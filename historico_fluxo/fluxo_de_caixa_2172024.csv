@@ -1,0 +1,1771 @@
+id;Nome;Tipo;Valor;Categoria;Conta;Data;Obs;desconsiderar;Parcela;Data origem;Data Criacao;TAG
+1089;Aplicação;Investimento;-18677,0;Tesouro Selic;Nubank;31/12/2022 00:00;;False;;;23/03/2024 11:58;
+1089;Aplicação;Investimento;18677,0;Tesouro Selic;Nuinvest;31/12/2022 00:00;;False;;;23/03/2024 11:58;
+1;Correção;Receita;902,19;Outros;Itaú;01/02/2023 00:00;;True;;;;
+10;pagamento de cartão;Transferência;3798,85;Transferência;PDA;01/02/2023 00:00;;True;;;;
+21;discunto me;Despesa;-16,0;Restaurante;PDA;01/02/2023 00:00;;False;;;;
+57;genera;Despesa;-36,58;Compras;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;;
+58;Relogio;Despesa;-99,88;Compras;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;;
+24;chiquinho;Despesa;-10,0;Restaurante;PDA;01/02/2023 00:00;;False;;;;
+59;mercado llivre;Despesa;-17,71;Compras;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;;
+63;bateria onix;Despesa;-96,68;Serviços;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;;
+158;Youcom;Despesa;-81,9;Compras;PDA;01/02/2023 00:00;;False;1.0;01/02/2023;23/04/2023 15:54;
+158;Youcom;Despesa;-81,9;Compras;PDA;01/02/2023 00:00;;False;4.0;01/02/2023;23/04/2023 15:54;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/02/2023 00:00;;False;4.0;01/02/2023;;
+4;nath;Despesa;-600,0;Educação;Itaú;02/02/2023 00:00;;False;;;;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;PDA;02/02/2023 00:00;;False;1.0;02/02/2023;;
+25;Uber;Despesa;-11,92;Transporte;PDA;05/02/2023 00:00;;False;;;;
+26;gasosa;Despesa;-100,0;Transporte;PDA;05/02/2023 00:00;;False;;;;
+27;mercado;Despesa;-19,34;Supermercado;PDA;05/02/2023 00:00;;False;;;;
+28;google wikiloc;Despesa;-41,9;Viagem;PDA;05/02/2023 00:00;;False;;;;
+20;google fotos;Despesa;-6,99;TV,Internet,Telefone;PDA;06/02/2023 00:00;;False;1.0;06/02/2023;;
+22;youse;Despesa;-200,0;Serviços;PDA;09/02/2023 00:00;;False;1.0;09/02/2023;;
+2;caixinha viagem;Despesa;-50,0;Viagem;Itaú;10/02/2023 00:00;;False;;;;
+29;santa tereza;Despesa;-82,0;Lazer;PDA;10/02/2023 00:00;;False;;;;
+30;fernanda;Despesa;-12,0;Restaurante;PDA;10/02/2023 00:00;;False;;;;
+31;rafaelli;Despesa;-52,0;Restaurante;PDA;10/02/2023 00:00;;False;;;;
+32;Mercado livre;Despesa;-52,0;Lazer;PDA;10/02/2023 00:00;;False;;;;
+33;mc donalds;Despesa;-10,7;Restaurante;PDA;10/02/2023 00:00;;False;;;;
+34;jatoba;Despesa;-38,0;Supermercado;PDA;10/02/2023 00:00;;False;;;;
+35;capitao tavar;Despesa;-64,0;Lazer;PDA;10/02/2023 00:00;;False;;;;
+36;peralta;Despesa;-21,26;Restaurante;PDA;15/02/2023 00:00;;False;;;;
+37;gasosa;Despesa;-100,0;Transporte;PDA;15/02/2023 00:00;;False;;;;
+38;china in box;Despesa;-54,5;Restaurante;PDA;15/02/2023 00:00;;False;;;;
+39;pizzaria poesia;Despesa;-60,0;Restaurante;PDA;15/02/2023 00:00;;False;;;;
+40;conectar ;Despesa;-50,0;Viagem;PDA;15/02/2023 00:00;;False;;;;
+41;renan filipe;Despesa;-29,0;Restaurante;PDA;15/02/2023 00:00;;False;;;;
+5;Tim;Despesa;-59,16;TV,Internet,Telefone;Itaú;17/02/2023 00:00;;False;;;;
+6;IPVA;Despesa;-414,27;Serviços;Itaú;17/02/2023 00:00;;False;1.0;17/02/2023;;
+42;estacionamento;Despesa;-63,0;Transporte;PDA;20/02/2023 00:00;;False;;;;
+43;ifood;Despesa;-20,99;Restaurante;PDA;20/02/2023 00:00;;False;;;;
+44;ifood;Despesa;-33,97;Restaurante;PDA;20/02/2023 00:00;;False;;;;
+45;jeronimo;Despesa;-50,1;Restaurante;PDA;20/02/2023 00:00;;False;;;;
+46;lucas meira lima;Despesa;-57,5;Restaurante;PDA;20/02/2023 00:00;;False;;;;
+47;drogal;Despesa;-10,98;Saúde;PDA;20/02/2023 00:00;;False;;;;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/02/2023 00:00;;False;1.0;21/02/2023;;
+7;Transferência;Transferência;88,32;Transferência;Itaú;22/02/2023 00:00;;True;;;;
+7;Transferência;Transferência;-88,32;Transferência;Nubank;22/02/2023 00:00;;True;;;;
+49;farmacia;Despesa;-55,62;Saúde;PDA;22/02/2023 00:00;;False;;;;
+50;tons cafe;Despesa;-14,0;Restaurante;PDA;22/02/2023 00:00;;False;;;;
+51;jeronimo;Despesa;-86,7;Restaurante;PDA;22/02/2023 00:00;;False;;;;
+9;CPFL;Despesa;-190,68;Casa;Itaú;25/02/2023 00:00;;False;;;;
+52;Transferência;Transferência;-40,0;Transferência;PDA;25/02/2023 00:00;paguei o jeronimo para meu pai;True;;;;
+53;conectar;Despesa;-50,0;Viagem;PDA;25/02/2023 00:00;;False;;;;
+54;adega;Despesa;-16,0;Lazer;PDA;25/02/2023 00:00;;False;;;;
+157;Casa das Alianças;Despesa;-51,68;Presentes;PDA;25/02/2023 00:00;;False;1.0;25/02/2023;23/04/2023 15:52;
+10;pagamento de cartão;Transferência;-3798,85;Transferência;Itaú;25/02/2023 00:00;;True;;;;
+11;onix;Despesa;-1000,0;Onix;Itaú;25/02/2023 00:00;;False;;;;
+12;salario;Receita;5766,7;Salário;Itaú;25/02/2023 00:00;;False;;;;
+15;SAAE;Despesa;-92,01;Casa;Itaú;25/02/2023 00:00;;False;;;;
+55;clube wine;Despesa;-77,62;Supermercado;PDA;28/02/2023 00:00;;False;;;;
+56;correção;Despesa;-1908,06;Outros;PDA;28/02/2023 00:00;correção;True;;;;
+64;correção;Receita;1550,98;Outros;PDA;28/02/2023 00:00;;True;;;;
+66;Comercial de comb;Despesa;-100,0;Transporte;PDA;28/02/2023 00:00;;False;;;06/04/2023 11:41;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+16;Gasosa;Despesa;-100,0;Transporte;PDA;01/03/2023 00:00;;False;;;;
+16;Uber;Despesa;-13,94;Transporte;PDA;01/03/2023 00:00;;False;;;;
+57;genera;Despesa;-36,58;Compras;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+58;Relogio;Despesa;-99,88;Compras;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+59;mercado llivre;Despesa;-17,71;Compras;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+63;bateria onix;Despesa;-96,68;Serviços;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;;
+52;Transferência;Transferência;40,0;Transferência;Nubank;01/03/2023 00:00;paguei o jeronimo para meu pai;True;;;;
+158;Youcom;Despesa;-81,9;Compras;PDA;01/03/2023 00:00;;False;2.0;01/02/2023;23/04/2023 15:54;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/03/2023 00:00;;False;5.0;01/02/2023;;
+158;Youcom;Despesa;-81,9;Compras;PDA;01/03/2023 00:00;;False;5.0;01/02/2023;23/04/2023 15:54;
+98;Bonus;Receita;26837,97;Salário;Itaú;01/03/2023 00:00;;False;;;23/04/2023 14:59;
+99;Antecipacao onix;Despesa;-15000,0;Onix;Itaú;01/03/2023 00:00;;False;;;23/04/2023 14:59;
+100;Aplicação;Investimento;1108,96;Fundos;Ion;01/03/2023 00:00;;True;;Itaú;23/04/2023 15:00;
+100;Aplicação;Investimento;-1108,96;Fundos;Itaú;01/03/2023 00:00;;True;;Ion;23/04/2023 15:00;
+101;nath;Despesa;-600,0;Educação;Itaú;01/03/2023 00:00;;False;;;23/04/2023 15:01;
+102;tim;Despesa;-59,14;TV,Internet,Telefone;Itaú;01/03/2023 00:00;;False;;;23/04/2023 15:01;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;PDA;02/03/2023 00:00;;False;2.0;02/02/2023;;
+17;gympass;Despesa;-45,9;Saúde;PDA;03/03/2023 00:00;;False;;;;
+18;agenda;Despesa;-21,9;Compras;PDA;03/03/2023 00:00;;False;;;;
+19;mercado;Despesa;-32,15;Supermercado;PDA;03/03/2023 00:00;;False;;;;
+67;Uber;Despesa;-13,94;Transporte;PDA;03/03/2023 00:00;;False;;;06/04/2023 11:42;
+68;Associacao atletica;Despesa;-35,0;Lazer;PDA;03/03/2023 00:00;;False;;;06/04/2023 11:43;
+69;gympass;Despesa;-49,9;Saúde;PDA;03/03/2023 00:00;;False;;;06/04/2023 11:44;
+20;google fotos;Despesa;-6,99;TV,Internet,Telefone;PDA;06/03/2023 00:00;;False;2.0;06/02/2023;;
+71;batata;Despesa;-25,98;Restaurante;PDA;06/03/2023 00:00;;False;;;06/04/2023 11:45;
+72;Drogal;Despesa;-125,9;Saúde;PDA;07/03/2023 00:00;;False;;;23/04/2023 14:40;
+3;pagamento bianca;Receita;90,0;Outros;Itaú;07/03/2023 00:00;;False;;;;
+73;polo show (;Despesa;-44,2;Compras;PDA;08/03/2023 00:00;N sei oq é;False;;;23/04/2023 14:41;
+74;ifood;Despesa;-23,79;Restaurante;PDA;08/03/2023 00:00;;False;;;23/04/2023 14:42;
+22;youse;Despesa;-200,0;Serviços;C6;09/03/2023 00:00;;False;2.0;09/02/2023;;
+75;luciana aparecida;Despesa;-17,0;Restaurante;PDA;10/03/2023 00:00;;False;;;23/04/2023 14:43;
+76;gasosa;Despesa;-100,0;Transporte;PDA;10/03/2023 00:00;;False;;;23/04/2023 14:43;
+159;Casas bahia;Despesa;-51,67;Compras;PDA;10/03/2023 00:00;;False;1.0;10/03/2023;23/04/2023 15:57;
+103;Galaxy s22;Despesa;-3006,9;Compras;Itaú;10/03/2023 00:00;;False;;;23/04/2023 15:04;
+104;mp.josegav;Despesa;-2,1;Multas;Itaú;10/03/2023 00:00;;False;;;23/04/2023 15:04;
+105;pai transf;Despesa;-5,0;Presentes;Itaú;10/03/2023 00:00;;False;;;23/04/2023 15:05;
+77;Amazon;Despesa;-29,81;Compras;PDA;13/03/2023 00:00;;False;;;23/04/2023 14:44;
+78;fernanda + droga;Despesa;-15,3;Compras;PDA;13/03/2023 00:00;;False;;;23/04/2023 14:45;
+79;jana capas box  + tinhos;Despesa;-64,0;Restaurante;PDA;13/03/2023 00:00;;False;;;23/04/2023 14:45;
+80;ifood;Despesa;-27,98;Restaurante;PDA;13/03/2023 00:00;;False;;;23/04/2023 14:46;
+6;IPVA;Despesa;-414,27;Serviços;Itaú;17/03/2023 00:00;;False;2.0;17/02/2023;;
+81;bar da 13;Despesa;-25,0;Lazer;PDA;18/03/2023 00:00;;False;;;23/04/2023 14:46;
+82;bar da 13 2 ;Despesa;-25,0;Lazer;PDA;18/03/2023 00:00;;False;;;23/04/2023 14:47;
+83;bk;Despesa;-91,6;Restaurante;PDA;18/03/2023 00:00;;False;;;23/04/2023 14:47;
+84;fernanda cristina;Despesa;-12,0;Supermercado;PDA;18/03/2023 00:00;;False;;;23/04/2023 14:48;
+85;zeik gastro bar ;Despesa;-132,54;Lazer;PDA;18/03/2023 00:00;;False;;;23/04/2023 14:48;
+86;jatoba;Despesa;-79,99;Supermercado;PDA;19/03/2023 00:00;;False;;;23/04/2023 14:48;
+87;amazon;Despesa;-178,99;Presentes;PDA;19/03/2023 00:00;;False;;;23/04/2023 14:49;
+106;mae pagamento;Despesa;-90,0;Compras;Itaú;20/03/2023 00:00;;False;;;23/04/2023 15:05;
+107;pai transf;Despesa;-135,0;Serviços;Itaú;20/03/2023 00:00;;False;;;23/04/2023 15:06;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/03/2023 00:00;;False;2.0;21/02/2023;;
+108;Aplicação;Investimento;-6700,0;Tesouro Selic;Itaú;23/03/2023 00:00;;True;;;23/04/2023 15:07;
+108;Aplicação;Investimento;6700,0;Tesouro Selic;Nuinvest;23/03/2023 00:00;;True;;;23/04/2023 15:07;
+88;associacao atletica;Despesa;-35,0;Lazer;PDA;24/03/2023 00:00;;False;;;23/04/2023 14:51;
+89;fabioferreitade;Despesa;-139,0;Restaurante;PDA;24/03/2023 00:00;;False;;;23/04/2023 14:52;
+157;Casa das Alianças;Despesa;-51,68;Presentes;PDA;25/03/2023 00:00;;False;2.0;25/02/2023;23/04/2023 15:52;
+90;pague menos;Despesa;-8,2;Saúde;PDA;26/03/2023 00:00;;False;;;23/04/2023 14:53;
+91;bk drive;Despesa;-66,6;Restaurante;PDA;26/03/2023 00:00;;False;;;23/04/2023 14:53;
+92;supermercado aeroporto;Despesa;-40,74;Supermercado;PDA;26/03/2023 00:00;;False;;;23/04/2023 14:54;
+93;club wine;Despesa;-77,62;Lazer;PDA;27/03/2023 00:00;;False;;;23/04/2023 14:55;
+114;Transferência;Transferência;2825,74;Transferência;PDA;27/03/2023 00:00;;True;;;23/04/2023 15:11;
+109;Cfpl;Despesa;-413,0;Casa;Itaú;27/03/2023 00:00;;False;;;23/04/2023 15:09;
+110;Aplicação;Investimento;-1000,0;Tesouro Selic;Itaú;27/03/2023 00:00;;True;;;23/04/2023 15:09;
+111;salario;Receita;5779,3;Salário;Itaú;27/03/2023 00:00;;False;;;23/04/2023 15:09;
+112;onix parcela;Despesa;-1000,0;Onix;Itaú;27/03/2023 00:00;;False;;;23/04/2023 15:10;
+113;saae;Despesa;-89,9;Casa;Itaú;27/03/2023 00:00;;False;;;23/04/2023 15:10;
+114;Transferência;Transferência;-2825,74;Transferência;Itaú;27/03/2023 00:00;;True;;;23/04/2023 15:11;
+110;Aplicação;Investimento;1000,0;Tesouro Selic;Nuinvest;27/03/2023 00:00;;True;;;23/04/2023 15:09;
+94;ifood;Despesa;-42,59;Restaurante;PDA;29/03/2023 00:00;;False;;;23/04/2023 14:56;
+95;drogal;Despesa;-91,27;Saúde;PDA;29/03/2023 00:00;;False;;;23/04/2023 14:56;
+96;lava rapido;Despesa;-55,0;Serviços;PDA;29/03/2023 00:00;;False;;;23/04/2023 14:56;
+115;nayara;Despesa;-20,0;Presentes;Itaú;31/03/2023 00:00;;False;;;23/04/2023 15:14;
+97;ifood + churrascaria;Despesa;-87,02;Restaurante;PDA;31/03/2023 00:00;;False;;;23/04/2023 14:57;
+57;genera;Despesa;-36,58;Compras;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;;
+58;Relogio;Despesa;-99,88;Compras;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;;
+59;mercado llivre;Despesa;-17,71;Compras;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/04/2023 00:00;;False;6.0;01/02/2023;;
+158;Youcom;Despesa;-81,9;Compras;PDA;01/04/2023 00:00;;False;3.0;01/02/2023;23/04/2023 15:54;
+116;bar do denny;Despesa;-27,5;Lazer;PDA;01/04/2023 00:00;;False;;;23/04/2023 15:23;
+117;luciana aparecida;Despesa;-30,0;Restaurante;PDA;01/04/2023 00:00;;False;;;23/04/2023 15:24;
+118;bike hotel;Despesa;-67,9;Restaurante;PDA;01/04/2023 00:00;;False;;;23/04/2023 15:25;
+119;uber;Despesa;-12,9;Transporte;PDA;01/04/2023 00:00;;False;;;23/04/2023 15:25;
+188;Havancon (presente vinicius);Despesa;-56,15;Presentes;PDA;01/04/2023 00:00;;False;1.0;01/04/2023;03/05/2023 14:04;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;PDA;02/04/2023 00:00;;False;3.0;02/02/2023;;
+120;bar das artes;Despesa;-157,1;Lazer;PDA;02/04/2023 00:00;;False;;;23/04/2023 15:26;
+121;bar da 13;Despesa;-51,0;Lazer;PDA;02/04/2023 00:00;;False;;;23/04/2023 15:26;
+122;aws;Despesa;-111,58;Multas;PDA;02/04/2023 00:00;;False;;;23/04/2023 15:27;
+123;pag jose;Despesa;-9,0;Compras;PDA;02/04/2023 00:00;;False;;;23/04/2023 15:27;
+124;gympass;Despesa;-49,9;Saúde;PDA;03/04/2023 00:00;;False;;;23/04/2023 15:28;
+125;autoposto;Despesa;-100,0;Transporte;PDA;03/04/2023 00:00;;False;;;23/04/2023 15:28;
+126;pag ticket ;Despesa;-86,0;Lazer;PDA;05/04/2023 00:00;;False;;;23/04/2023 15:29;
+20;google fotos;Despesa;-6,99;TV,Internet,Telefone;PDA;06/04/2023 00:00;;False;3.0;06/02/2023;;
+127;christian lucas;Despesa;-86,0;Restaurante;PDA;06/04/2023 00:00;;False;;;23/04/2023 15:30;
+128;bandeira burguer;Despesa;-40,0;Restaurante;PDA;06/04/2023 00:00;;False;;;23/04/2023 15:30;
+129;sagrado bar + bar da 13;Despesa;-93,98;Lazer;PDA;08/04/2023 00:00;;False;;;23/04/2023 15:31;
+22;youse;Despesa;-200,0;Serviços;PDA;09/04/2023 00:00;;False;3.0;09/02/2023;;
+130;disk breja;Despesa;-5,49;Lazer;PDA;09/04/2023 00:00;;False;;;23/04/2023 15:31;
+131;otavio pattaro;Despesa;-38,0;Supermercado;PDA;10/04/2023 00:00;;False;;;23/04/2023 15:32;
+132;uber;Despesa;-8,44;Transporte;PDA;10/04/2023 00:00;;False;;;23/04/2023 15:32;
+161;Bianca;Receita;133,0;Cobrança;Itaú;10/04/2023 00:00;;False;;;23/04/2023 15:59;
+159;Casas bahia;Despesa;-51,67;Compras;PDA;10/04/2023 00:00;;False;2.0;10/03/2023;23/04/2023 15:57;
+133;uber;Despesa;-9,48;Transporte;PDA;13/04/2023 00:00;;False;;;23/04/2023 15:33;
+134;transporte;Despesa;-100,0;Transporte;PDA;13/04/2023 00:00;;False;;;23/04/2023 15:33;
+162;Tim;Despesa;-59,21;TV,Internet,Telefone;Itaú;13/04/2023 00:00;;False;;;23/04/2023 15:59;
+163;nath;Despesa;-500,0;Educação;Itaú;13/04/2023 00:00;;False;;;23/04/2023 16:00;
+164;caixinha;Despesa;-50,0;Viagem;Itaú;13/04/2023 00:00;;False;;;23/04/2023 16:01;
+135;Sagrado bar;Despesa;-67,5;Lazer;PDA;14/04/2023 00:00;;False;;;23/04/2023 15:34;
+136;Luciano henrique;Despesa;-10,0;Compras;PDA;15/04/2023 00:00;;False;;;23/04/2023 15:34;
+137;mercpago;Despesa;-20,0;Compras;PDA;15/04/2023 00:00;;False;;;23/04/2023 15:35;
+138;lava jato;Despesa;-55,0;Presentes;PDA;15/04/2023 00:00;;False;;;23/04/2023 15:35;
+139;star art;Despesa;-35,0;Restaurante;PDA;15/04/2023 00:00;;False;;;23/04/2023 15:35;
+234;Youcom;Despesa;-49,95;Compras;PDA;15/04/2023 00:00;;False;1.0;15/04/2023;26/05/2023 15:48;
+140;pag zig;Despesa;-90,6;Lazer;PDA;16/04/2023 00:00;Rolezao em campinas;False;;;23/04/2023 15:37;
+141;my sushi;Despesa;-72,9;Restaurante;PDA;17/04/2023 00:00;;False;;;23/04/2023 15:38;
+6;IPVA;Despesa;-414,27;Serviços;Itaú;17/04/2023 00:00;;False;3.0;17/02/2023;;
+142;click bus;Despesa;-49,54;Transporte;PDA;18/04/2023 00:00;;False;;;23/04/2023 15:39;
+143;uber;Despesa;-9,44;Transporte;PDA;18/04/2023 00:00;;False;;;23/04/2023 15:39;
+144;uber;Despesa;-19,96;Transporte;PDA;19/04/2023 00:00;volta;False;;;23/04/2023 15:40;
+145;uber;Despesa;-46,86;Transporte;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:41;
+146;cafe;Despesa;-11,6;Restaurante;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:42;
+147;bauduco;Despesa;-11,6;Restaurante;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:43;
+148;tahine;Despesa;-72,5;Restaurante;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:43;
+149;click bus;Despesa;-55,32;Transporte;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:44;
+150;happy hour;Despesa;-70,0;Lazer;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:44;
+151;salgado;Despesa;-25,0;Supermercado;PDA;19/04/2023 00:00;;False;;;23/04/2023 15:45;
+165;rshop;Despesa;-8,8;Supermercado;Itaú;19/04/2023 00:00;;False;;;23/04/2023 16:01;
+152;bbq house ;Despesa;-119,46;Restaurante;PDA;20/04/2023 00:00;santo parque;False;;;23/04/2023 15:46;
+153;remedio mae;Despesa;-60,0;Presentes;PDA;20/04/2023 00:00;;False;;;23/04/2023 15:46;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/04/2023 00:00;;False;3.0;21/02/2023;;
+154;ifood ;Despesa;-34,89;Restaurante;PDA;22/04/2023 00:00;;False;;;23/04/2023 15:47;
+155;comercial de comb;Despesa;-100,0;Transporte;PDA;22/04/2023 00:00;;False;;;23/04/2023 15:48;
+156;vilma de jesus oliveira;Despesa;-45,0;Lazer;PDA;22/04/2023 00:00;;False;;;23/04/2023 15:49;
+157;Casa das Alianças;Despesa;-51,68;Presentes;PDA;25/04/2023 00:00;;False;3.0;25/02/2023;23/04/2023 15:52;
+166;Cashback ;Receita;534,36;Outros;Itaú;26/04/2023 00:00;;False;;;02/05/2023 09:30;
+167;Salario;Receita;6615,89;Salário;Itaú;27/04/2023 00:00;;False;;;02/05/2023 09:31;
+168;Transferência;Transferência;-4027,25;Transferência;Itaú;27/04/2023 00:00;;True;;;02/05/2023 09:31;
+169;CPFL;Despesa;-315,15;Casa;Itaú;27/04/2023 00:00;;False;;;02/05/2023 09:32;
+168;Transferência;Transferência;4027,25;Transferência;PDA;27/04/2023 00:00;;True;;;02/05/2023 09:31;
+170;Aplicação;Investimento;-1120,0;Tesouro Selic;Itaú;27/04/2023 00:00;;True;;Nuinvest;02/05/2023 09:33;
+171;Onix;Despesa;-1000,0;Onix;Itaú;27/04/2023 00:00;;False;;;02/05/2023 09:34;
+172;Festinha;Despesa;-10,0;Lazer;Itaú;27/04/2023 00:00;;False;;;02/05/2023 09:34;
+168;slc merican bar;Despesa;21,76;Restaurante;PDA;27/04/2023 00:00;;False;;;02/05/2023 09:31;
+168;pague contas;Despesa;37,29;Restaurante;PDA;27/04/2023 00:00;;False;;;02/05/2023 09:31;
+168;uber + juros;Despesa;10,84;Restaurante;PDA;27/04/2023 00:00;;False;;;02/05/2023 09:31;
+174;Club wine;Despesa;-53,07;Supermercado;PDA;27/04/2023 00:00;;False;;;02/05/2023 09:37;
+175;elite group;Despesa;-6,0;Compras;PDA;27/04/2023 00:00;;False;;;02/05/2023 09:37;
+170;Aplicação;Investimento;1120,0;Tesouro Selic;Nuinvest;27/04/2023 00:00;;True;;Itaú;02/05/2023 09:33;
+173;SAAE;Despesa;-98,64;Casa;Itaú;28/04/2023 00:00;;False;;;02/05/2023 09:35;
+176;Almocinho;Despesa;-229,57;Lazer;PDA;28/04/2023 00:00;;False;;;02/05/2023 09:38;
+233;Feijoada;Despesa;-229,57;Restaurante;PDA;29/04/2023 00:00;;False;;;26/05/2023 15:41;
+177;Uber;Despesa;-9,33;Transporte;PDA;30/04/2023 00:00;;False;;;02/05/2023 09:40;
+178;amo pastel;Despesa;-47,07;Restaurante;PDA;30/04/2023 00:00;;False;;;02/05/2023 09:41;
+179;BK drive;Despesa;-42,8;Restaurante;PDA;30/04/2023 00:00;;False;;;02/05/2023 09:42;
+57;genera;Despesa;-36,58;Compras;PDA;01/05/2023 00:00;;False;4.0;01/02/2023;;
+58;Relogio;Despesa;-99,88;Compras;PDA;01/05/2023 00:00;;False;4.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/05/2023 00:00;;False;4.0;01/02/2023;;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/05/2023 00:00;;False;7.0;01/02/2023;;
+180;Bike hotel;Despesa;-83,8;Restaurante;PDA;01/05/2023 00:00;;False;;;02/05/2023 09:42;
+181;My sushi;Despesa;-53,8;Restaurante;PDA;01/05/2023 00:00;;False;;;02/05/2023 09:43;
+182;hinode samuel;Despesa;-10,0;Lazer;PDA;01/05/2023 00:00;;False;;;02/05/2023 09:45;
+186;Autopostosvictor;Despesa;-100,0;Transporte;PDA;01/05/2023 00:00;;False;;;03/05/2023 10:57;
+188;Havancon (presente vinicius);Despesa;-56,15;Presentes;PDA;01/05/2023 00:00;;False;2.0;01/04/2023;03/05/2023 14:04;
+232;terno vinicius;Despesa;-150,0;Presentes;PDA;01/05/2023 00:00;;False;1.0;01/05/2023;26/05/2023 15:37;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;PDA;02/05/2023 00:00;;False;4.0;02/02/2023;;
+183;Vinho;Despesa;-30,0;Supermercado;Itaú;02/05/2023 00:00;;False;;;02/05/2023 09:46;
+184;Nathalia;Despesa;-600,0;Educação;Itaú;02/05/2023 00:00;;False;;;03/05/2023 10:54;
+185;Fut;Despesa;-16,0;Saúde;Itaú;02/05/2023 00:00;;False;;;03/05/2023 10:55;
+189;autopostosvictor;Despesa;-100,0;Transporte;PDA;02/05/2023 00:00;;False;;;09/05/2023 11:59;
+187;Gympass;Despesa;-49,9;Saúde;PDA;03/05/2023 00:00;;False;;;03/05/2023 10:58;
+190;Conect car;Despesa;-50,0;Viagem;PDA;03/05/2023 00:00;;False;;;09/05/2023 12:00;
+20;google fotos;Despesa;-6,99;TV,Internet,Telefone;PDA;06/05/2023 00:00;;False;4.0;06/02/2023;;
+191;Dona waffle;Despesa;-50,0;Restaurante;PDA;07/05/2023 00:00;;False;;;09/05/2023 12:01;
+194;Bianca;Receita;40,0;Cobrança;Itaú;08/05/2023 00:00;;False;;;09/05/2023 12:04;
+192;Transf bianca;Despesa;-10,31;Presentes;PDA;08/05/2023 00:00;;False;;;09/05/2023 12:03;
+195;Transferência;Transferência;-25,0;Transferência;Itaú;08/05/2023 00:00;;True;;;14/05/2023 20:13;
+195;Transferência;Transferência;25,0;Transferência;Nubank;08/05/2023 00:00;;True;;;14/05/2023 20:13;
+22;youse;Despesa;-200,0;Serviços;PDA;09/05/2023 00:00;;False;4.0;09/02/2023;;
+193;Transferência;Transferência;38,59;Transferência;Cartão Nubank;09/05/2023 00:00;;True;;;09/05/2023 12:03;
+193;Transferência;Transferência;-38,59;Transferência;Itaú;09/05/2023 00:00;;True;;;09/05/2023 12:03;
+204;Transferencia bianca;Despesa;-51,0;Presentes;Itaú;09/05/2023 00:00;;False;;;14/05/2023 20:19;
+159;Casas bahia;Despesa;-51,67;Compras;PDA;10/05/2023 00:00;;False;3.0;10/03/2023;23/04/2023 15:57;
+198;Conectar;Despesa;-25,0;Transporte;PDA;10/05/2023 00:00;;False;;;14/05/2023 20:16;
+204;Caixinha;Despesa;-51,0;Viagem;Itaú;11/05/2023 00:00;;False;;;14/05/2023 20:19;
+196;Otavio pattaro;Despesa;-33,0;Restaurante;PDA;12/05/2023 00:00;;False;;;14/05/2023 20:14;
+197;uber;Despesa;-9,18;Transporte;PDA;12/05/2023 00:00;;False;;;14/05/2023 20:15;
+198;Conectar;Despesa;-50,0;Transporte;PDA;13/05/2023 00:00;;False;;;14/05/2023 20:16;
+199;autoposto;Despesa;-100,0;Transporte;PDA;13/05/2023 00:00;;False;;;14/05/2023 20:16;
+200;lojas comeia;Despesa;-8,3;Supermercado;PDA;13/05/2023 00:00;;False;;;14/05/2023 20:17;
+202;portal do engenho;Despesa;-260,0;Restaurante;PDA;14/05/2023 00:00;;False;;;14/05/2023 20:18;
+203;autoposto;Despesa;-70,0;Viagem;PDA;14/05/2023 00:00;;False;;;14/05/2023 20:19;
+234;Youcom;Despesa;-49,95;Compras;PDA;15/05/2023 00:00;;False;2.0;15/04/2023;26/05/2023 15:48;
+205;comercial de comb ida;Despesa;-50,0;Transporte;PDA;15/05/2023 00:00;gasosa;False;;;25/05/2023 10:32;
+225;Tim sa;Despesa;-63,99;TV,Internet,Telefone;Itaú;16/05/2023 00:00;;False;;;25/05/2023 12:28;
+206;Clickbus;Despesa;-49,54;Transporte;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:12;
+207;Fabio ferreira de;Despesa;-40,0;Restaurante;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:13;
+208;parking;Despesa;-8,0;Transporte;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:14;
+209;Clickbus;Despesa;-55,32;Transporte;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:15;
+210;Uber;Despesa;-11,95;Transporte;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:15;
+211;Casas bauduco;Despesa;-5,9;Restaurante;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:15;
+212;Stadium cafe;Despesa;-6,5;Restaurante;PDA;17/05/2023 00:00;;False;;;25/05/2023 12:18;
+6;IPVA;Despesa;-414,27;Serviços;Itaú;17/05/2023 00:00;;False;4.0;17/02/2023;;
+230;TNG calça;Despesa;-100,0;Compras;PDA;17/05/2023 00:00;;False;1.0;17/05/2023;26/05/2023 15:31;
+231;CEA;Despesa;-96,67;Compras;PDA;17/05/2023 00:00;;False;1.0;17/05/2023;26/05/2023 15:31;
+226;aauttar;Despesa;-4,4;Supermercado;Itaú;18/05/2023 00:00;;False;;;25/05/2023 12:29;
+213;Solangeoliveiradu;Despesa;-20,0;Restaurante;PDA;19/05/2023 00:00;;False;;;25/05/2023 12:19;
+214;Viagem Cambury;Despesa;-366,98;Viagem;PDA;19/05/2023 00:00;;False;;;25/05/2023 12:21;
+215;Pao com linguica;Despesa;-9,0;Supermercado;PDA;19/05/2023 00:00;;False;;;25/05/2023 12:21;
+216;Taitiros restaurante;Despesa;-25,0;Restaurante;PDA;20/05/2023 00:00;;False;;;25/05/2023 12:22;
+217;cristiane aparecida;Despesa;-44,0;Restaurante;PDA;20/05/2023 00:00;Pastel;False;;;25/05/2023 12:23;
+218;vitoriaamorim;Despesa;-22,0;Restaurante;PDA;20/05/2023 00:00;;False;;;25/05/2023 12:23;
+219;Taitiros;Despesa;-25,0;Restaurante;PDA;20/05/2023 00:00;;False;;;25/05/2023 12:24;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/05/2023 00:00;;False;4.0;21/02/2023;;
+220;mercado;Despesa;-6,0;Supermercado;PDA;21/05/2023 00:00;;False;;;25/05/2023 12:24;
+221;Chiquinho;Despesa;-19,5;Restaurante;PDA;22/05/2023 00:00;;False;;;25/05/2023 12:25;
+222;polo show;Despesa;-22,7;Supermercado;PDA;22/05/2023 00:00;;False;;;25/05/2023 12:26;
+223;indaiatubactnshp;Despesa;-68,7;Restaurante;PDA;22/05/2023 00:00;Madero;False;;;25/05/2023 12:27;
+224;rdnirg otrus;Despesa;-17,99;Lazer;PDA;22/05/2023 00:00;;False;;;25/05/2023 12:28;
+227;Flavia;Despesa;-150,0;Viagem;Itaú;23/05/2023 00:00;;False;;;25/05/2023 12:29;
+228;Salario;Receita;6628,32;Salário;Itaú;26/05/2023 00:00;;False;;;26/05/2023 10:24;
+229;Bonus;Receita;4485,41;Salário;Itaú;26/05/2023 00:00;;False;;;26/05/2023 10:30;
+235;Transferência;Transferência;-4160,12;Transferência;Itaú;26/05/2023 00:00;;True;;;26/05/2023 15:58;
+235;Transferência;Transferência;4160,12;Transferência;PDA;26/05/2023 00:00;;True;;;26/05/2023 15:58;
+237;Onix;Despesa;-1000,0;Onix;Itaú;26/05/2023 00:00;;False;;;26/05/2023 15:59;
+238;Saae;Despesa;-166,38;Casa;Itaú;26/05/2023 00:00;;False;;;26/05/2023 16:01;
+239;cpfl;Despesa;-309,27;Casa;Itaú;26/05/2023 00:00;;False;;;26/05/2023 16:01;
+236;Aplicação;Investimento;-1325,0;Tesouro Selic;Itaú;26/05/2023 00:00;;True;;Nuinvest;26/05/2023 15:59;
+236;Aplicação;Investimento;1325,0;Tesouro Selic;Nuinvest;26/05/2023 00:00;;True;;Itaú;26/05/2023 15:59;
+240;Show vitor kley;Despesa;-23,0;Restaurante;PDA;28/05/2023 00:00;;False;;;29/05/2023 10:00;
+241;Comes show vitor kley;Despesa;-58,0;Lazer;PDA;28/05/2023 00:00;;False;;;29/05/2023 10:01;
+242;CLube wine;Despesa;-120,64;Supermercado;PDA;31/05/2023 00:00;;False;;;01/06/2023 23:53;
+243;Auto posto + uber;Despesa;-28,98;Transporte;PDA;31/05/2023 00:00;;False;;;01/06/2023 23:54;
+57;genera;Despesa;-36,58;Compras;PDA;01/06/2023 00:00;;False;5.0;01/02/2023;;
+58;Relogio;Despesa;-99,88;Compras;PDA;01/06/2023 00:00;;False;5.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/06/2023 00:00;;False;5.0;01/02/2023;;
+62;camiseta riachuelo;Despesa;-33,3;Compras;PDA;01/06/2023 00:00;;False;;;;
+188;Havancon (presente vinicius);Despesa;-56,15;Presentes;PDA;01/06/2023 00:00;;False;3.0;01/04/2023;03/05/2023 14:04;
+232;terno vinicius;Despesa;-150,0;Presentes;PDA;01/06/2023 00:00;;False;2.0;01/05/2023;26/05/2023 15:37;
+260;Nath;Despesa;-600,0;Educação;Itaú;01/06/2023 00:00;;False;;;22/06/2023 21:58;
+246;Sapato Terno Vinicius;Despesa;-50,0;Presentes;PDA;01/06/2023 00:00;;False;;;05/06/2023 08:59;
+247;conectar;Despesa;-50,0;Transporte;PDA;01/06/2023 00:00;;False;;;05/06/2023 09:02;
+248;uber;Despesa;-8,95;Transporte;PDA;01/06/2023 00:00;;False;;;05/06/2023 09:03;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/06/2023 00:00;;False;8.0;01/02/2023;;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;PDA;02/06/2023 00:00;;False;5.0;02/02/2023;;
+249;Conect car;Despesa;-50,0;Transporte;PDA;02/06/2023 00:00;;False;;;05/06/2023 11:32;
+250;Pague menos;Despesa;-87,66;Saúde;PDA;02/06/2023 00:00;;False;;;05/06/2023 11:35;
+251;fabioferreirade;Despesa;-100,0;Saúde;PDA;02/06/2023 00:00;;False;;;05/06/2023 11:38;
+244;Caixinha;Despesa;-50,0;Viagem;Itaú;02/06/2023 00:00;;False;;;05/06/2023 08:55;
+252;pague menos;Despesa;-2,29;Supermercado;PDA;03/06/2023 00:00;;False;;;13/06/2023 14:15;
+253;gympass;Despesa;-49,9;Saúde;PDA;03/06/2023 00:00;;False;;;22/06/2023 21:48;
+254;gympass;Despesa;-27,99;Saúde;PDA;05/06/2023 00:00;;False;;;22/06/2023 21:49;
+245;Presente Vinicius;Despesa;-1200,0;Presentes;Itaú;05/06/2023 00:00;;False;;;05/06/2023 08:56;
+20;google fotos;Despesa;-6,99;TV,Internet,Telefone;PDA;06/06/2023 00:00;;False;5.0;06/02/2023;;
+255;Conect car;Despesa;-100,0;Transporte;PDA;06/06/2023 00:00;;False;;;22/06/2023 21:51;
+256;Chiquinho;Despesa;-11,0;Restaurante;PDA;06/06/2023 00:00;;False;;;22/06/2023 21:53;
+257;uber;Despesa;-12,99;Transporte;PDA;07/06/2023 00:00;;False;;;22/06/2023 21:54;
+261;Bianca cobrança;Receita;90,0;Cobrança;Itaú;07/06/2023 00:00;;False;;;22/06/2023 21:59;
+265;lojas americanas;Despesa;-25,96;Supermercado;C6;08/06/2023 00:00;;False;;;22/06/2023 22:03;
+22;youse;Despesa;-200,0;Serviços;PDA;09/06/2023 00:00;;False;5.0;09/02/2023;;
+266;colonial joias;Despesa;-29,0;Compras;C6;10/06/2023 00:00;;False;;;22/06/2023 22:04;
+267;duraes chocolates;Despesa;-47,9;Presentes;C6;10/06/2023 00:00;;False;;;22/06/2023 22:04;
+268;Sonho bazar;Despesa;-13,0;Presentes;C6;10/06/2023 00:00;;False;;;22/06/2023 22:05;
+269;grafica focus;Despesa;-16,0;Presentes;C6;10/06/2023 00:00;;False;;;22/06/2023 22:05;
+270;autoposto;Despesa;-100,0;Transporte;C6;10/06/2023 00:00;;False;;;22/06/2023 22:05;
+271;itaici;Despesa;-30,0;Transporte;C6;10/06/2023 00:00;;False;;;22/06/2023 22:06;
+272;cozinha do rica;Despesa;-67,4;Restaurante;C6;10/06/2023 00:00;;False;;;22/06/2023 22:06;
+274;Cia do salgado;Despesa;-66,0;Restaurante;C6;11/06/2023 00:00;;False;;;22/06/2023 22:10;
+262;Cintia 10/06;Despesa;-89,0;Presentes;Itaú;12/06/2023 00:00;;False;;;22/06/2023 22:00;
+275;Fini;Despesa;-27,35;Presentes;C6;12/06/2023 00:00;;False;;;22/06/2023 22:10;
+276;Americanas ursinho;Despesa;-65,96;Presentes;C6;12/06/2023 00:00;;False;;;22/06/2023 22:11;
+277;Polo show;Despesa;-15,6;Transporte;C6;12/06/2023 00:00;;False;;;22/06/2023 22:12;
+278;buddha spa;Despesa;-271,15;Presentes;C6;12/06/2023 00:00;;False;;;22/06/2023 22:12;
+201;vanusa teixeira d;Despesa;-93,33;Presentes;PDA;13/06/2023 00:00;;False;1.0;13/06/2023;14/05/2023 20:18;
+263;tim;Despesa;-65,17;TV,Internet,Telefone;Itaú;13/06/2023 00:00;;False;;;22/06/2023 22:00;
+279;Jeronimo;Despesa;-41,7;Restaurante;C6;13/06/2023 00:00;;False;;;22/06/2023 22:13;
+280;Boris;Despesa;-55,8;Restaurante;C6;14/06/2023 00:00;;False;;;22/06/2023 22:13;
+281;Latam site;Despesa;-362,44;Viagem;C6;15/06/2023 00:00;;False;;;22/06/2023 22:13;
+282;elite group;Despesa;-3,0;Supermercado;C6;16/06/2023 00:00;;False;;;22/06/2023 22:13;
+230;TNG calça;Despesa;-100,0;Compras;PDA;17/06/2023 00:00;;False;2.0;17/05/2023;26/05/2023 15:31;
+231;CEA;Despesa;-96,67;Compras;PDA;17/06/2023 00:00;;False;2.0;17/05/2023;26/05/2023 15:31;
+283;Posto riviera;Despesa;-50,0;Transporte;C6;17/06/2023 00:00;;False;;;22/06/2023 22:14;
+284;autoposto victo;Despesa;-72,05;Transporte;C6;17/06/2023 00:00;;False;;;22/06/2023 22:14;
+285;airbnb;Despesa;-1294,76;Viagem;C6;17/06/2023 00:00;;False;;;22/06/2023 22:15;
+286;assai atacadista;Despesa;-215,15;Supermercado;C6;17/06/2023 00:00;;False;;;22/06/2023 22:15;
+258;Conect car;Despesa;-50,0;Transporte;PDA;18/06/2023 00:00;;False;;;22/06/2023 21:55;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/06/2023 00:00;;False;5.0;21/02/2023;;
+287;bella capri;Despesa;-169,61;Restaurante;C6;21/06/2023 00:00;;False;;;22/06/2023 22:16;
+264;Aplicação;Investimento;-1600,0;CDB;Itaú;21/06/2023 00:00;;True;;99Pay;22/06/2023 22:01;
+264;Aplicação;Investimento;1600,0;CDB;99Pay;21/06/2023 00:00;;True;;Itaú;22/06/2023 22:01;
+259;uber;Despesa;-12,91;Transporte;PDA;22/06/2023 00:00;;False;;;22/06/2023 21:55;
+300;autopostos;Despesa;-100,0;Transporte;C6;24/06/2023 00:00;;False;;;01/07/2023 21:54;
+301;sonda;Despesa;-17,45;Supermercado;C6;24/06/2023 00:00;;False;;;01/07/2023 21:55;
+289;Clubw;Despesa;-75,4;Supermercado;PDA;27/06/2023 00:00;;False;;;27/06/2023 15:32;
+290;onix;Despesa;-1000,0;Onix;Itaú;27/06/2023 00:00;;False;;;27/06/2023 15:34;
+291;Saae;Despesa;-129,73;Casa;Itaú;27/06/2023 00:00;;False;;;27/06/2023 15:34;
+292;Transferência;Transferência;2376,72;Transferência;PDA;27/06/2023 00:00;;False;;;27/06/2023 15:34;
+292;Transferência;Transferência;-2376,72;Transferência;Itaú;27/06/2023 00:00;;False;;;27/06/2023 15:34;
+293;Transferência;Transferência;2898,6;Transferência;C6;27/06/2023 00:00;;False;;;27/06/2023 15:35;
+293;Transferência;Transferência;-2898,6;Transferência;Itaú;27/06/2023 00:00;;False;;;27/06/2023 15:35;
+294;Salario;Receita;6640,92;Salário;Itaú;27/06/2023 00:00;;False;;;27/06/2023 15:35;
+295;Correção conta;Receita;764,86;Outros;Itaú;27/06/2023 00:00;;True;;;27/06/2023 15:36;
+302;Booking;Despesa;-272,98;Viagem;C6;28/06/2023 00:00;viagem sp;False;;;01/07/2023 21:57;
+303;indigo;Despesa;-110,0;Lazer;C6;28/06/2023 00:00;viagem sp;False;;;01/07/2023 21:57;
+296;rshop;Despesa;-4,4;Supermercado;Itaú;29/06/2023 00:00;;False;;;01/07/2023 21:42;
+304;cafe retro;Despesa;-6,0;Restaurante;C6;29/06/2023 00:00;viagem sp;False;;;01/07/2023 21:58;
+297;rshop;Despesa;-15,0;Viagem;Itaú;30/06/2023 00:00;viagem sp;False;;;01/07/2023 21:44;
+305;uber;Despesa;-33,09;Transporte;C6;30/06/2023 00:00;viagem sp;False;;;01/07/2023 22:00;
+306;nova guinea;Despesa;-12,0;Restaurante;C6;30/06/2023 00:00;;False;;;01/07/2023 22:02;
+307;uber;Despesa;-8,9;Transporte;C6;30/06/2023 00:00;viagem sp;False;;;01/07/2023 22:06;
+308;Transferência;Transferência;-42,54;Transferência;C6;30/06/2023 00:00;;False;;;01/07/2023 22:10;
+308;Transferência;Transferência;42,54;Transferência;Nubank;30/06/2023 00:00;;False;;;01/07/2023 22:10;
+309;quartoze bis;Despesa;-14,18;Restaurante;C6;30/06/2023 00:00;;False;;;01/07/2023 22:15;
+310;adega;Despesa;-21,47;Lazer;C6;30/06/2023 00:00;;False;;;01/07/2023 22:17;
+57;genera;Despesa;-36,58;Compras;PDA;01/07/2023 00:00;;False;6.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/07/2023 00:00;;False;6.0;01/02/2023;;
+188;Havancon (presente vinicius);Despesa;-56,15;Presentes;PDA;01/07/2023 00:00;;False;4.0;01/04/2023;03/05/2023 14:04;
+298;conectar ;Despesa;-50,0;Transporte;PDA;01/07/2023 00:00;;False;;;01/07/2023 21:45;
+311;hocca;Despesa;-32,87;Restaurante;C6;01/07/2023 00:00;viagem sp;False;;;01/07/2023 22:17;
+312;santander;Despesa;-35,0;Lazer;C6;01/07/2023 00:00;viagem sp;False;;;01/07/2023 22:18;
+313;jardim meio hectares;Despesa;-86,82;Restaurante;C6;01/07/2023 00:00;viagem sp;False;;;01/07/2023 22:18;
+314;coffe selfie;Despesa;-41,7;Restaurante;C6;01/07/2023 00:00;viagem sp;False;;;01/07/2023 22:19;
+315;emporio;Despesa;-41,08;Supermercado;C6;01/07/2023 00:00;viagem sp;False;;;01/07/2023 22:19;
+299;rshop;Despesa;-30,0;Viagem;Itaú;01/07/2023 00:00;viagem sp;False;;;01/07/2023 21:45;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/07/2023 00:00;;False;9.0;01/02/2023;;
+23;microsoft;Despesa;-29,99;TV,Internet,Telefone;C6;02/07/2023 00:00;;False;6.0;02/02/2023;;
+319;uber;Despesa;-35,93;Transporte;C6;02/07/2023 00:00;;False;;;08/07/2023 11:46;
+320;coco verde ibira;Despesa;-14,0;Supermercado;C6;02/07/2023 00:00;;False;;;08/07/2023 11:46;
+316;Nath facul;Despesa;-600,0;Educação;Itaú;03/07/2023 00:00;;False;;;08/07/2023 11:42;
+317;rshop-perto sa metro;Despesa;-20,0;Transporte;Itaú;03/07/2023 00:00;;False;;;08/07/2023 11:43;
+321;gympass;Despesa;-79,9;Saúde;C6;03/07/2023 00:00;;False;;;08/07/2023 11:47;
+322;tembici;Despesa;-9,8;Viagem;C6;03/07/2023 00:00;;False;;;08/07/2023 11:47;
+324;vb são paulo;Despesa;-105,4;Transporte;C6;03/07/2023 00:00;Viagem sp;False;;;08/07/2023 11:49;
+326;google;Despesa;-6,99;TV,Internet,Telefone;C6;06/07/2023 00:00;;False;;;08/07/2023 11:51;
+318;Bianca cobrança;Receita;90,0;Cobrança;Itaú;07/07/2023 00:00;;False;;;08/07/2023 11:43;
+323;mercearia da;Despesa;-10,59;Supermercado;C6;08/07/2023 00:00;coca;False;;;08/07/2023 11:48;
+325;spotify;Despesa;-19,9;TV,Internet,Telefone;C6;08/07/2023 00:00;;False;;;08/07/2023 11:50;
+327;presente fátima;Despesa;-80,0;Presentes;Nubank;08/07/2023 00:00;;False;;;08/07/2023 12:07;
+328;Tetro RJ;Despesa;-44,0;Lazer;C6;08/07/2023 00:00;rj;False;;;13/07/2023 09:12;
+329;Bondinho pao bondinho;Despesa;-53,34;Lazer;C6;08/07/2023 00:00;rj;False;1.0;08/07/2023;13/07/2023 09:13;
+22;youse;Despesa;-200,0;Serviços;C6;09/07/2023 00:00;;False;6.0;09/02/2023;;
+273;duas cerejas;Despesa;-28,38;Presentes;C6;11/07/2023 00:00;;False;1.0;11/07/2023;22/06/2023 22:07;
+330;Sonyplaystatn;Despesa;-53,1;Compras;C6;11/07/2023 00:00;;False;;;13/07/2023 09:24;
+333;tembici;Despesa;-37,9;Multas;C6;12/07/2023 00:00;bike itaú a bianca precisa cancelar;False;;;16/07/2023 20:40;
+201;vanusa teixeira d;Despesa;-93,33;Presentes;PDA;13/07/2023 00:00;;False;2.0;13/06/2023;14/05/2023 20:18;
+331;transf pai;Despesa;-180,0;Compras;Itaú;13/07/2023 00:00;PS5;False;;;16/07/2023 20:36;
+340;Transferência;Transferência;99,0;Transferência;Itaú;13/07/2023 00:00;;False;;;30/07/2023 11:38;
+340;Transferência;Transferência;-99,0;Transferência;Nubank;13/07/2023 00:00;;False;;;30/07/2023 11:38;
+334;emporio do norte;Despesa;-16,99;Supermercado;C6;14/07/2023 00:00;;False;;;16/07/2023 20:40;
+335;auto posto;Despesa;-100,0;Transporte;C6;14/07/2023 00:00;gasosa;False;;;16/07/2023 20:41;
+332;pix vinicius;Despesa;-20,0;Lazer;Itaú;14/07/2023 00:00;Futezinho mais churras;False;;;16/07/2023 20:36;
+336;Amazon Prime;Despesa;-14,9;TV,Internet,Telefone;C6;15/07/2023 00:00;;False;;;16/07/2023 20:41;
+231;CEA;Despesa;-96,67;Compras;PDA;17/07/2023 00:00;;False;3.0;17/05/2023;26/05/2023 15:31;
+338;estorno anuidade;Receita;33,75;Outros;PDA;17/07/2023 00:00;;False;;;30/07/2023 11:36;
+353;ifood golds aca;Despesa;-25,99;Presentes;C6;17/07/2023 00:00;presente bi;False;;;30/07/2023 12:07;
+354;fabioferreirade;Despesa;-40,0;Saúde;C6;18/07/2023 00:00;barbeiro;False;;;30/07/2023 12:40;
+355;pague menos;Despesa;-48,99;Saúde;C6;18/07/2023 00:00;sabonete facial;False;;;30/07/2023 12:41;
+356;minimal club;Despesa;-27,16;Compras;C6;20/07/2023 00:00;camiseta;False;1.0;20/07/2023;30/07/2023 12:44;
+48;anuidade;Despesa;-33,75;Multas;PDA;21/07/2023 00:00;;False;6.0;21/02/2023;;
+288;dafiti presente mae;Despesa;60,0;Presentes;C6;21/07/2023 00:00;;False;1.0;21/07/2023;22/06/2023 22:16;
+357;autoposto;Despesa;-90,0;Transporte;C6;21/07/2023 00:00;gasosa;False;;;30/07/2023 12:48;RJ
+358;autoposto victor;Despesa;-100,0;Viagem;C6;21/07/2023 00:00;;False;;;30/07/2023 12:49;RJ
+359;noar choperia;Despesa;-18,0;Restaurante;C6;21/07/2023 00:00;;False;;;30/07/2023 12:50;RJ
+360;uber trip;Despesa;-30,06;Viagem;C6;21/07/2023 00:00;aeroporto casa;False;;;30/07/2023 12:52;RJ
+361;uber;Despesa;-2,1;Transporte;C6;22/07/2023 00:00;;False;;;30/07/2023 12:53;RJ
+362;ifood o burgues;Despesa;-67,9;Restaurante;C6;22/07/2023 00:00;;False;;;30/07/2023 12:53;RJ
+363;skorpios;Despesa;-26,83;Supermercado;C6;22/07/2023 00:00;;False;;;30/07/2023 12:54;RJ
+364;pao e cia;Despesa;-20,5;Supermercado;C6;22/07/2023 00:00;;False;;;30/07/2023 12:54;RJ
+365;leonardo olympio;Despesa;-15,0;Supermercado;C6;22/07/2023 00:00;;False;;;30/07/2023 12:54;RJ
+366;cynthia;Despesa;-30,0;Restaurante;C6;22/07/2023 00:00;;False;;;30/07/2023 12:55;RJ
+367;chaieneantoniadej;Despesa;-40,0;Lazer;C6;22/07/2023 00:00;barraquinha;False;;;30/07/2023 12:58;RJ
+368;pinbank;Despesa;-3,9;Restaurante;C6;22/07/2023 00:00;;False;;;30/07/2023 12:58;RJ
+369;tempici;Despesa;-11,8;Lazer;C6;22/07/2023 00:00;;False;;;30/07/2023 12:59;RJ
+370;metro;Despesa;-27,6;Transporte;C6;23/07/2023 00:00;;False;;;30/07/2023 13:00;RJ
+371;tatiana silva;Despesa;-5,5;Supermercado;C6;23/07/2023 00:00;;False;;;30/07/2023 13:01;RJ
+372;uber;Despesa;-74,89;Transporte;C6;23/07/2023 00:00;;False;;;30/07/2023 13:01;RJ
+373;uber;Despesa;-8,93;Supermercado;C6;23/07/2023 00:00;;False;;;30/07/2023 13:01;RJ
+374;clk badalado;Despesa;-60,14;Lazer;C6;23/07/2023 00:00;;False;;;30/07/2023 13:02;RJ
+375;gio 54;Despesa;-21,4;Compras;C6;23/07/2023 00:00;dichav;False;;;30/07/2023 13:03;RJ
+376;ifood;Despesa;-50,9;Restaurante;C6;23/07/2023 00:00;;False;;;30/07/2023 13:03;RJ
+339;folha de ferias;Receita;1834,64;Salário;Itaú;24/07/2023 00:00;;False;;;30/07/2023 11:37;
+341;saque;Despesa;-150,0;Lazer;Itaú;24/07/2023 00:00;beregue jhonson;False;;;30/07/2023 11:39;
+377;uber;Despesa;-25,81;Transporte;C6;24/07/2023 00:00;;False;;;31/07/2023 11:18;RJ
+378;metro rj;Despesa;-13,8;Transporte;C6;24/07/2023 00:00;;False;;;31/07/2023 11:46;RJ
+379;barraca 61;Despesa;-77,0;Restaurante;C6;24/07/2023 00:00;;False;;;31/07/2023 11:47;RJ
+380;pão de açucar;Despesa;-11,06;Supermercado;C6;24/07/2023 00:00;;False;;;31/07/2023 11:47;RJ
+381;fabio drinks;Despesa;-21,0;Restaurante;C6;24/07/2023 00:00;;False;;;31/07/2023 11:47;RJ
+382;da pedra;Despesa;-24,0;Restaurante;C6;24/07/2023 00:00;;False;;;31/07/2023 11:48;RJ
+383;metro rj;Despesa;-27,6;Transporte;C6;24/07/2023 00:00;;False;;;31/07/2023 11:49;RJ
+342;bruno + gustavo;Despesa;-73,0;Restaurante;Itaú;25/07/2023 00:00;Compras na praia RJ;False;;;30/07/2023 11:41;
+384;empada chopp;Despesa;-25,0;Restaurante;C6;25/07/2023 00:00;;False;;;31/07/2023 11:49;RJ
+385;farmacia biscaya;Despesa;-7,99;Supermercado;C6;25/07/2023 00:00;;False;;;31/07/2023 11:49;RJ
+386;tembici;Despesa;-5,9;Lazer;C6;25/07/2023 00:00;;False;;;31/07/2023 11:51;RJ
+387;vanderson santos;Despesa;-15,0;Restaurante;C6;25/07/2023 00:00;;False;;;31/07/2023 11:51;RJ
+388;pão e companhia;Despesa;-6,5;Supermercado;C6;25/07/2023 00:00;;False;;;31/07/2023 11:51;RJ
+389;pao di copa;Despesa;-14,62;Supermercado;C6;26/07/2023 00:00;;False;;;31/07/2023 11:52;RJ
+390;metro rj;Despesa;-41,4;Transporte;C6;26/07/2023 00:00;;False;;;31/07/2023 11:53;RJ
+391;uber;Despesa;-44,45;Transporte;C6;26/07/2023 00:00;;False;;;31/07/2023 11:53;RJ
+392;sympla instituto;Despesa;-30,0;Lazer;C6;26/07/2023 00:00;;False;;;31/07/2023 11:54;RJ
+393;depto cultural;Despesa;-20,0;Lazer;C6;26/07/2023 00:00;;False;;;31/07/2023 11:54;RJ
+394;tembici;Despesa;-12,4;Lazer;C6;26/07/2023 00:00;bike itau;False;;;31/07/2023 11:55;RJ
+395;ifood;Despesa;-67,01;Restaurante;C6;26/07/2023 00:00;;False;;;31/07/2023 11:55;RJ
+343;Transferência;Transferência;910,68;Transferência;PDA;27/07/2023 00:00;pagamento pda;False;;;30/07/2023 11:42;
+343;Transferência;Transferência;-910,68;Transferência;Itaú;27/07/2023 00:00;pagamento pda;False;;;30/07/2023 11:42;
+344;folha de pagamento;Receita;5816,36;Salário;Itaú;27/07/2023 00:00;;False;;;30/07/2023 11:42;
+345;trans lucas;Despesa;-20,0;Restaurante;Itaú;27/07/2023 00:00;compras praia;False;;;30/07/2023 11:43;
+346;int ted 6f5624c0;Despesa;-1100,0;Investimento;Itaú;27/07/2023 00:00;investimento;True;;;30/07/2023 11:46;
+347;pix qrs;Despesa;-281,13;Casa;Itaú;27/07/2023 00:00;cpfl;False;;;30/07/2023 11:48;
+348;transf filippe;Despesa;-1000,0;Onix;Itaú;27/07/2023 00:00;onix;False;;;30/07/2023 11:51;
+349;Transferência;Transferência;3000,0;Transferência;C6 corrente;27/07/2023 00:00;;False;;;30/07/2023 11:57;
+349;Transferência;Transferência;-3000,0;Transferência;Itaú;27/07/2023 00:00;;False;;;30/07/2023 11:57;
+396;clubwine;Despesa;-75,4;Supermercado;C6;27/07/2023 00:00;;False;;;31/07/2023 11:57;RJ
+397;olivioantonioda;Despesa;-10,0;Restaurante;C6;27/07/2023 00:00;;False;;;31/07/2023 11:57;RJ
+398;sucos copa;Despesa;-12,0;Restaurante;C6;27/07/2023 00:00;;False;;;31/07/2023 11:58;RJ
+399;bruno amendoin;Despesa;-12,0;Restaurante;C6;27/07/2023 00:00;;False;;;31/07/2023 11:58;RJ
+400;ladelson gomes;Despesa;-10,0;Restaurante;C6;27/07/2023 00:00;;False;;;31/07/2023 11:59;RJ
+401;sol e mar;Despesa;-48,0;Lazer;C6;27/07/2023 00:00;;False;;;31/07/2023 11:59;RJ
+402;drogarias pacheco;Despesa;-56,99;Compras;C6;27/07/2023 00:00;;False;;;31/07/2023 11:59;RJ
+403;uber;Despesa;-7,95;Transporte;C6;27/07/2023 00:00;;False;;;31/07/2023 12:00;RJ
+417;Transferência;Transferência;-3035,22;Transferência;C6 corrente;27/07/2023 00:00;;False;;;31/07/2023 15:05;
+417;Transferência;Transferência;3035,22;Transferência;C6;27/07/2023 00:00;;False;;;31/07/2023 15:05;
+350;Restituição receita;Receita;2660,78;Outros;Itaú;28/07/2023 00:00;;False;;;30/07/2023 11:58;
+404;metro rj;Despesa;-27,6;Transporte;C6;28/07/2023 00:00;;False;;;31/07/2023 12:00;RJ
+405;tembici;Despesa;-5,9;Lazer;C6;28/07/2023 00:00;;False;;;31/07/2023 12:01;RJ
+406;tembici;Despesa;-5,9;Transporte;C6;28/07/2023 00:00;;False;;;31/07/2023 12:02;RJ
+407;tembici;Despesa;-105,0;Lazer;C6;28/07/2023 00:00;o custo real;False;;;31/07/2023 12:02;RJ
+408;amigosbar + thaismorais;Despesa;-6,9;Restaurante;C6;28/07/2023 00:00;;False;;;31/07/2023 12:03;RJ
+409;uber;Despesa;-13,29;Transporte;C6;28/07/2023 00:00;;False;;;31/07/2023 12:03;RJ
+410;classico urca;Despesa;-40,32;Restaurante;C6;28/07/2023 00:00;cafezinho;False;;;31/07/2023 12:04;RJ
+411;foto grafica;Despesa;-25,0;Compras;C6;28/07/2023 00:00;;False;;;31/07/2023 12:04;RJ
+412;pinbank qc 19;Despesa;-52,09;Restaurante;C6;28/07/2023 00:00;restaurante copacabana;False;;;31/07/2023 12:05;RJ
+413;ifood borda;Despesa;-52,4;Restaurante;C6;28/07/2023 00:00;pizza;False;;;31/07/2023 12:06;RJ
+414;Uber;Despesa;-28,71;Viagem;C6;29/07/2023 00:00;de volta pra casa;False;;;31/07/2023 12:07;RJ
+415;vb sao paulo;Despesa;-105,4;Viagem;C6;29/07/2023 00:00;;False;;;31/07/2023 12:08;RJ
+416;autoposto;Despesa;-50,0;Presentes;C6;29/07/2023 00:00;;False;;;31/07/2023 12:09;RJ
+351;saque;Despesa;-20,0;Viagem;Itaú;31/07/2023 00:00;busão;False;;;30/07/2023 11:58;
+421;pix wrs servico;Despesa;-131,09;Casa;Itaú;31/07/2023 00:00;saae;False;;;04/08/2023 09:35;[]
+420;Aplicação;Investimento;-2000,0;Tesouro Selic;Itaú;31/07/2023 00:00;;True;;Nuinvest;04/08/2023 09:34;[]
+420;Aplicação;Investimento;2000,0;Tesouro Selic;Nuinvest;31/07/2023 00:00;;True;;Nuinvest;04/08/2023 09:34;[]
+57;genera;Despesa;-36,58;Compras;PDA;01/08/2023 00:00;;False;7.0;01/02/2023;;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/08/2023 00:00;;False;7.0;01/02/2023;;
+61;peças onix mercado livre;Despesa;-33,3;Serviços;PDA;01/08/2023 00:00;;False;1.0;01/02/2023;;
+419;Nath;Despesa;-600,0;Educação;Itaú;01/08/2023 00:00;;False;;;04/08/2023 09:33;[]
+424;ifood bom appet;Despesa;-28,56;Supermercado;C6;01/08/2023 00:00;;False;;;08/08/2023 08:57;[]
+418;Mãe 170;Despesa;-170,0;Presentes;Itaú;02/08/2023 00:00;;False;;;04/08/2023 09:33;[]
+423;pix;Despesa;-50,0;Viagem;Itaú;03/08/2023 00:00;caixinha;False;;;04/08/2023 09:38;[]
+425;Amazon br;Despesa;-75,9;Saúde;C6;04/08/2023 00:00;protetor;False;;;08/08/2023 08:58;[]
+426;autoposto;Despesa;-100,0;Transporte;C6;04/08/2023 00:00;;False;;;08/08/2023 08:58;[]
+427;gympass;Despesa;-79,9;Saúde;C6;05/08/2023 00:00;;False;;;08/08/2023 08:58;[]
+428;spotify;Despesa;-19,9;TV,Internet,Telefone;C6;05/08/2023 00:00;;False;;;08/08/2023 08:59;[]
+429;pague menos;Despesa;-8,61;Presentes;C6;05/08/2023 00:00;remedios bi;False;;;08/08/2023 08:59;[]
+430;ingresso com;Despesa;-55,04;Lazer;C6;05/08/2023 00:00;;False;;;08/08/2023 09:00;[]
+431;multifran comercio de;Despesa;-17,0;Restaurante;C6;06/08/2023 00:00;bobs;False;;;08/08/2023 12:43;[]
+432;miniso;Despesa;-1,99;Supermercado;C6;06/08/2023 00:00;;False;;;08/08/2023 12:43;[]
+433;kopenhagenn;Despesa;-23,8;Restaurante;C6;06/08/2023 00:00;;False;;;08/08/2023 12:44;[]
+434;pq dom pedro;Despesa;-17,0;Transporte;C6;06/08/2023 00:00;;False;;;08/08/2023 12:44;[]
+435;pag realiza;Despesa;-12,0;Restaurante;C6;06/08/2023 00:00;;False;;;08/08/2023 12:46;[]
+452;bianca;Receita;90,0;Cobrança;Itaú;07/08/2023 00:00;;False;;;14/08/2023 18:38;[]
+329;Bondinho pao bondinho;Despesa;-53,34;Lazer;C6;08/08/2023 00:00;rj;False;2.0;08/07/2023;13/07/2023 09:13;
+436;Mp Clickbus;Despesa;-52,63;Transporte;C6;08/08/2023 00:00;presencial;False;;;14/08/2023 17:51;[]
+437;Supermercado Sonda;Despesa;-20,1;Supermercado;C6;08/08/2023 00:00;;False;;;14/08/2023 17:52;[]
+22;youse;Despesa;-200,0;Serviços;C6;09/08/2023 00:00;;False;7.0;09/02/2023;;
+438;Pag monster dog;Despesa;-6,5;Supermercado;C6;09/08/2023 00:00;;False;;;14/08/2023 17:52;[]
+439;milla salgados;Despesa;-3,0;Restaurante;C6;09/08/2023 00:00;;False;;;14/08/2023 17:53;[]
+440;Tbsb restaurante;Despesa;-70,0;Restaurante;C6;09/08/2023 00:00;Happy hour;False;;;14/08/2023 17:55;[]
+441;Uber;Despesa;-21,66;Transporte;C6;09/08/2023 00:00;;False;;;14/08/2023 17:56;[]
+442;Vb Sao Paulo;Despesa;-52,7;Transporte;C6;09/08/2023 00:00;;False;;;14/08/2023 17:56;[]
+453;rshop-auttar;Despesa;-4,4;Supermercado;Itaú;09/08/2023 00:00;;False;;;14/08/2023 18:39;[]
+443;alemao lanches;Despesa;-15,5;Restaurante;C6;10/08/2023 00:00;;False;;;14/08/2023 18:32;[]
+273;duas cerejas;Despesa;-28,38;Presentes;C6;11/08/2023 00:00;;False;2.0;11/07/2023;22/06/2023 22:07;
+444;Ifood;Despesa;-44,05;Restaurante;C6;11/08/2023 00:00;;False;;;14/08/2023 18:33;[]
+445;Comercial de comb;Despesa;-50,0;Transporte;C6;11/08/2023 00:00;gasosa;False;;;14/08/2023 18:33;[]
+446;Sony playstation;Despesa;-53,1;TV,Internet,Telefone;C6;11/08/2023 00:00;;False;;;14/08/2023 18:34;[]
+447;Tembici;Despesa;-37,9;Transporte;C6;12/08/2023 00:00;É a porra da bike?;False;;;14/08/2023 18:34;[]
+448;SOrvetao;Despesa;-9,57;Restaurante;C6;12/08/2023 00:00;;False;;;14/08/2023 18:35;[]
+201;vanusa teixeira d;Despesa;-93,33;Presentes;PDA;13/08/2023 00:00;;False;3.0;13/06/2023;14/05/2023 20:18;
+449;2 cerejas;Despesa;-39,56666667;Presentes;C6;13/08/2023 00:00;;False;1.0;13/08/2023;14/08/2023 18:36;[]
+450;mc donals;Despesa;-18,8;Restaurante;C6;14/08/2023 00:00;;False;;;14/08/2023 18:36;[]
+451;Autoposto;Despesa;-100,0;Transporte;C6;14/08/2023 00:00;;False;;;14/08/2023 18:36;[]
+454;tim;Despesa;-65,16;TV,Internet,Telefone;Itaú;14/08/2023 00:00;;False;;;14/08/2023 18:39;[]
+457;Amazon prime ;Despesa;-14,9;TV,Internet,Telefone;C6;14/08/2023 00:00;;False;;;21/08/2023 15:53;[]
+455;pix alisson;Despesa;-35,0;Lazer;Itaú;14/08/2023 00:00;;False;;;14/08/2023 18:40;[]
+456;PIX;Despesa;-180,0;Compras;Itaú;14/08/2023 00:00;PS5;False;;;14/08/2023 18:40;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/08/2023 00:00;parcelamento;False;1.0;16/08/2023;30/07/2023 12:06;
+458;amazon com br;Despesa;-46,79;Saúde;C6;16/08/2023 00:00;protetor;False;;;21/08/2023 15:54;[]
+459;bar da 13;Despesa;-4,0;Restaurante;C6;17/08/2023 00:00;;False;;;21/08/2023 15:54;[]
+460;autoposto ekopark;Despesa;-30,0;Transporte;C6;18/08/2023 00:00;;False;;;21/08/2023 15:55;[]
+461;assistencia tecnic;Despesa;-12,0;Presentes;C6;19/08/2023 00:00;;False;;;21/08/2023 15:55;[]
+356;minimal club;Despesa;-27,16;Compras;C6;20/08/2023 00:00;camiseta;False;2.0;20/07/2023;30/07/2023 12:44;
+462;centro autom;Despesa;-96,0;Lazer;C6;20/08/2023 00:00;conserto;False;;;21/08/2023 15:58;[]
+463;autoposto victor;Despesa;-100,0;Transporte;C6;20/08/2023 00:00;;False;;;21/08/2023 15:59;[]
+464;China in box;Despesa;-71,8;Restaurante;C6;20/08/2023 00:00;;False;;;21/08/2023 16:00;[]
+48;anuidade;Despesa;-33,75;Multas;PDA;21/08/2023 00:00;;False;7.0;21/02/2023;;
+288;dafiti presente mae;Despesa;60,0;Presentes;C6;21/08/2023 00:00;;False;2.0;21/07/2023;22/06/2023 22:16;
+465;PIX selma;Despesa;-30,0;Supermercado;Itaú;21/08/2023 00:00;mercado;False;;;21/08/2023 16:06;[]
+466;pix pai;Despesa;-40,0;Viagem;Itaú;21/08/2023 00:00;Pedagios;False;;;21/08/2023 16:07;['RJ']
+468;saae;Despesa;-114,41;Casa;Itaú;23/08/2023 00:00;;False;;;25/08/2023 08:29;[]
+467;salariao;Receita;6666,49;Salário;Itaú;25/08/2023 00:00;;False;;;25/08/2023 08:28;[]
+469;CPFL;Despesa;-283,62;Casa;Itaú;25/08/2023 00:00;;False;;;25/08/2023 08:39;[]
+470;Onix;Despesa;-1000,0;Onix;Itaú;25/08/2023 00:00;;False;;;25/08/2023 08:39;[]
+471;Aplicação;Investimento;-1200,0;Tesouro Selic;Itaú;25/08/2023 00:00;;True;;Nuinvest;25/08/2023 08:40;[]
+471;Aplicação;Investimento;1200,0;Tesouro Selic;Nuinvest;25/08/2023 00:00;;True;;Nuinvest;25/08/2023 08:40;[]
+473;Transferência;Transferência;2890,19;Transferência;C6;26/08/2023 00:00;;False;;;27/08/2023 11:27;
+472;pix alisson;Despesa;-14,0;Lazer;Itaú;26/08/2023 00:00;fut;False;;;27/08/2023 11:26;[]
+474;Transferência;Transferência;539,13;Transferência;PDA;26/08/2023 00:00;;False;;;27/08/2023 11:27;
+473;Transferência;Transferência;-2890,19;Transferência;Itaú;26/08/2023 00:00;;False;;;27/08/2023 11:27;
+474;Transferência;Transferência;-539,13;Transferência;Itaú;26/08/2023 00:00;;False;;;27/08/2023 11:27;
+475;ifood;Despesa;-79,89;Restaurante;C6;29/08/2023 00:00;my sushi;False;;;30/08/2023 10:19;[]
+482;pix andreza;Despesa;-10,0;Supermercado;Itaú;29/08/2023 00:00;trufas;False;;;04/09/2023 09:08;[]
+481;CPFL;Despesa;-278,07;Compras;Itaú;31/08/2023 00:00;;False;;;04/09/2023 09:08;[]
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/09/2023 00:00;;False;8.0;01/02/2023;;
+476;Centauro BR;Despesa;-79,38;Compras;C6;01/09/2023 00:00;chuteira;False;1.0;01/09/2023;31/08/2023 14:39;[]
+477;transf bianca;Despesa;-15,0;Presentes;Itaú;01/09/2023 00:00;uber;False;;;04/09/2023 09:05;[]
+484;autopostovictor;Despesa;-50,0;Transporte;C6;01/09/2023 00:00;;False;;;04/09/2023 12:35;[]
+485;arena garden;Despesa;-30,0;Lazer;C6;01/09/2023 00:00;;False;;;04/09/2023 12:36;[]
+498;Airbnb hm93tyswpj;Despesa;-306,97;Viagem;C6;01/09/2023 00:00;;True;;;10/09/2023 21:10;[]
+486;mundo beer;Despesa;-36,3;Lazer;C6;02/09/2023 00:00;;False;;;04/09/2023 12:36;[]
+487;diskbreja;Despesa;-10,99;Supermercado;C6;02/09/2023 00:00;;False;;;04/09/2023 12:37;[]
+488;oxxo martinelli;Despesa;-37,55;Supermercado;C6;02/09/2023 00:00;bebidas;False;;;04/09/2023 12:38;[]
+489;Cafe imperial;Despesa;-22,0;Restaurante;C6;02/09/2023 00:00;maravilha;False;;;04/09/2023 12:40;[]
+499;autoposto;Despesa;-160,7;Viagem;C6;02/09/2023 00:00;viagem;True;;;10/09/2023 21:13;[]
+500;gislenemacedo;Despesa;-55,0;Lazer;C6;02/09/2023 00:00;vodkas;False;;;10/09/2023 21:14;[]
+491;Snacks;Despesa;-30,0;Lazer;C6;03/09/2023 00:00;;False;;;04/09/2023 12:42;[]
+492;Uber;Despesa;-12,97;Transporte;C6;03/09/2023 00:00;;False;;;04/09/2023 12:43;[]
+493;Arlene bianca;Despesa;-10,0;Supermercado;C6;03/09/2023 00:00;;False;;;04/09/2023 12:43;[]
+494;camarão express;Despesa;-5,0;Supermercado;C6;03/09/2023 00:00;;False;;;04/09/2023 12:44;[]
+501;autoposto;Despesa;-72,27;Viagem;C6;03/09/2023 00:00;;True;;;10/09/2023 21:16;[]
+478;saque;Despesa;-40,0;Outros;Itaú;04/09/2023 00:00;saque;False;;;04/09/2023 09:06;[]
+483;Amazon MarketPlace;Despesa;-26,9;Saúde;C6;04/09/2023 00:00;bruxismo;False;;;04/09/2023 10:39;[]
+490;Tokyo;Despesa;-190,0;Lazer;C6;04/09/2023 00:00;;False;;;04/09/2023 12:42;[]
+479;tim;Despesa;-65,16;TV,Internet,Telefone;Itaú;04/09/2023 00:00;;False;;;04/09/2023 09:06;[]
+480;nath transf;Despesa;-600,0;Educação;Itaú;04/09/2023 00:00;;False;;;04/09/2023 09:06;[]
+497;Pedagios Pai;Despesa;-84,0;Outros;Itaú;04/09/2023 00:00;;True;;;10/09/2023 21:08;[]
+502;Fabio ferreirade;Despesa;-40,0;Saúde;C6;04/09/2023 00:00;;False;;;10/09/2023 21:16;[]
+503;ifood;Despesa;-39,9;Restaurante;C6;04/09/2023 00:00;;False;;;10/09/2023 21:17;[]
+504;clickbus;Despesa;-52,63;Transporte;C6;04/09/2023 00:00;;False;;;10/09/2023 21:18;[]
+505;Gympass;Despesa;-79,9;Saúde;C6;05/09/2023 00:00;;False;;;10/09/2023 21:19;[]
+506;Spotify;Despesa;-21,9;TV,Internet,Telefone;C6;05/09/2023 00:00;;False;;;10/09/2023 21:19;[]
+507;vb são pauloo;Despesa;-52,7;Transporte;C6;05/09/2023 00:00;;False;;;10/09/2023 21:20;[]
+508;grsa ilha;Despesa;-8,0;Supermercado;C6;05/09/2023 00:00;;False;;;10/09/2023 21:21;[]
+495;Auttar loja;Despesa;-8,8;Transporte;Itaú;05/09/2023 00:00;;False;;;10/09/2023 21:06;[]
+496;Bianca transferencia;Receita;90,0;Cobrança;Itaú;06/09/2023 00:00;;False;;;10/09/2023 21:07;[]
+509;Google storage;Despesa;-6,99;TV,Internet,Telefone;C6;07/09/2023 00:00;;False;;;10/09/2023 21:21;[]
+510;Bar da 13;Despesa;-49,0;Lazer;C6;07/09/2023 00:00;;False;;;10/09/2023 21:22;[]
+329;Bondinho pao bondinho;Despesa;-53,34;Lazer;C6;08/09/2023 00:00;rj;False;3.0;08/07/2023;13/07/2023 09:13;
+511;madruga lanches;Despesa;-24,0;Restaurante;C6;08/09/2023 00:00;;False;;;10/09/2023 21:22;[]
+512;Viagem são paulo;Despesa;-231,66;Viagem;Nubank;08/09/2023 00:00;;False;;;10/09/2023 21:25;[]
+22;youse;Despesa;-200,0;Serviços;C6;09/09/2023 00:00;;False;8.0;09/02/2023;;
+513;Pagamento viagem MV;Receita;231,66;Cobrança;Nubank;10/09/2023 00:00;;True;;;10/09/2023 21:26;[]
+514;transf ps5;Despesa;-220,0;Compras;Nubank;10/09/2023 00:00;;False;;;10/09/2023 21:45;[]
+273;duas cerejas;Despesa;-28,38;Presentes;C6;11/09/2023 00:00;;False;3.0;11/07/2023;22/06/2023 22:07;
+515;Churrasco familia;Despesa;-200,0;Lazer;Nubank;11/09/2023 00:00;;False;;;11/09/2023 15:12;[]
+517;clickbus;Despesa;-97,1;Transporte;C6;11/09/2023 00:00;;False;;;13/09/2023 10:29;[]
+518;tembici sa;Despesa;-37,9;Multas;C6;12/09/2023 00:00;BIKE ITAU;False;;;13/09/2023 10:33;[]
+519;grsa gr club;Despesa;-10,0;Restaurante;C6;12/09/2023 00:00;coxinha rodoviaria;False;;;13/09/2023 10:34;[]
+520;madero;Despesa;-38,4;Restaurante;C6;12/09/2023 00:00;;False;;;13/09/2023 10:34;[]
+531;auttar loja;Despesa;-8,8;Transporte;Itaú;12/09/2023 00:00;metro;False;;;22/09/2023 10:20;[]
+449;2 cerejas;Despesa;-39,56666667;Presentes;C6;13/09/2023 00:00;;False;2.0;13/08/2023;14/08/2023 18:36;[]
+516;Sonyplaystation;Despesa;-341,19;Compras;C6;13/09/2023 00:00;;True;;;13/09/2023 10:29;[]
+532;caixinha;Despesa;-50,0;Viagem;Itaú;13/09/2023 00:00;;False;;;22/09/2023 10:21;[]
+521;amazonprimebr;Despesa;-14,9;TV,Internet,Telefone;C6;15/09/2023 00:00;;False;;;22/09/2023 10:11;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/09/2023 00:00;parcelamento;False;2.0;16/08/2023;30/07/2023 12:06;
+522;ifood ;Despesa;-18,24;Restaurante;C6;16/09/2023 00:00;;False;;;22/09/2023 10:12;[]
+523;tatianeoliveira;Despesa;-35,5;Restaurante;C6;16/09/2023 00:00;;False;;;22/09/2023 10:12;[]
+524;autposto;Despesa;-50,0;Transporte;C6;17/09/2023 00:00;;False;;;22/09/2023 10:12;[]
+525;uber;Despesa;-13,33;Transporte;C6;17/09/2023 00:00;;False;;;22/09/2023 10:13;[]
+526;sushi;Despesa;-39,9;Restaurante;C6;18/09/2023 00:00;;False;;;22/09/2023 10:13;[]
+527;clickbus;Despesa;-52,63;Transporte;C6;18/09/2023 00:00;;False;;;22/09/2023 10:14;[]
+533;pix transf camila;Receita;20,0;Cobrança;Itaú;18/09/2023 00:00;;False;;;22/09/2023 10:22;[]
+528;vb sçao paulo;Despesa;-52,7;Transporte;C6;19/09/2023 00:00;;False;;;22/09/2023 10:14;[]
+534;auttar;Despesa;-8,8;Transporte;Itaú;19/09/2023 00:00;;False;;;22/09/2023 10:27;[]
+356;minimal club;Despesa;-27,16;Compras;C6;20/09/2023 00:00;camiseta;False;3.0;20/07/2023;30/07/2023 12:44;
+529;sonda supermercado;Despesa;-5,99;Supermercado;C6;20/09/2023 00:00;;False;;;22/09/2023 10:14;[]
+530;diskbreja;Despesa;-27,48;Lazer;C6;20/09/2023 00:00;;False;;;22/09/2023 10:15;[]
+48;anuidade;Despesa;-33,75;Multas;PDA;21/09/2023 00:00;;False;8.0;21/02/2023;;
+536;totalpass;Despesa;-59,9;Saúde;C6;21/09/2023 00:00;;False;;;23/09/2023 17:54;[]
+535;int licenc;Despesa;-155,23;Serviços;Itaú;21/09/2023 00:00;licenciamento;False;;;22/09/2023 10:27;[]
+537;lava rapido;Despesa;-55,0;Serviços;C6;22/09/2023 00:00;;False;;;23/09/2023 17:55;[]
+538;lopes maciel;Despesa;-335,09;Restaurante;C6;22/09/2023 00:00;Santa tereza;True;;;24/09/2023 13:40;[]
+539;Santa teresa;Despesa;-139,12;Lazer;Nubank;22/09/2023 00:00;;False;;;24/09/2023 13:42;[]
+540;BK;Despesa;-29,9;Restaurante;C6;23/09/2023 00:00;;False;;;24/09/2023 13:45;[]
+541;autopostocidadedo;Despesa;-100,0;Transporte;C6;23/09/2023 00:00;;False;;;24/09/2023 13:46;[]
+542;elite group;Despesa;-11,0;Supermercado;C6;23/09/2023 00:00;;False;;;24/09/2023 13:46;[]
+543;Robsonoliveiradas;Despesa;-46,0;Supermercado;C6;24/09/2023 00:00;Paletas mexicanas;False;;;24/09/2023 13:47;[]
+544;Seg transacao protegida;Despesa;-3,9;Serviços;Itaú;25/09/2023 00:00;;False;;;27/09/2023 08:44;[]
+545;pix qrs agp;Despesa;-3611,12;Compras;Itaú;25/09/2023 00:00;Celular bianca;True;;;27/09/2023 08:44;[]
+546;pix qrs me gusta;Despesa;-24,9;Supermercado;Itaú;25/09/2023 00:00;;False;;;27/09/2023 08:45;[]
+547;cacau;Despesa;-9,9;Supermercado;Itaú;25/09/2023 00:00;;False;;;27/09/2023 08:45;[]
+548;pix transf alisson;Despesa;-15,0;Saúde;Itaú;25/09/2023 00:00;;False;;;27/09/2023 08:46;[]
+551;souza xavier inndaiatuba;Despesa;-118,07;Restaurante;C6;27/09/2023 00:00;quisque parque;False;;;27/09/2023 08:52;[]
+552;clubew;Despesa;-37,7;Supermercado;C6;27/09/2023 00:00;;False;;;27/09/2023 08:53;[]
+549;Folha de participação;Receita;9863,17;Salário;Itaú;27/09/2023 00:00;;False;;;27/09/2023 08:47;[]
+550;Pagamento mensal;Receita;6796,54;Salário;Itaú;27/09/2023 00:00;;False;;;27/09/2023 08:47;[]
+554;Transferência;Transferência;469,25;Transferência;PDA;27/09/2023 00:00;;False;;;27/09/2023 09:17;
+553;pix qrs companhia;Despesa;-365,9;Casa;Itaú;27/09/2023 00:00;;False;;;27/09/2023 09:17;[]
+555;Transferência;Transferência;2956,83;Transferência;C6;27/09/2023 00:00;;False;;;27/09/2023 09:17;
+554;Transferência;Transferência;-469,25;Transferência;Itaú;27/09/2023 00:00;;False;;;27/09/2023 09:17;
+555;Transferência;Transferência;-2956,83;Transferência;Itaú;27/09/2023 00:00;;False;;;27/09/2023 09:17;
+556;se pague;Despesa;-1300,0;Investimento;Itaú;27/09/2023 00:00;;True;;;27/09/2023 09:18;[]
+557;onix;Despesa;-1000,0;Onix;Itaú;27/09/2023 00:00;;False;;;27/09/2023 09:32;[]
+560;autopostovictor;Despesa;-20,0;Transporte;C6;27/09/2023 00:00;;False;;;02/10/2023 10:36;[]
+558;antecipação onix;Despesa;-5000,0;Onix;Itaú;27/09/2023 00:00;;False;;;27/09/2023 09:33;[]
+559;pix qrs;Despesa;-114,44;Casa;Itaú;27/09/2023 00:00;saae;False;;;27/09/2023 09:33;[]
+1092;Aplicação;Investimento;-1300,0;Tesouro Selic;Nubank;27/09/2023 00:00;;False;;;29/03/2024 14:49;
+1092;Aplicação;Investimento;1300,0;Tesouro Selic;Nuinvest;27/09/2023 00:00;;False;;;29/03/2024 14:49;
+561;clubew;Despesa;-37,7;Supermercado;C6;29/09/2023 00:00;;False;;;02/10/2023 10:38;[]
+563;RSCSS-BAZAR;Despesa;-49,5;Saúde;C6;29/09/2023 00:00;;False;;;02/10/2023 10:46;[]
+576;bazar ponto;Despesa;-49,5;Restaurante;Itaú;29/09/2023 00:00;;False;;;08/10/2023 20:22;[]
+562;autopostovictor;Despesa;-50,0;Transporte;C6;30/09/2023 00:00;;False;;;02/10/2023 10:38;[]
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/10/2023 00:00;;False;9.0;01/02/2023;;
+476;Centauro BR;Despesa;-79,38;Compras;C6;01/10/2023 00:00;chuteira;False;2.0;01/09/2023;31/08/2023 14:39;[]
+574;IOF ;Despesa;-14,62;Multas;Itaú;03/10/2023 00:00;;False;;;08/10/2023 20:19;[]
+575;bruno pix;Despesa;-200,0;Lazer;Itaú;03/10/2023 00:00;Despedida ze;False;;;08/10/2023 20:20;[]
+569;clickbus;Despesa;-52,63;Transporte;C6;04/10/2023 00:00;;False;;;08/10/2023 20:15;[]
+570;Carneiro multimarcar;Despesa;-99,68;Compras;C6;04/10/2023 00:00;Camisa polo CK;False;1.0;04/10/2023;08/10/2023 20:15;[]
+565;GRSA quiosque;Despesa;-12,0;Lazer;C6;05/10/2023 00:00;;False;;;08/10/2023 20:13;[]
+566;VB Sao paulo;Despesa;-52,7;Transporte;C6;05/10/2023 00:00;;False;;;08/10/2023 20:13;[]
+567;Spotify;Despesa;-21,9;TV,Internet,Telefone;C6;05/10/2023 00:00;;False;;;08/10/2023 20:14;[]
+568;cafe na medida;Despesa;-6,5;Supermercado;C6;05/10/2023 00:00;;False;;;08/10/2023 20:14;[]
+573;Pix transf bianca;Receita;130,0;Cobrança;Itaú;05/10/2023 00:00;;False;;;08/10/2023 20:18;[]
+564;google;Despesa;-6,99;TV,Internet,Telefone;C6;06/10/2023 00:00;;False;;;08/10/2023 20:12;[]
+571;transf nathalia;Despesa;-600,0;Educação;Itaú;06/10/2023 00:00;;False;;;08/10/2023 20:17;[]
+572;Bianca;Receita;180,0;Cobrança;Itaú;06/10/2023 00:00;;False;;;08/10/2023 20:18;[]
+577;ifood sushi;Despesa;-101,8;Restaurante;C6;08/10/2023 00:00;;False;;;19/10/2023 21:32;[]
+22;youse;Despesa;-200,0;Serviços;C6;09/10/2023 00:00;;False;9.0;09/02/2023;;
+578;Autoposto;Despesa;-100,0;Transporte;C6;09/10/2023 00:00;;False;;;19/10/2023 21:33;[]
+602;Food-light;Despesa;-53,5;Presentes;Itaú;09/10/2023 00:00;;False;;;19/10/2023 21:58;[]
+579;Pague menos;Despesa;-59,98;Saúde;C6;10/10/2023 00:00;;False;;;19/10/2023 21:34;[]
+580;Alpehaus;Despesa;-300,0;Viagem;C6;11/10/2023 00:00;;False;;;19/10/2023 21:35;[]
+603;Folha de férias;Receita;1917,76;Salário;Itaú;11/10/2023 00:00;;False;;;19/10/2023 21:58;[]
+581;Manutenção carro;Despesa;-155,0;Serviços;C6;12/10/2023 00:00;;False;1.0;12/10/2023;19/10/2023 21:36;[]
+616;Medicação cllara;Despesa;-165,0;Lazer;Nubank;12/10/2023 00:00;;False;;;30/10/2023 09:11;[]
+449;2 cerejas;Despesa;-39,56666667;Presentes;C6;13/10/2023 00:00;;False;3.0;13/08/2023;14/08/2023 18:36;[]
+582;Autoposto;Despesa;-181,65;Viagem;C6;13/10/2023 00:00;;False;;;19/10/2023 21:37;[]
+583;Pastel maluf;Despesa;-80,0;Restaurante;C6;13/10/2023 00:00;;False;;;19/10/2023 21:37;[]
+584;Pousada Openhaus;Despesa;-1450,0;Viagem;C6;13/10/2023 00:00;Deu errado, é pra eu receber esse valor de volta;True;;;19/10/2023 21:38;[]
+585;Magia do chocolate;Despesa;-14,0;Restaurante;C6;13/10/2023 00:00;;False;;;19/10/2023 21:39;[]
+586;Restaurante Sexta;Despesa;-264,76;Restaurante;C6;13/10/2023 00:00;Forneria;False;;;19/10/2023 21:39;[]
+604;Transferência;Transferência;2000,0;Transferência;C6 corrente;13/10/2023 00:00;;False;;;19/10/2023 21:59;
+604;Transferência;Transferência;-2000,0;Transferência;Itaú;13/10/2023 00:00;;False;;;19/10/2023 21:59;
+587;Artesanal chocolate;Despesa;-9,0;Supermercado;C6;14/10/2023 00:00;;False;;;19/10/2023 21:40;[]
+588;Cantina Nona Mimi;Despesa;-146,41;Restaurante;C6;14/10/2023 00:00;;False;;;19/10/2023 21:41;[]
+589;Mariomericoda;Despesa;-239,73;Restaurante;C6;14/10/2023 00:00;Fondue;False;;;19/10/2023 21:42;[]
+590;Thomas Jose Elias;Despesa;-6,0;Supermercado;C6;14/10/2023 00:00;;False;;;19/10/2023 21:43;[]
+591;Amazonprime;Despesa;-14,9;TV,Internet,Telefone;C6;15/10/2023 00:00;;False;;;19/10/2023 21:43;[]
+592;Pousada Cantinho da Se;Despesa;-331,8333333;Viagem;C6;15/10/2023 00:00;;False;1.0;15/10/2023;19/10/2023 21:44;[]
+593;Mercadinho nova;Despesa;-72,0;Viagem;C6;15/10/2023 00:00;pizza;False;;;19/10/2023 21:45;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/10/2023 00:00;parcelamento;False;3.0;16/08/2023;30/07/2023 12:06;
+594;Pousada Cantinho da Se;Despesa;-157,5;Viagem;C6;16/10/2023 00:00;;False;1.0;16/10/2023;19/10/2023 21:46;[]
+595;Queijo Cremoso;Despesa;-47,0;Supermercado;C6;16/10/2023 00:00;;False;;;19/10/2023 21:47;[]
+596;ptesentes bianca;Despesa;-46,5;Supermercado;C6;16/10/2023 00:00;;True;;;19/10/2023 21:48;[]
+597;Chocolates da Lu;Despesa;-25,9;Supermercado;C6;16/10/2023 00:00;;False;;;19/10/2023 21:48;[]
+598;Posto nova Era;Despesa;-50,0;Viagem;C6;16/10/2023 00:00;Gasosa;False;;;19/10/2023 21:49;[]
+605;;Despesa;-1000,0;Investimento;Itaú;16/10/2023 00:00;;True;;;19/10/2023 22:00;[]
+599;Pag*teclab;Despesa;-285,0;Saúde;C6;17/10/2023 00:00;Veterinario clara;False;;;19/10/2023 21:50;[]
+600;Supermercado Sonda;Despesa;-129,105;Supermercado;C6;17/10/2023 00:00;;False;1.0;17/10/2023;19/10/2023 21:51;[]
+601;Autoposto Cidadedo;Despesa;-100,0;Transporte;C6;18/10/2023 00:00;;False;;;19/10/2023 21:51;[]
+617;Kleiton;Despesa;-250,0;Saúde;Nubank;18/10/2023 00:00;Anestesista;False;;;30/10/2023 09:19;[]
+1094;Resgate;Investimento;-864,42;CDB;99Pay;18/10/2023 00:00;;False;;;29/03/2024 15:04;
+1094;Resgate;Investimento;864,42;CDB;Nubank;18/10/2023 00:00;;False;;;29/03/2024 15:04;
+625;Bianca;Receita;546,0;Cobrança;Itaú;20/10/2023 00:00;;False;;;30/10/2023 09:27;[]
+48;anuidade;Despesa;-33,75;Multas;PDA;21/10/2023 00:00;;False;9.0;21/02/2023;;
+606;Total Pass;Despesa;-82,58;Saúde;C6;21/10/2023 00:00;;False;;;30/10/2023 08:57;[]
+607;Santa Adega;Despesa;-68,06;Lazer;C6;21/10/2023 00:00;;False;;;30/10/2023 08:57;[]
+608;Transferência;Transferência;-41,29;Transferência;C6;21/10/2023 00:00;;False;;;30/10/2023 08:58;
+608;Transferência;Transferência;41,29;Transferência;Nubank;21/10/2023 00:00;;False;;;30/10/2023 08:58;
+639;edson roberto;Despesa;-15,0;Supermercado;Nubank;21/10/2023 00:00;;False;;;09/11/2023 20:00;[]
+609;Vans outlet;Despesa;-79,32666667;Compras;C6;22/10/2023 00:00;;False;1.0;22/10/2023;30/10/2023 08:59;[]
+610;Calvin Klein;Despesa;-75,6;Compras;C6;22/10/2023 00:00;;False;1.0;22/10/2023;30/10/2023 08:59;[]
+611;Harley;Despesa;-93,768;Compras;C6;22/10/2023 00:00;;False;1.0;22/10/2023;30/10/2023 09:00;[]
+612;Puma;Despesa;-115,0;Compras;C6;22/10/2023 00:00;;False;1.0;22/10/2023;30/10/2023 09:01;[]
+626;Caixinha;Despesa;-50,0;Viagem;Itaú;23/10/2023 00:00;;False;;;30/10/2023 10:29;[]
+628;Puma;Despesa;-119,9;Compras;Itaú;23/10/2023 00:00;;False;;;30/10/2023 10:30;[]
+627;Aplicação;Investimento;-500,0;CDB;Itaú;23/10/2023 00:00;;True;;C6Invest;30/10/2023 10:30;[]
+627;Aplicação;Investimento;500,0;CDB;C6Invest;23/10/2023 00:00;;True;;C6Invest;30/10/2023 10:30;[]
+629;Seguro;Despesa;-3,9;Serviços;Itaú;25/10/2023 00:00;;False;;;30/10/2023 10:31;[]
+613;Clubwine;Despesa;-75,4;Supermercado;C6;27/10/2023 00:00;;False;;;30/10/2023 09:02;[]
+614;bar da 13;Despesa;-28,0;Lazer;C6;27/10/2023 00:00;;False;;;30/10/2023 09:04;[]
+618;Transferência;Transferência;2472,84;Transferência;C6;27/10/2023 00:00;;False;;;30/10/2023 09:20;
+618;Transferência;Transferência;-2472,84;Transferência;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:20;
+619;Onix;Despesa;-1000,0;Onix;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:21;[]
+621;CPFL;Despesa;-439,9;Casa;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:22;[]
+622;SAAE;Despesa;-166,87;Casa;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:23;[]
+623;PS5;Despesa;-180,0;Compras;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:24;[]
+630;Transferência;Transferência;469,25;Transferência;PDA;27/10/2023 00:00;;False;;;30/10/2023 10:34;
+624;Salario;Receita;7547,71;Salário;Itaú;27/10/2023 00:00;;False;;;30/10/2023 09:24;[]
+630;Transferência;Transferência;-469,25;Transferência;Itaú;27/10/2023 00:00;;False;;;30/10/2023 10:34;
+620;Aplicação;Investimento;-1300,0;Tesouro Selic;Itaú;27/10/2023 00:00;;True;;Nuinvest;30/10/2023 09:22;[]
+620;Aplicação;Investimento;1300,0;Tesouro Selic;Nuinvest;27/10/2023 00:00;;True;;Nuinvest;30/10/2023 09:22;[]
+615;autopostocidade;Despesa;-100,0;Transporte;C6;28/10/2023 00:00;;False;;;30/10/2023 09:04;[]
+633;Food light;Despesa;-40,0;Supermercado;C6;30/10/2023 00:00;marmitas;False;;;09/11/2023 19:53;[]
+634;Pague menos;Despesa;-79,47;Saúde;C6;30/10/2023 00:00;;False;;;09/11/2023 19:53;[]
+635;Clickbus;Despesa;-97,0;Transporte;C6;30/10/2023 00:00;;False;;;09/11/2023 19:54;[]
+631;Niver madalena;Despesa;-75,0;Lazer;Itaú;30/10/2023 00:00;;False;;;30/10/2023 10:34;[]
+636;Lanchonete + bolo;Despesa;-40,8;Restaurante;C6;31/10/2023 00:00;;False;;;09/11/2023 19:55;[]
+637;tembici;Despesa;-4,39;Transporte;C6;31/10/2023 00:00;;False;;;09/11/2023 19:56;[]
+638;Bandeira burguer;Despesa;-26,0;Restaurante;C6;31/10/2023 00:00;;False;;;09/11/2023 19:57;[]
+640;lucas amaral cunha;Despesa;-30,0;Lazer;Nubank;31/10/2023 00:00;;False;;;09/11/2023 20:01;[]
+632;pacman tecn;Despesa;-8,8;Transporte;Itaú;31/10/2023 00:00;metro;False;;;09/11/2023 19:50;[]
+1090;Resgate;Investimento;-3843,22;Tesouro Selic;Nuinvest;31/10/2023 00:00;;False;;;23/03/2024 12:10;
+1090;Resgate;Investimento;3843,22;Tesouro Selic;Nubank;31/10/2023 00:00;;False;;;23/03/2024 12:10;
+1095;Aplicação;Investimento;-4357,45;CDB;C6 corrente;31/10/2023 00:00;;False;;;29/03/2024 15:09;
+1095;Aplicação;Investimento;4357,45;CDB;C6Invest;31/10/2023 00:00;;False;;;29/03/2024 15:09;
+60;Hotel urbano(ITALIA);Despesa;-469,25;Viagem;PDA;01/11/2023 00:00;;False;10.0;01/02/2023;;
+641;icaroartesanatos;Despesa;-240,0;Presentes;C6;01/11/2023 00:00;Terno Zé;False;;;14/11/2023 12:51;[]
+642;Fabioferreira;Despesa;-40,0;Saúde;C6;01/11/2023 00:00;;False;;;14/11/2023 12:52;[]
+643;Fabio Luis dos Santos;Despesa;-15,0;Supermercado;C6;01/11/2023 00:00;;False;;;14/11/2023 12:53;[]
+668;Gabriel01/11;Despesa;-216,0;Viagem;Itaú;01/11/2023 00:00;chacara;False;;;28/11/2023 22:32;[]
+669;copo stanley;Despesa;-49,9;Compras;Itaú;01/11/2023 00:00;;False;;;28/11/2023 22:33;[]
+670;Nathalia;Despesa;-600,0;Educação;Itaú;01/11/2023 00:00;;False;;;28/11/2023 22:33;[]
+644;Pague menos;Despesa;-78,99;Saúde;C6;02/11/2023 00:00;;False;;;14/11/2023 12:54;[]
+645;Uber;Despesa;-10,98;Transporte;C6;02/11/2023 00:00;;False;;;14/11/2023 12:54;[]
+646;Sant'adega;Despesa;-23,35;Lazer;C6;02/11/2023 00:00;;False;;;14/11/2023 12:55;[]
+647;Foodlight;Despesa;-40,0;Supermercado;C6;03/11/2023 00:00;;False;;;14/11/2023 12:56;[]
+570;Carneiro multimarcar;Despesa;-99,68;Compras;C6;04/11/2023 00:00;Camisa polo CK;False;2.0;04/10/2023;08/10/2023 20:15;[]
+648;Pão;Despesa;-3,73;Supermercado;C6;04/11/2023 00:00;;False;;;14/11/2023 12:57;[]
+649;Autoposto;Despesa;-100,0;Transporte;C6;04/11/2023 00:00;;False;;;14/11/2023 12:57;[]
+650;Casepresentes;Despesa;-197,61;Presentes;C6;04/11/2023 00:00;;False;;;14/11/2023 12:57;[]
+651;Ocimar Joao;Despesa;-25,55;Restaurante;C6;04/11/2023 00:00;;False;;;14/11/2023 12:59;[]
+652;Pagtaxi;Despesa;-40,0;Transporte;C6;04/11/2023 00:00;;False;;;14/11/2023 13:00;[]
+700;Gravata zé ;Despesa;-200,0;Presentes;Nubank;04/11/2023 00:00;;False;;;28/11/2023 23:10;[]
+653;Spotify;Despesa;-21,9;TV,Internet,Telefone;C6;05/11/2023 00:00;;False;;;14/11/2023 13:01;[]
+654;Oliveira Comercio de;Despesa;-34,7;Restaurante;C6;05/11/2023 00:00;;False;;;14/11/2023 13:01;[]
+655;Rodosnack Mairipora;Despesa;-21,8;Restaurante;C6;05/11/2023 00:00;;False;;;14/11/2023 13:02;[]
+656;Google storage;Despesa;-6,99;TV,Internet,Telefone;C6;06/11/2023 00:00;;False;;;14/11/2023 13:05;[]
+657;Latam site;Despesa;-494,32;Viagem;C6;08/11/2023 00:00;;False;1.0;08/11/2023;14/11/2023 13:08;[]
+658;Autopostocidadedo;Despesa;-100,0;Transporte;C6;08/11/2023 00:00;;False;;;14/11/2023 13:09;[]
+659;Arena beer garden;Despesa;-40,0;Lazer;C6;08/11/2023 00:00;;False;;;14/11/2023 13:10;[]
+660;Youse Auto;Despesa;-200,99;Serviços;C6;09/11/2023 00:00;;False;;;14/11/2023 13:13;[]
+671;pix transf pai;Despesa;-40,0;Compras;Itaú;10/11/2023 00:00;;False;;;28/11/2023 22:34;[]
+672;derivad-1011;Despesa;-103,66;Transporte;Itaú;10/11/2023 00:00;gasolina;False;;;28/11/2023 22:40;[]
+581;Manutenção carro;Despesa;-155,0;Serviços;C6;12/11/2023 00:00;;False;2.0;12/10/2023;19/10/2023 21:36;[]
+661;Rafaelparanhosde;Despesa;-15,98;Restaurante;C6;12/11/2023 00:00;;False;;;14/11/2023 13:15;[]
+662;tabacariaoucai;Despesa;-8,98;Restaurante;C6;12/11/2023 00:00;;False;;;28/11/2023 22:27;[]
+674;Transferência;Transferência;-1000,0;Transferência;C6 corrente;13/11/2023 00:00;;False;;;28/11/2023 22:43;
+675;Transferência;Transferência;60,0;Transferência;C6 corrente;13/11/2023 00:00;;False;;;28/11/2023 22:43;
+673;pix transf adriana;Despesa;-20,0;Restaurante;Itaú;13/11/2023 00:00;;False;;;28/11/2023 22:42;[]
+676;Transferência;Transferência;1000,0;Transferência;C6 corrente;13/11/2023 00:00;;False;;;28/11/2023 22:44;
+674;Transferência;Transferência;1000,0;Transferência;Itaú;13/11/2023 00:00;;False;;;28/11/2023 22:43;
+675;Transferência;Transferência;-60,0;Transferência;Itaú;13/11/2023 00:00;;False;;;28/11/2023 22:43;
+676;Transferência;Transferência;-1000,0;Transferência;Itaú;13/11/2023 00:00;;False;;;28/11/2023 22:44;
+677;Maria madalena estadia;Despesa;-100,0;Viagem;Itaú;13/11/2023 00:00;;False;;;28/11/2023 22:45;[]
+592;Pousada Cantinho da Se;Despesa;-331,8333333;Viagem;C6;15/11/2023 00:00;;False;2.0;15/10/2023;19/10/2023 21:44;[]
+663;Amazon prime ;Despesa;-14,9;TV,Internet,Telefone;C6;15/11/2023 00:00;;False;;;28/11/2023 22:27;[]
+664;bloco2;Despesa;-82,5;Lazer;C6;15/11/2023 00:00;;False;;;28/11/2023 22:28;[]
+691;ifood my sushi;Despesa;-62,89;Restaurante;Black;15/11/2023 00:00;;False;;;28/11/2023 23:02;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/11/2023 00:00;parcelamento;False;4.0;16/08/2023;30/07/2023 12:06;
+594;Pousada Cantinho da Se;Despesa;-157,5;Viagem;C6;16/11/2023 00:00;;False;2.0;16/10/2023;19/10/2023 21:46;[]
+600;Supermercado Sonda;Despesa;-129,105;Supermercado;C6;17/11/2023 00:00;;False;2.0;17/10/2023;19/10/2023 21:51;[]
+665;Disk Breja;Despesa;-14,18;Lazer;C6;17/11/2023 00:00;;False;;;28/11/2023 22:28;[]
+678;Bianca;Receita;600,0;Cobrança;Itaú;17/11/2023 00:00;;False;;;28/11/2023 22:45;[]
+692;Clube latam pass;Despesa;-40,9;Serviços;Black;17/11/2023 00:00;;False;;;28/11/2023 23:03;[]
+666;bloco2;Despesa;-113,1;Lazer;C6;18/11/2023 00:00;;False;;;28/11/2023 22:29;[]
+693;ifood rafael he;Despesa;-70,86;Restaurante;Black;20/11/2023 00:00;;False;;;28/11/2023 23:03;[]
+48;anuidade;Despesa;-33,75;Multas;PDA;21/11/2023 00:00;;False;10.0;21/02/2023;;
+679;Caixinha;Despesa;-50,0;Viagem;Itaú;21/11/2023 00:00;;False;;;28/11/2023 22:46;[]
+690;My sushi;Despesa;-74,9;Restaurante;Black;21/11/2023 00:00;;False;;;28/11/2023 23:02;[]
+702;;Receita;3416,0;Outros;Nubank;21/11/2023 00:00;;True;;;28/11/2023 23:12;[]
+1091;Resgate;Investimento;-3416,0;Tesouro Selic;Nuinvest;21/11/2023 00:00;;False;;;23/03/2024 12:11;
+1091;Resgate;Investimento;3416,0;Tesouro Selic;Nubank;21/11/2023 00:00;;False;;;23/03/2024 12:11;
+609;Vans outlet;Despesa;-79,32666667;Compras;C6;22/11/2023 00:00;;False;2.0;22/10/2023;30/10/2023 08:59;[]
+610;Calvin Klein;Despesa;-75,6;Compras;C6;22/11/2023 00:00;;False;2.0;22/10/2023;30/10/2023 08:59;[]
+611;Harley;Despesa;-93,768;Compras;C6;22/11/2023 00:00;;False;2.0;22/10/2023;30/10/2023 09:00;[]
+612;Puma;Despesa;-115,0;Compras;C6;22/11/2023 00:00;;False;2.0;22/10/2023;30/10/2023 09:01;[]
+680;Total pass;Despesa;-59,9;Saúde;Itaú;22/11/2023 00:00;;False;;;28/11/2023 22:50;[]
+681;Transferência;Transferência;54,0;Transferência;Nubank;23/11/2023 00:00;;False;;;28/11/2023 22:50;
+681;Transferência;Transferência;-54,0;Transferência;Itaú;23/11/2023 00:00;;False;;;28/11/2023 22:50;
+701;Pagamento divida Hugo;Despesa;-3500,0;Multas;Nubank;23/11/2023 00:00;;False;;;28/11/2023 23:11;[]
+694;Bloco2;Despesa;-52,8;Lazer;Black;25/11/2023 00:00;;False;;;28/11/2023 23:05;[]
+695;Alemao lanche;Despesa;-15,5;Restaurante;Black;25/11/2023 00:00;;False;;;28/11/2023 23:05;[]
+696;bar da 13;Despesa;-16,0;Lazer;Black;25/11/2023 00:00;;False;;;28/11/2023 23:06;[]
+697;bloco2;Despesa;-32,0;Lazer;Black;25/11/2023 00:00;;False;;;28/11/2023 23:07;[]
+698;hot dog daora;Despesa;-15,0;Restaurante;Black;26/11/2023 00:00;;False;;;28/11/2023 23:07;[]
+699;bar da 13;Despesa;-12,0;Lazer;Black;26/11/2023 00:00;;False;;;28/11/2023 23:07;[]
+682;Transferência;Transferência;4643,84;Transferência;C6;27/11/2023 00:00;;False;;;28/11/2023 22:51;
+682;Transferência;Transferência;-4643,84;Transferência;Itaú;27/11/2023 00:00;;False;;;28/11/2023 22:51;
+667;Clubwine;Despesa;-75,4;Supermercado;C6;28/11/2023 00:00;;False;;;28/11/2023 22:30;[]
+683;pix companhia;Despesa;-367,9;Casa;Itaú;28/11/2023 00:00;cpfl;False;;;28/11/2023 22:52;[]
+686;Transferência;Transferência;469,25;Transferência;PDA;28/11/2023 00:00;;False;;;28/11/2023 22:54;
+684;pix servico aut;Despesa;-156,43;Casa;Itaú;28/11/2023 00:00;;False;;;28/11/2023 22:52;[]
+686;Transferência;Transferência;-469,25;Transferência;Itaú;28/11/2023 00:00;;False;;;28/11/2023 22:54;
+687;;Receita;6419,09;Salário;Itaú;28/11/2023 00:00;;False;;;28/11/2023 22:55;[]
+689;Transferência;Transferência;249,55;Transferência;Black;28/11/2023 00:00;;False;;;28/11/2023 22:57;
+703;Ventilador Vó;Despesa;244,61;Presentes;Black;28/11/2023 00:00;;False;;;28/11/2023 23:23;[]
+688;seguro;Despesa;-3,9;Serviços;Itaú;28/11/2023 00:00;;False;;;28/11/2023 22:55;[]
+689;Transferência;Transferência;-249,55;Transferência;Itaú;28/11/2023 00:00;;False;;;28/11/2023 22:57;
+705;Despesa Clarinha;Despesa;-200,0;Saúde;Black;30/11/2023 00:00;;False;;;05/12/2023 11:26;[]
+706;Descanse em paz clara;Despesa;-150,0;Saúde;Black;01/12/2023 00:00;;False;;;05/12/2023 11:27;[]
+685;nathalia;Despesa;-600,0;Educação;Itaú;01/12/2023 00:00;;False;;;28/11/2023 22:54;[]
+707;Adega maguste + trailer;Despesa;-43,3;Restaurante;Black;02/12/2023 00:00;;False;;;05/12/2023 11:28;[]
+708;autposto;Despesa;-100,0;Transporte;Black;02/12/2023 00:00;;False;;;05/12/2023 11:29;[]
+709;Kadampa;Despesa;-40,0;Compras;Black;03/12/2023 00:00;;False;;;05/12/2023 11:29;[]
+570;Carneiro multimarcar;Despesa;-99,68;Compras;C6;04/12/2023 00:00;Camisa polo CK;False;3.0;04/10/2023;08/10/2023 20:15;[]
+710;ifood;Despesa;-63,6;Restaurante;Black;04/12/2023 00:00;;False;;;05/12/2023 11:29;[]
+704;REcebimento viagem;Receita;600,0;Cobrança;Itaú;04/12/2023 00:00;;True;;;05/12/2023 11:18;[]
+789;Uber;Despesa;-26,95;Transporte;C6;04/12/2023 00:00;;False;;;02/01/2024 22:30;[]
+711;Clube Latam Pass;Despesa;-40,9;Compras;Black;05/12/2023 00:00;;False;;;05/12/2023 11:30;[]
+712;Salviano de frei;Despesa;-7,5;Supermercado;Black;05/12/2023 00:00;;False;;;26/12/2023 23:39;[]
+713;Capitao pastel;Despesa;-12,0;Restaurante;Black;06/12/2023 00:00;;False;;;26/12/2023 23:40;[]
+762;Churrasco rep;Despesa;-360,0;Lazer;Itaú;06/12/2023 00:00;;False;;;27/12/2023 00:24;[]
+791;Google Storage;Despesa;-6,99;TV,Internet,Telefone;C6;06/12/2023 00:00;;False;;;02/01/2024 22:30;[]
+714;Clickbus;Despesa;-61,53;Transporte;Black;07/12/2023 00:00;;False;;;26/12/2023 23:41;[]
+657;Latam site;Despesa;-494,32;Viagem;C6;08/12/2023 00:00;;False;2.0;08/11/2023;14/11/2023 13:08;[]
+715;Posto esplanada;Despesa;-30,0;Transporte;Black;08/12/2023 00:00;;False;;;26/12/2023 23:41;[]
+716;Youse auto;Despesa;-148,96;Serviços;Black;09/12/2023 00:00;;False;;;26/12/2023 23:43;[]
+717;Posto cidadedo;Despesa;-156,3;Viagem;Black;09/12/2023 00:00;;False;;;26/12/2023 23:44;[]
+718;Conectcar;Despesa;-50,0;Viagem;Black;09/12/2023 00:00;;False;;;26/12/2023 23:45;[]
+719;Hibis araraquara;Despesa;-219,45;Viagem;Black;09/12/2023 00:00;;False;;;26/12/2023 23:45;[]
+720;Hibis;Despesa;-28,0;Supermercado;Black;10/12/2023 00:00;;False;;;26/12/2023 23:46;[]
+721;Conect car;Despesa;-50,0;Transporte;Black;10/12/2023 00:00;;False;;;26/12/2023 23:46;[]
+722;Comercio de;Despesa;-29,9;Restaurante;Black;10/12/2023 00:00;;False;;;26/12/2023 23:46;[]
+723;Click bus;Despesa;-53,52;Transporte;Black;11/12/2023 00:00;;False;;;26/12/2023 23:47;[]
+724;Booking.com;Despesa;-230,73;Casa;Black;11/12/2023 00:00;;False;;;26/12/2023 23:49;[]
+725;Fabioferreira;Despesa;-40,0;Saúde;Black;11/12/2023 00:00;;False;;;26/12/2023 23:50;[]
+801;Hotel SP;Receita;230,0;Cobrança;Nubank;11/12/2023 00:00;;True;;;03/01/2024 10:25;[]
+763;pakman;Despesa;-8,8;Transporte;Itaú;12/12/2023 00:00;metro;False;;;27/12/2023 00:25;[]
+726;drgoaria são paulo;Despesa;-74,97;Supermercado;Black;13/12/2023 00:00;;False;;;26/12/2023 23:52;[]
+727;360 suites;Despesa;-138,0;Casa;Black;13/12/2023 00:00;;False;;;26/12/2023 23:52;[]
+728;mercadinho;Despesa;-4,99;Supermercado;Black;13/12/2023 00:00;;False;;;26/12/2023 23:53;[]
+729;zigpay;Despesa;-57,91;Lazer;Black;14/12/2023 00:00;;False;;;26/12/2023 23:53;[]
+730;Uber ;Despesa;-60,5;Transporte;Black;14/12/2023 00:00;;False;;;26/12/2023 23:53;[]
+764;Folha de férias;Receita;6297,59;Salário;Itaú;14/12/2023 00:00;;False;;;27/12/2023 00:26;[]
+592;Pousada Cantinho da Se;Despesa;-331,8333333;Viagem;C6;15/12/2023 00:00;;False;3.0;15/10/2023;19/10/2023 21:44;[]
+732;uber;Despesa;-62,66;Transporte;Black;15/12/2023 00:00;;False;;;26/12/2023 23:56;[]
+733;pag*zig;Despesa;-59,55;Lazer;Black;15/12/2023 00:00;;False;;;27/12/2023 00:00;[]
+734;clickbus + coffe;Despesa;-62,48;Transporte;Black;15/12/2023 00:00;;False;;;27/12/2023 00:01;[]
+765;Pakman;Despesa;-8,8;Transporte;Itaú;15/12/2023 00:00;;False;;;27/12/2023 00:26;[]
+792;Amazonprime;Despesa;-14,9;TV,Internet,Telefone;C6;15/12/2023 00:00;;False;;;02/01/2024 22:31;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/12/2023 00:00;parcelamento;False;5.0;16/08/2023;30/07/2023 12:06;
+594;Pousada Cantinho da Se;Despesa;-157,5;Viagem;C6;16/12/2023 00:00;;False;3.0;16/10/2023;19/10/2023 21:46;[]
+735;comercial de comb inda;Despesa;-50,0;Transporte;Black;16/12/2023 00:00;;False;;;27/12/2023 00:02;[]
+736;autoposto victor;Despesa;-163,19;Transporte;Black;17/12/2023 00:00;;False;;;27/12/2023 00:02;[]
+737;Conectar;Despesa;-100,0;Viagem;Black;18/12/2023 00:00;;False;;;27/12/2023 00:03;[]
+738;eliane de fatimados;Despesa;-14,0;Supermercado;Black;18/12/2023 00:00;;False;;;27/12/2023 00:04;[]
+739;drogatur;Despesa;-29,28;Saúde;Black;18/12/2023 00:00;;False;;;27/12/2023 00:04;[]
+740;bar cana da praça;Despesa;-145,2;Restaurante;Black;18/12/2023 00:00;;False;;;27/12/2023 00:04;[]
+741;panificadora;Despesa;-24,39;Supermercado;Black;19/12/2023 00:00;;False;;;27/12/2023 00:05;[]
+742;foodtruck;Despesa;-30,0;Restaurante;Black;19/12/2023 00:00;;False;;;27/12/2023 00:05;[]
+743;pag*guadalupeiraci + artemandala ;Despesa;-32,2;Compras;Black;19/12/2023 00:00;compra paraty;False;;;27/12/2023 00:07;[]
+744;gelateria coupe;Despesa;-56,27;Restaurante;Black;19/12/2023 00:00;;False;;;27/12/2023 00:07;[]
+745;parking;Despesa;-15,05;Viagem;Black;19/12/2023 00:00;;False;;;27/12/2023 00:08;[]
+766;Pix transf;Despesa;-40,0;Compras;Itaú;19/12/2023 00:00;;False;;;27/12/2023 00:28;[]
+767;Comes praia;Despesa;-18,0;Restaurante;Itaú;19/12/2023 00:00;;False;;;27/12/2023 00:28;[]
+768;Aplicação;Investimento;-6000,0;CDB;Itaú;19/12/2023 00:00;;True;;;27/12/2023 00:29;[]
+768;Aplicação;Investimento;6000,0;CDB;Ion;19/12/2023 00:00;;True;;;27/12/2023 00:29;[]
+746;pedro de jesus;Despesa;-20,0;Outros;Black;20/12/2023 00:00;estacionamento cachoeira;True;;;27/12/2023 00:10;[]
+747;Annelhy;Despesa;-40,0;Restaurante;Black;20/12/2023 00:00;;False;;;27/12/2023 00:10;[]
+748;Sorveteria pistache;Despesa;-38,48;Restaurante;Black;20/12/2023 00:00;;False;;;27/12/2023 00:10;[]
+749;Ladolce Vita;Despesa;-176,22;Restaurante;Black;20/12/2023 00:00;Pizzaria;False;;;27/12/2023 00:11;[]
+769;pix qre eb parking;Despesa;-10,75;Viagem;Itaú;20/12/2023 00:00;;True;;;27/12/2023 00:31;[]
+770;Pix bianca;Receita;600,0;Cobrança;Itaú;20/12/2023 00:00;;True;;;27/12/2023 00:32;[]
+771;Folha de pagamento mensal;Receita;10358,76;Salário;Itaú;20/12/2023 00:00;;False;;;27/12/2023 00:32;[]
+772;folha de pgto 13 salario;Receita;2565,87;Salário;Itaú;20/12/2023 00:00;;False;;;27/12/2023 00:33;[]
+773;Aplicação;Investimento;-12000,0;CDB;Itaú;20/12/2023 00:00;;True;;;27/12/2023 00:33;[]
+773;Aplicação;Investimento;12000,0;CDB;Ion;20/12/2023 00:00;;True;;Itaú;27/12/2023 00:33;[]
+48;anuidade;Despesa;-33,75;Multas;PDA;21/12/2023 00:00;;False;10.0;21/02/2023;;
+750;Life bar;Despesa;-36,3;Lazer;Black;21/12/2023 00:00;;False;;;27/12/2023 00:11;[]
+751;quebranar;Despesa;-55,0;Lazer;Black;21/12/2023 00:00;forro;False;;;27/12/2023 00:12;[]
+752;humbertierib;Despesa;-10,0;Transporte;Black;21/12/2023 00:00;;False;;;27/12/2023 00:13;[]
+609;Vans outlet;Despesa;-79,32666667;Compras;C6;22/12/2023 00:00;;False;3.0;22/10/2023;30/10/2023 08:59;[]
+610;Calvin Klein;Despesa;-75,6;Compras;C6;22/12/2023 00:00;;False;3.0;22/10/2023;30/10/2023 08:59;[]
+611;Harley;Despesa;-93,768;Compras;C6;22/12/2023 00:00;;False;3.0;22/10/2023;30/10/2023 09:00;[]
+753;ceciliagomes podrao;Despesa;-42,0;Restaurante;Black;22/12/2023 00:00;;False;;;27/12/2023 00:13;[]
+754;paanificadora;Despesa;-8,2;Supermercado;Black;22/12/2023 00:00;;False;;;27/12/2023 00:14;[]
+755;assb comercio varej;Despesa;-21,0;Compras;Black;22/12/2023 00:00;;False;;;27/12/2023 00:14;[]
+756;sorveteria;Despesa;-30,0;Restaurante;Black;22/12/2023 00:00;;False;;;27/12/2023 00:14;[]
+757;open stores;Despesa;-10,0;Compras;Black;22/12/2023 00:00;;False;;;27/12/2023 00:15;[]
+774;qrs parking;Despesa;-43,0;Transporte;Itaú;22/12/2023 00:00;;True;;;27/12/2023 00:35;[]
+793;totalpass;Despesa;-59,9;Saúde;C6;22/12/2023 00:00;;False;;;03/01/2024 10:15;[]
+758;conecta car;Despesa;-50,0;Transporte;Black;23/12/2023 00:00;;True;;;27/12/2023 00:16;[]
+759;doctorcar;Despesa;-120,0;Serviços;Black;23/12/2023 00:00;balanceamento;False;;;27/12/2023 00:16;[]
+760;Conect car;Despesa;-50,0;Transporte;Black;24/12/2023 00:00;;False;;;27/12/2023 00:17;[]
+802;GOW;Despesa;-130,0;Compras;Nubank;24/12/2023 00:00;;False;;;03/01/2024 10:27;[]
+761;sonyplayst God Of War;Despesa;-50,19;Compras;Black;25/12/2023 00:00;;False;;;27/12/2023 00:17;[]
+731;milla salgados;Despesa;-18,44;Restaurante;Black;26/12/2023 00:00;;False;;;26/12/2023 23:55;[]
+775;pix renan;Despesa;-50,0;Compras;Itaú;26/12/2023 00:00;;False;;;27/12/2023 00:35;[]
+776;pagar tim;Despesa;-80,0;TV,Internet,Telefone;Itaú;26/12/2023 00:00;;False;;;27/12/2023 00:36;[]
+777;Presente sara;Despesa;-50,0;Presentes;Itaú;26/12/2023 00:00;;False;;;27/12/2023 00:36;[]
+778;seguro;Despesa;-3,9;Serviços;Itaú;26/12/2023 00:00;;False;;;02/01/2024 22:07;[]
+843;Carro viagem booking;Despesa;-267,96;Viagem;Black;26/12/2023 00:00;;False;;;21/01/2024 14:36;[]
+784;autoposto victor;Despesa;-50,0;Transporte;Black;27/12/2023 00:00;;False;;;02/01/2024 22:13;[]
+794;Club wine;Despesa;-96,74;Supermercado;C6;27/12/2023 00:00;;False;;;03/01/2024 10:16;[]
+785;autoposto;Despesa;-100,0;Transporte;Black;28/12/2023 00:00;;False;;;02/01/2024 22:14;[]
+786;arena beer garden;Despesa;-60,0;Lazer;Black;28/12/2023 00:00;;False;;;02/01/2024 22:14;[]
+787;santadega;Despesa;-25,16;Lazer;Black;29/12/2023 00:00;;False;;;02/01/2024 22:14;[]
+795;Amazon Marketplace;Despesa;-31,64;Presentes;C6;29/12/2023 00:00;;False;;;03/01/2024 10:16;[]
+803;Carla Cristina;Receita;600,0;Cobrança;Nubank;29/12/2023 00:00;;True;;;03/01/2024 10:28;[]
+788;bandeira;Despesa;-6,64;Supermercado;Black;30/12/2023 00:00;;False;;;02/01/2024 22:15;[]
+780;Transferência;Transferência;7490,48;Transferência;Black;31/12/2023 00:00;;False;;;02/01/2024 22:09;
+780;Transferência;Transferência;-7490,48;Transferência;Itaú;31/12/2023 00:00;;False;;;02/01/2024 22:09;
+782;Indaiatuba ;Despesa;-131,1;Casa;Itaú;31/12/2023 00:00;;False;;;02/01/2024 22:10;[]
+783;cpfl;Despesa;-574,03;Casa;Itaú;31/12/2023 00:00;;False;;;02/01/2024 22:11;[]
+798;Onix;Despesa;-1000,0;Onix;Itaú;31/12/2023 00:00;;False;;;03/01/2024 10:22;[]
+809;Gasolina;Despesa;-100,0;Presentes;Black;01/01/2024 00:00;;False;;;05/01/2024 10:11;[]
+781;Resgate;Investimento;8000,0;CDB;Itaú;02/01/2024 00:00;;True;;;02/01/2024 22:09;[]
+779;Nath;Despesa;-600,0;Educação;Itaú;02/01/2024 00:00;;False;;;02/01/2024 22:08;[]
+781;Resgate;Investimento;-8000,0;CDB;Ion;02/01/2024 00:00;;True;;;02/01/2024 22:09;[]
+796;Transferência;Transferência;2244,0;Transferência;C6;03/01/2024 00:00;;False;;;03/01/2024 10:21;
+800;Transferência;Transferência;-2021,78;Transferência;C6 corrente;03/01/2024 00:00;;False;;;03/01/2024 10:23;
+800;Transferência;Transferência;2021,78;Transferência;C6;03/01/2024 00:00;;False;;;03/01/2024 10:23;
+796;Transferência;Transferência;-2244,0;Transferência;Itaú;03/01/2024 00:00;;False;;;03/01/2024 10:21;
+797;Tim;Despesa;-65,0;TV,Internet,Telefone;Itaú;03/01/2024 00:00;;False;;;03/01/2024 10:21;[]
+799;Onix;Despesa;-1000,0;Onix;Itaú;03/01/2024 00:00;;False;;;03/01/2024 10:22;[]
+810;ifood;Despesa;-62,6;Restaurante;Black;03/01/2024 00:00;;False;;;05/01/2024 10:11;[]
+804;Growth;Despesa;-186,88;Saúde;Itaú;03/01/2024 00:00;;False;;;05/01/2024 09:54;[]
+805;Safe2pay;Despesa;-15,0;Restaurante;Itaú;03/01/2024 00:00;Primeira mesa;False;;;05/01/2024 09:55;[]
+806;Transferência;Transferência;-2156,0;Transferência;Nubank;04/01/2024 00:00;;False;;;05/01/2024 09:56;
+811;marmitas;Despesa;-55,0;Supermercado;Black;04/01/2024 00:00;;False;;;05/01/2024 10:11;[]
+812;lava jato;Despesa;-55,0;Serviços;Black;04/01/2024 00:00;;False;;;05/01/2024 10:12;[]
+813;jals pizzaria;Despesa;-107,9;Restaurante;Black;04/01/2024 00:00;;False;;;05/01/2024 10:12;[]
+814;open ai;Despesa;-41,6;Educação;Black;04/01/2024 00:00;;False;;;05/01/2024 10:12;[]
+806;Transferência;Transferência;2156,0;Transferência;Itaú;04/01/2024 00:00;;False;;;05/01/2024 09:56;
+807;Resgate;Investimento;1000,53;CDB;Itaú;04/01/2024 00:00;;True;;Ion;05/01/2024 09:56;[]
+807;Resgate;Investimento;-1000,53;CDB;Ion;04/01/2024 00:00;;True;;;05/01/2024 09:56;[]
+790;Spotify;Despesa;-21,9;TV,Internet,Telefone;C6;05/01/2024 00:00;;False;;;02/01/2024 22:30;[]
+808;correção saldo;Receita;2824,0;Outros;Nubank;05/01/2024 00:00;;True;;;05/01/2024 10:08;[]
+815;club latam pass matri;Despesa;-40,9;Compras;Black;05/01/2024 00:00;;False;;;05/01/2024 10:13;[]
+819;Airffryer magalu;Despesa;-52,45;Compras;Black;05/01/2024 00:00;;False;1.0;05/01/2024;07/01/2024 18:47;[]
+820;Clickbus;Despesa;-99,0;Transporte;Black;05/01/2024 00:00;;False;;;07/01/2024 18:48;[]
+816;;Receita;100,0;Cobrança;Itaú;05/01/2024 00:00;;True;;;07/01/2024 18:42;[]
+821;ELite group;Despesa;-11,0;Supermercado;Black;06/01/2024 00:00;;False;;;07/01/2024 18:49;[]
+822;google storage;Despesa;-7,99;TV,Internet,Telefone;Black;06/01/2024 00:00;;False;;;07/01/2024 18:52;[]
+823;ingresso online velox;Despesa;-30,0;Lazer;Black;07/01/2024 00:00;;False;;;07/01/2024 18:53;[]
+824;Sant'adega;Despesa;-27,95;Lazer;Black;07/01/2024 00:00;;False;;;07/01/2024 18:53;[]
+817;Transf vinicius;Despesa;-30,0;Transporte;Itaú;07/01/2024 00:00;;False;;;07/01/2024 18:42;[]
+818;reserva casa;Despesa;-140,0;Casa;Itaú;07/01/2024 00:00;;False;;;07/01/2024 18:43;[]
+657;Latam site;Despesa;-494,32;Viagem;C6;08/01/2024 00:00;;False;3.0;08/11/2023;14/11/2023 13:08;[]
+825;ifd*br;Despesa;-5,95;Restaurante;Black;08/01/2024 00:00;;False;;;11/01/2024 08:37;[]
+1118;caixinha;Despesa;-100,0;Viagem;Itaú;08/01/2024 00:00;;False;;;29/03/2024 16:22;[]
+826;Youse;Despesa;-148,96;Serviços;Black;09/01/2024 00:00;;False;;;11/01/2024 08:37;[]
+827;NAB;Despesa;-15,96;Compras;Black;10/01/2024 00:00;;False;;;11/01/2024 08:38;[]
+828;Farmacia;Despesa;-28,7;Compras;Black;10/01/2024 00:00;;False;;;11/01/2024 08:38;[]
+829;juliana;Despesa;-27,5;Compras;Itaú;10/01/2024 00:00;MANO PRESENTE PRO CHEFE TNC!!;False;;;11/01/2024 08:41;[]
+830;Transferência;Transferência;-20,0;Transferência;Nubank;11/01/2024 00:00;;False;;;11/01/2024 08:42;
+830;Transferência;Transferência;20,0;Transferência;Itaú;11/01/2024 00:00;;False;;;11/01/2024 08:42;
+831;correção;Despesa;-5,0;Supermercado;Itaú;11/01/2024 00:00;;True;;;18/01/2024 09:41;[]
+1119;Resgate;Investimento;100,0;CDB;Itaú;11/01/2024 00:00;;False;;;29/03/2024 16:23;
+1119;Resgate;Investimento;-100,0;CDB;Ion;11/01/2024 00:00;;False;;;29/03/2024 16:23;
+834;Extra;Despesa;-100,07;Compras;Black;12/01/2024 00:00;;False;1.0;12/01/2024;18/01/2024 09:46;[]
+835;autoposto;Despesa;-30,0;Transporte;Black;12/01/2024 00:00;;False;;;18/01/2024 09:47;[]
+836;transporte;Despesa;-120,0;Supermercado;Cartão Nubank;12/01/2024 00:00;na vdd a fatima pagou, mas faz parte do gasto da viagem;False;;;18/01/2024 09:47;[]
+837;comercial;Despesa;-10,0;Supermercado;Black;12/01/2024 00:00;;False;;;18/01/2024 09:48;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/01/2024 00:00;;False;1.0;15/01/2024;18/01/2024 09:49;[]
+890;amazon prime;Despesa;-14,89;Compras;C6;15/01/2024 00:00;;False;;;31/01/2024 22:05;[]
+832;Pix fernand;Despesa;-8,7;Restaurante;Itaú;15/01/2024 00:00;garcom;False;;;18/01/2024 09:43;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/01/2024 00:00;parcelamento;False;6.0;16/08/2023;30/07/2023 12:06;
+839;org sem fonteiras;Despesa;-46,0;Compras;Black;16/01/2024 00:00;brechó;False;;;18/01/2024 09:50;[]
+833;IPVA onix;Despesa;-389,96;Serviços;Itaú;17/01/2024 00:00;;False;1.0;17/01/2024;18/01/2024 09:44;[]
+1116;Resgate;Investimento;2384,65;CDB;Itaú;17/01/2024 00:00;;False;;;29/03/2024 16:15;
+1117;celular bianca;Despesa;-2384,0;Compras;Itaú;17/01/2024 00:00;;True;;;29/03/2024 16:15;[]
+1116;Resgate;Investimento;-2384,65;CDB;Ion;17/01/2024 00:00;;False;;;29/03/2024 16:15;
+840;Bianca divida;Receita;700,0;Cobrança;Itaú;18/01/2024 00:00;;True;;;21/01/2024 12:33;[]
+842;Conect car;Despesa;-50,0;Transporte;Black;19/01/2024 00:00;;True;;;21/01/2024 12:37;[]
+845;oxxo;Despesa;-24,58;Supermercado;Black;19/01/2024 00:00;;False;;;21/01/2024 14:43;[]
+846;ifood;Despesa;-77,78;Restaurante;Black;19/01/2024 00:00;;False;;;21/01/2024 14:43;[]
+841;metro;Despesa;-10,0;Transporte;Itaú;19/01/2024 00:00;;False;;;21/01/2024 12:34;[]
+847;mercado vergueiro;Despesa;-7,98;Supermercado;Black;20/01/2024 00:00;;False;;;21/01/2024 14:44;[]
+848;pastorinho vila mariana;Despesa;-20,97;Lazer;Black;20/01/2024 00:00;;False;;;21/01/2024 14:45;[]
+849;casa giro;Despesa;-35,97;Supermercado;Black;20/01/2024 00:00;Melhor linguica do mundo;False;;;21/01/2024 14:46;[]
+850;ifood;Despesa;-65,7;Restaurante;Black;20/01/2024 00:00;;False;;;21/01/2024 14:46;[]
+844;Viagem nordeste;Despesa;-177,68;Viagem;Black;21/01/2024 00:00;;False;;;21/01/2024 14:41;[]
+851;Gasosa;Despesa;-75,34;Transporte;Black;21/01/2024 00:00;;False;;;25/01/2024 17:47;[]
+610;Calvin Klein;Despesa;-75,6;Compras;C6;22/01/2024 00:00;;False;4.0;22/10/2023;30/10/2023 08:59;[]
+611;Harley;Despesa;-93,768;Compras;C6;22/01/2024 00:00;;False;4.0;22/10/2023;30/10/2023 09:00;[]
+852;presente bianca;Despesa;-108,34;Presentes;Black;22/01/2024 00:00;;False;1.0;22/01/2024;25/01/2024 17:48;[]
+853;dentista bruxismo;Despesa;-200,0;Saúde;Black;22/01/2024 00:00;;False;;;25/01/2024 17:58;[]
+854;total pass;Despesa;-59,9;Saúde;Black;22/01/2024 00:00;;False;;;25/01/2024 17:59;[]
+855;fabioferreira ;Despesa;-40,0;Saúde;Black;22/01/2024 00:00;;False;;;25/01/2024 17:59;[]
+856;vinho fabio;Despesa;-35,0;Compras;Black;22/01/2024 00:00;;False;;;25/01/2024 18:00;[]
+869;transf david;Despesa;-250,0;Compras;Itaú;22/01/2024 00:00;fogão;False;;;25/01/2024 18:20;[]
+870;pix transf;Despesa;-82,97;Compras;Itaú;22/01/2024 00:00;;False;;;25/01/2024 18:20;[]
+857;conect car;Despesa;-50,0;Transporte;Black;23/01/2024 00:00;;False;;;25/01/2024 18:00;[]
+858;kalunga;Despesa;-85,5;Compras;Black;23/01/2024 00:00;;False;;;25/01/2024 18:04;[]
+859;mercado vergueiro;Despesa;-22,9;Supermercado;Black;23/01/2024 00:00;;False;;;25/01/2024 18:04;[]
+860;auto posto metro;Despesa;-50,0;Supermercado;Black;23/01/2024 00:00;;False;;;25/01/2024 18:05;[]
+861;ritorna;Despesa;-70,0;Restaurante;Black;23/01/2024 00:00;;False;;;25/01/2024 18:05;[]
+872;Transferência;Transferência;-1423,0;Transferência;Nubank;23/01/2024 00:00;;False;;;25/01/2024 18:21;
+871;emporio;Despesa;-100,0;Serviços;Itaú;23/01/2024 00:00;;False;;;25/01/2024 18:21;[]
+872;Transferência;Transferência;1423,0;Transferência;Itaú;23/01/2024 00:00;;False;;;25/01/2024 18:21;
+862;frutilla;Despesa;-30,0;Restaurante;Black;24/01/2024 00:00;;False;;;25/01/2024 18:07;[]
+863;spo vergueiro;Despesa;-35,5;Compras;Black;24/01/2024 00:00;kalunga;False;;;25/01/2024 18:16;[]
+864;uber;Despesa;-13,09;Transporte;Black;24/01/2024 00:00;;False;;;25/01/2024 18:17;[]
+865;bar comandante;Despesa;-97,0;Lazer;Black;24/01/2024 00:00;;False;;;25/01/2024 18:17;[]
+873;derek;Despesa;-10,0;Transporte;Itaú;24/01/2024 00:00;;False;;;25/01/2024 18:22;[]
+866;frutilla;Despesa;-27,5;Restaurante;Black;25/01/2024 00:00;;False;;;25/01/2024 18:18;[]
+867;pastorinho;Despesa;-52,24;Supermercado;Black;25/01/2024 00:00;mercado;False;;;25/01/2024 18:18;[]
+868;tecnigaz;Despesa;-260,0;Serviços;Black;25/01/2024 00:00;adaptação fogão;False;;;25/01/2024 18:19;[]
+882;oxxo;Despesa;-26,66;Lazer;Black;25/01/2024 00:00;;False;;;31/01/2024 21:53;[]
+874;seg proteção;Despesa;-3,9;Serviços;Itaú;25/01/2024 00:00;;False;;;31/01/2024 21:40;[]
+883;mercados (vergueiro + pastorinho);Despesa;-39,99;Supermercado;Black;26/01/2024 00:00;;False;;;31/01/2024 21:53;[]
+875;aluguel;Despesa;-692,0;Casa;Itaú;26/01/2024 00:00;;False;;;31/01/2024 21:42;[]
+876;salariao;Receita;2965,3;Salário;Itaú;26/01/2024 00:00;;False;;;31/01/2024 21:42;[]
+877;parte do cumo;Despesa;-692,0;Outros;Itaú;26/01/2024 00:00;;True;;;31/01/2024 21:43;[]
+884;Clubw;Despesa;-34,65;Supermercado;Black;27/01/2024 00:00;;False;;;31/01/2024 21:54;[]
+885;top metro;Despesa;-10,0;Transporte;Black;27/01/2024 00:00;;False;;;31/01/2024 21:54;[]
+886;top metro;Despesa;-20,0;Transporte;Black;28/01/2024 00:00;;False;;;31/01/2024 21:55;[]
+887;oxxo;Despesa;-13,96;Supermercado;Black;28/01/2024 00:00;;False;;;31/01/2024 21:56;[]
+888;chaveiro;Despesa;-10,0;Serviços;Black;29/01/2024 00:00;;False;;;31/01/2024 21:56;[]
+889;top;Despesa;-51,0;Transporte;Black;30/01/2024 00:00;;False;;;31/01/2024 21:57;[]
+879;Transferência;Transferência;-808,71;Transferência;Nubank;31/01/2024 00:00;;False;;;31/01/2024 21:45;
+878;cartão mae + ajuda financeira;Receita;1043,0;Cobrança;Itaú;31/01/2024 00:00;;True;;;31/01/2024 21:44;[]
+879;Transferência;Transferência;808,71;Transferência;Itaú;31/01/2024 00:00;;False;;;31/01/2024 21:45;
+880;saae + cpfl - ajuda de custo;Despesa;-283,4;Casa;Itaú;31/01/2024 00:00;;False;;;31/01/2024 21:46;[]
+881;cpfl saae (ajuda financeira);Despesa;-300,0;Casa;Itaú;31/01/2024 00:00;recebi ajuda mae ;True;;;31/01/2024 21:48;[]
+891;Transferência;Transferência;3064,1;Transferência;Black;01/02/2024 00:00;;False;;;06/02/2024 18:02;
+897;gran coffe;Despesa;-5,5;Restaurante;Black;01/02/2024 00:00;;False;;;06/02/2024 18:11;[]
+891;Transferência;Transferência;-3064,1;Transferência;Itaú;01/02/2024 00:00;;False;;;06/02/2024 18:02;
+898;uber;Despesa;-35,98;Transporte;Black;02/02/2024 00:00;;False;;;06/02/2024 18:12;[]
+899;clickbus;Despesa;-59,47;Transporte;Black;02/02/2024 00:00;;False;;;06/02/2024 18:12;[]
+900;mcdonalds;Despesa;-6,9;Restaurante;Black;03/02/2024 00:00;;False;;;06/02/2024 18:13;[]
+901;clickbus;Despesa;-52,63;Transporte;Black;04/02/2024 00:00;;False;;;06/02/2024 18:14;[]
+819;Airffryer magalu;Despesa;-52,45;Compras;Black;05/02/2024 00:00;;False;2.0;05/01/2024;07/01/2024 18:47;[]
+892;Transferência;Transferência;1800,0;Transferência;C6;05/02/2024 00:00;;False;;;06/02/2024 18:02;
+902;Clube latam pass;Despesa;-40,9;Viagem;Black;05/02/2024 00:00;;False;;;06/02/2024 18:15;[]
+904;torneira;Despesa;-19,99;Serviços;Black;05/02/2024 00:00;;False;;;06/02/2024 18:16;[]
+892;Transferência;Transferência;-1800,0;Transferência;Itaú;05/02/2024 00:00;;False;;;06/02/2024 18:02;
+893;pagamento mãe;Receita;990,0;Cobrança;Itaú;05/02/2024 00:00;;True;;;06/02/2024 18:03;[]
+894;condominio;Despesa;-450,97;Casa;Itaú;05/02/2024 00:00;;False;;;06/02/2024 18:04;[]
+895;IOF;Despesa;-30,0;Multas;Itaú;05/02/2024 00:00;;False;;;06/02/2024 18:04;[]
+903;spotify;Despesa;-21,9;TV,Internet,Telefone;Black;06/02/2024 00:00;;False;;;06/02/2024 18:15;[]
+905;google storage;Despesa;-7,99;TV,Internet,Telefone;Black;06/02/2024 00:00;;False;;;06/02/2024 18:16;[]
+906;grancoffe;Despesa;-1,0;Supermercado;Black;06/02/2024 00:00;;False;;;06/02/2024 18:17;[]
+927;nath;Despesa;-386,0;Educação;Black;06/02/2024 00:00;;False;;;14/02/2024 23:12;[]
+896;resgate;Receita;1700,3;Outros;Itaú;06/02/2024 00:00;;True;;;06/02/2024 18:10;[]
+926;nath;Despesa;-214,0;Educação;Itaú;06/02/2024 00:00;;False;;;14/02/2024 23:11;[]
+896;Resgate;Investimento;-1700,3;CDB;Ion;06/02/2024 00:00;;True;;;06/02/2024 18:10;[]
+907;pereira distribuidora;Despesa;-41,0;Restaurante;Black;07/02/2024 00:00;;False;;;14/02/2024 22:50;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/02/2024 00:00;;False;1.0;07/02/2024;14/02/2024 22:51;[]
+909;pag*indigo;Despesa;-24,0;Restaurante;Black;07/02/2024 00:00;baccio;False;;;14/02/2024 22:51;[]
+928;Transferência;Transferência;15,0;Transferência;C6 corrente;07/02/2024 00:00;;False;;;14/02/2024 23:13;
+928;Transferência;Transferência;-15,0;Transferência;Itaú;07/02/2024 00:00;;False;;;14/02/2024 23:13;
+929;aluguel;Despesa;-1250,0;Casa;Itaú;07/02/2024 00:00;;False;;;14/02/2024 23:16;[]
+657;Latam site;Despesa;-494,32;Viagem;C6;08/02/2024 00:00;;False;4.0;08/11/2023;14/11/2023 13:08;[]
+910;uber;Despesa;-13,11;Transporte;Black;08/02/2024 00:00;;False;;;14/02/2024 22:51;[]
+911;futshow;Despesa;-26,0;Lazer;Black;08/02/2024 00:00;;False;;;14/02/2024 22:52;[]
+912;uber;Despesa;-24,92;Transporte;Black;08/02/2024 00:00;;False;;;14/02/2024 22:53;[]
+913;youse;Despesa;-148,96;Serviços;Black;09/02/2024 00:00;;False;;;14/02/2024 22:53;[]
+914;top;Despesa;-50,0;Transporte;Black;09/02/2024 00:00;;False;;;14/02/2024 22:53;[]
+915;uber;Despesa;-11,91;Transporte;Black;09/02/2024 00:00;;False;;;14/02/2024 22:54;[]
+916;zig;Despesa;-10,0;Restaurante;Black;09/02/2024 00:00;;False;;;14/02/2024 22:55;[]
+930;futao;Despesa;-30,0;Saúde;Itaú;09/02/2024 00:00;;False;;;14/02/2024 23:18;[]
+931;churras;Despesa;-24,0;Lazer;Itaú;09/02/2024 00:00;;False;;;14/02/2024 23:18;[]
+917;los panchos;Despesa;-25,0;Lazer;Black;10/02/2024 00:00;;False;;;14/02/2024 22:55;[]
+918;pastorinho;Despesa;-135,5;Lazer;Black;10/02/2024 00:00;;False;;;14/02/2024 22:56;[]
+919;douglasmaiada;Despesa;-112,8;Lazer;Black;10/02/2024 00:00;;False;;;14/02/2024 22:58;[]
+920;uber;Despesa;-101,94;Transporte;Black;11/02/2024 00:00;;False;;;14/02/2024 22:59;[]
+921;mercado bebidas;Despesa;-15,0;Lazer;Black;11/02/2024 00:00;;False;;;14/02/2024 23:00;[]
+834;Extra;Despesa;-100,07;Compras;Black;12/02/2024 00:00;;False;2.0;12/01/2024;18/01/2024 09:46;[]
+922;vb são + uber;Despesa;-61,3;Transporte;Black;13/02/2024 00:00;;False;;;14/02/2024 23:01;[]
+923;uber;Despesa;-33,84;Transporte;Black;13/02/2024 00:00;;False;;;14/02/2024 23:02;[]
+924;chiquinho;Despesa;-10,0;Restaurante;Black;13/02/2024 00:00;;False;;;14/02/2024 23:02;[]
+925;mc donalds;Despesa;-43,9;Restaurante;Black;14/02/2024 00:00;;False;;;14/02/2024 23:03;[]
+932;caixinha;Despesa;-50,0;Viagem;Itaú;14/02/2024 00:00;;False;;;14/02/2024 23:19;[]
+940;Resgate;Investimento;100,2;CDB;Itaú;14/02/2024 00:00;;True;;;19/02/2024 10:27;[]
+941;transf bianca;Receita;5,0;Cobrança;Itaú;14/02/2024 00:00;;True;;;19/02/2024 10:27;[]
+940;Resgate;Investimento;-100,2;CDB;Ion;14/02/2024 00:00;;True;;;19/02/2024 10:27;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/02/2024 00:00;;False;2.0;15/01/2024;18/01/2024 09:49;[]
+934;Amazonprime;Despesa;-14,9;TV,Internet,Telefone;Black;15/02/2024 00:00;;False;;;19/02/2024 08:39;[]
+942;pix transf valdinei;Receita;700,0;Cobrança;Itaú;15/02/2024 00:00;;True;;;19/02/2024 10:29;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/02/2024 00:00;parcelamento;False;7.0;16/08/2023;30/07/2023 12:06;
+935;COnectar;Despesa;-50,0;Transporte;Black;17/02/2024 00:00;;True;;;19/02/2024 08:40;[]
+936;ifood mysushi;Despesa;-149,9;Restaurante;Black;17/02/2024 00:00;;False;;;19/02/2024 08:41;[]
+833;IPVA onix;Despesa;-389,96;Serviços;Itaú;17/02/2024 00:00;;False;2.0;17/01/2024;18/01/2024 09:44;[]
+937;HAvan;Despesa;-89,99;Compras;Black;18/02/2024 00:00;;False;;;19/02/2024 08:42;[]
+938;Estacionamento;Despesa;-4,9;Transporte;Black;18/02/2024 00:00;;False;;;19/02/2024 08:43;[]
+939;Casa da esfiha;Despesa;-63,7;Restaurante;Black;18/02/2024 00:00;;False;;;19/02/2024 10:23;[]
+944;amazon br;Despesa;-42,89;Compras;Black;19/02/2024 00:00; protetor;False;;;22/02/2024 20:32;[]
+943;;Receita;50,0;Cobrança;Itaú;19/02/2024 00:00;;True;;;19/02/2024 10:29;[]
+948;Bianca dividas;Receita;800,0;Cobrança;Itaú;19/02/2024 00:00;;True;;;22/02/2024 20:47;[]
+949;centro automotivo;Despesa;-100,0;Transporte;Itaú;19/02/2024 00:00;;False;;;22/02/2024 20:48;[]
+950;mercado;Despesa;-125,0;Supermercado;Itaú;19/02/2024 00:00;;False;;;22/02/2024 20:50;[]
+945;nunes clementino;Despesa;-8,17;Restaurante;Black;21/02/2024 00:00;;False;;;22/02/2024 20:36;[]
+946;feaum lanchonete;Despesa;-68,48;Restaurante;Black;21/02/2024 00:00;;False;;;22/02/2024 20:37;[]
+947;ca bba;Despesa;-13,1;Restaurante;Black;21/02/2024 00:00;;False;;;22/02/2024 20:38;[]
+951;Transferência;Transferência;500,0;Transferência;Black;21/02/2024 00:00;;False;;;22/02/2024 20:52;
+951;Transferência;Transferência;-500,0;Transferência;Itaú;21/02/2024 00:00;;False;;;22/02/2024 20:52;
+610;Calvin Klein;Despesa;-75,6;Compras;C6;22/02/2024 00:00;;False;5.0;22/10/2023;30/10/2023 08:59;[]
+611;Harley;Despesa;-93,768;Compras;C6;22/02/2024 00:00;;False;5.0;22/10/2023;30/10/2023 09:00;[]
+852;presente bianca;Despesa;-108,34;Presentes;Black;22/02/2024 00:00;;False;2.0;22/01/2024;25/01/2024 17:48;[]
+952;são carlos lanches ;Despesa;-69,8;Restaurante;Black;22/02/2024 00:00;;False;;;25/02/2024 12:19;[]
+953;top;Despesa;-50,0;Transporte;Black;23/02/2024 00:00;;False;;;25/02/2024 12:20;[]
+954;armazem parrilla ;Despesa;-55,82;Restaurante;Black;23/02/2024 00:00;;False;;;25/02/2024 12:20;[]
+955;uber;Despesa;-9,92;Transporte;Black;23/02/2024 00:00;;False;;;25/02/2024 12:21;[]
+956;Pag Caetano;Despesa;-102,0;Lazer;Itaú;23/02/2024 00:00;;False;;;26/02/2024 10:02;[]
+957;Pedro dry;Despesa;-200,0;Lazer;Itaú;23/02/2024 00:00;;False;;;26/02/2024 10:02;[]
+998;Uber;Despesa;-19,91;Transporte;Black;24/02/2024 00:00;;False;;;17/03/2024 14:48;[]
+999;Leblon lebon;Despesa;-180,0;Lazer;Black;24/02/2024 00:00;;False;;;17/03/2024 14:48;[]
+1000;São carlos lanches ;Despesa;-91,8;Restaurante;Black;24/02/2024 00:00;;False;;;17/03/2024 14:49;[]
+1001;supermercado confianca;Despesa;-84,09;Supermercado;Black;25/02/2024 00:00;;False;;;17/03/2024 14:50;[]
+962;cinemark;Despesa;-27,0;Lazer;Black;26/02/2024 00:00;;False;;;26/02/2024 10:12;[]
+965;Transferência;Transferência;2879,9;Transferência;Black;26/02/2024 00:00;;False;;;17/03/2024 13:28;
+959;drogaria;Despesa;-45,58;Compras;Itaú;26/02/2024 00:00;;False;;;26/02/2024 10:05;[]
+960;bullguer ;Despesa;-61,0;Restaurante;Itaú;26/02/2024 00:00;;False;;;26/02/2024 10:05;[]
+1002;Click bus;Despesa;-59,47;Transporte;Black;26/02/2024 00:00;;False;;;17/03/2024 14:52;[]
+1003;Ifood;Despesa;-62,9;Restaurante;Black;26/02/2024 00:00;;False;;;17/03/2024 14:53;[]
+1004;oxxo;Despesa;-6,99;Supermercado;Black;26/02/2024 00:00;;False;;;17/03/2024 14:53;[]
+961;bobs;Despesa;-17,9;Restaurante;Itaú;26/02/2024 00:00;;False;;;26/02/2024 10:06;[]
+963;Seguro transação;Despesa;-3,9;Serviços;Itaú;26/02/2024 00:00;;False;;;17/03/2024 13:26;[]
+964;pereira;Despesa;-16,0;Restaurante;Itaú;26/02/2024 00:00;;False;;;17/03/2024 13:26;[]
+965;Transferência;Transferência;-2879,9;Transferência;Itaú;26/02/2024 00:00;;False;;;17/03/2024 13:28;
+1005;Club wine;Despesa;-34,65;Supermercado;Black;27/02/2024 00:00;;False;;;17/03/2024 14:56;[]
+1006;total pass;Despesa;-59,9;Supermercado;Black;27/02/2024 00:00;;False;;;17/03/2024 14:57;[]
+966;;Receita;4815,5;Salário;Itaú;27/02/2024 00:00;;False;;;17/03/2024 13:33;[]
+1252;;Receita;1060,84;Salário;VR;27/02/2024 00:00;;False;;;17/05/2024 13:47;[]
+1253;Momiji rest;Despesa;-115,0;Restaurante;VR;27/02/2024 00:00;;False;;;17/05/2024 13:47;[]
+1007;gran coffe;Despesa;-2,0;Supermercado;Black;28/02/2024 00:00;;False;;;17/03/2024 14:57;[]
+1254;Lujain restaurante;Despesa;-76,81;Restaurante;VR;28/02/2024 00:00;;False;;;17/05/2024 13:48;[]
+1008;gran coffe;Despesa;-1,0;Supermercado;Black;29/02/2024 00:00;;False;;;17/03/2024 14:57;[]
+967;;Receita;992,0;Cobrança;Itaú;29/02/2024 00:00;;True;;;17/03/2024 13:34;[]
+1255;Patties;Despesa;-49,5;Restaurante;VR;29/02/2024 00:00;;False;;;17/05/2024 13:49;[]
+1256;mc donalds;Despesa;-40,3;Restaurante;VR;29/02/2024 00:00;;False;;;17/05/2024 13:49;[]
+972;Transferência;Transferência;5048,98;Transferência;Black;01/03/2024 00:00;;False;;;17/03/2024 13:38;
+968;Nath;Despesa;-300,0;Educação;Itaú;01/03/2024 00:00;;False;;;17/03/2024 13:35;[]
+1009;renata pinellide;Despesa;-50,9;Restaurante;Black;01/03/2024 00:00;;False;;;17/03/2024 15:01;[]
+1010;vila montana;Despesa;-50,0;Restaurante;Black;01/03/2024 00:00;;False;;;17/03/2024 15:02;[]
+969;Pai pagamento;Receita;1100,0;Cobrança;Itaú;01/03/2024 00:00;;True;;;17/03/2024 13:36;[]
+970;pagametno pai;Receita;420,0;Cobrança;Itaú;01/03/2024 00:00;;True;;;17/03/2024 13:36;[]
+971;Bonus;Receita;48175,19;Salário;Itaú;01/03/2024 00:00;;False;;;17/03/2024 13:37;[]
+972;Transferência;Transferência;-5048,98;Transferência;Itaú;01/03/2024 00:00;;False;;;17/03/2024 13:38;
+1257;Oxxo ;Despesa;-39,08;Supermercado;VR;01/03/2024 00:00;;False;;;17/05/2024 13:50;[]
+1258;Indessa;Despesa;-152,46;Restaurante;VR;02/03/2024 00:00;;False;;;17/05/2024 13:50;[]
+1011;ingresso .com;Despesa;-58,88;Lazer;Black;03/03/2024 00:00;;False;;;17/03/2024 15:02;[]
+1012;Tommy campinas;Despesa;-388,2;Compras;Black;03/03/2024 00:00;;False;;;17/03/2024 15:02;[]
+1013;lloccitane;Despesa;-49,9;Presentes;Black;03/03/2024 00:00;;False;;;17/03/2024 15:03;[]
+1014;levis ;Despesa;-889,7;Compras;Black;03/03/2024 00:00;;False;;;17/03/2024 15:03;[]
+1015;Lojas renner;Despesa;-113,2;Compras;Black;03/03/2024 00:00;;False;1.0;03/03/2024;17/03/2024 15:04;[]
+1016;Conectar ;Despesa;-50,0;Transporte;Black;03/03/2024 00:00;;False;;;17/03/2024 15:05;[]
+1259;Mc donalds;Despesa;-40,7;Restaurante;VR;03/03/2024 00:00;;False;;;17/05/2024 13:50;[]
+1260;Yakis;Despesa;-102,1;Restaurante;VR;03/03/2024 00:00;;False;;;17/05/2024 13:51;[]
+974;Folha de ferias;Receita;3607,69;Salário;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:54;[]
+975;marcos e fatima paraty;Receita;310,0;Cobrança;Itaú;04/03/2024 00:00;;True;;;17/03/2024 13:54;[]
+976;Rainara;Despesa;-10,0;Supermercado;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:55;[]
+1017;Havainas;Despesa;-34,99;Compras;Black;04/03/2024 00:00;;False;;;17/03/2024 15:05;[]
+1018;chilli beans;Despesa;-349,98;Compras;Black;04/03/2024 00:00;;False;;;17/03/2024 15:05;[]
+1019;amazon prime aluguel;Despesa;-14,9;Multas;Black;04/03/2024 00:00;;False;;;17/03/2024 15:06;[]
+973;Aplicação;Investimento;43000,0;CDB;Ion;04/03/2024 00:00;;False;;;17/03/2024 13:52;
+977;Trans selma presente nath;Despesa;-150,0;Presentes;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:55;[]
+978;Onix quitação;Despesa;-6000,0;Onix;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:56;[]
+979;IOF;Despesa;-11,63;Multas;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:56;[]
+973;Aplicação;Investimento;-43000,0;CDB;Itaú;04/03/2024 00:00;;False;;;17/03/2024 13:52;
+1261;Burguer king;Despesa;-43,8;Restaurante;VR;04/03/2024 00:00;;False;;;17/05/2024 13:51;[]
+819;Airffryer magalu;Despesa;-52,45;Compras;Black;05/03/2024 00:00;;False;3.0;05/01/2024;07/01/2024 18:47;[]
+1020;Club latampass;Despesa;-40,9;Viagem;Black;05/03/2024 00:00;;False;;;17/03/2024 15:07;[]
+1021;fabioferreirade;Despesa;-40,0;Saúde;Black;05/03/2024 00:00;;False;;;17/03/2024 15:07;[]
+1022;Comes;Despesa;-103,41;Restaurante;Black;06/03/2024 00:00;;False;;;17/03/2024 15:09;[]
+1023;Pontiguar;Despesa;-293,12;Viagem;Black;06/03/2024 00:00;;False;1.0;06/03/2024;17/03/2024 15:12;[]
+1024;emprestimo pontiguar;Despesa;-586,0;Outros;Black;06/03/2024 00:00;;True;1.0;06/03/2024;17/03/2024 15:15;[]
+1025;Foco aluguel;Despesa;-417,89;Viagem;Black;06/03/2024 00:00;;False;;;17/03/2024 15:17;[]
+1026;google;Despesa;-7,99;TV,Internet,Telefone;Black;06/03/2024 00:00;;False;;;17/03/2024 15:17;[]
+1027;Conectar ;Despesa;-50,0;Viagem;Black;06/03/2024 00:00;;False;;;17/03/2024 15:18;[]
+980;Saque;Despesa;-100,0;Lazer;Itaú;06/03/2024 00:00;;False;;;17/03/2024 13:57;[]
+1262;Mc donalds;Despesa;-46,8;Restaurante;VR;06/03/2024 00:00;;False;;;17/05/2024 13:52;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/03/2024 00:00;;False;2.0;07/02/2024;14/02/2024 22:51;[]
+1028;Aline caronlina;Despesa;-37,89;Restaurante;Black;07/03/2024 00:00;;False;;;17/03/2024 15:27;[]
+1029;Donadel;Despesa;-143,0;Restaurante;Black;07/03/2024 00:00;;False;;;17/03/2024 15:29;[]
+1030;Cachaçaria;Despesa;-80,0;Supermercado;Black;07/03/2024 00:00;;False;;;17/03/2024 15:30;[]
+1031;emilly;Despesa;-10,0;Compras;Black;07/03/2024 00:00;;False;;;17/03/2024 15:30;[]
+1032;Pizzaria;Despesa;-100,0;Restaurante;Black;07/03/2024 00:00;;False;;;17/03/2024 15:31;[]
+1033;posto gasosa;Despesa;-27,26666667;Viagem;Black;08/03/2024 00:00;;False;;;17/03/2024 15:34;[]
+1034;emprestimo;Despesa;-54,3;Outros;Black;08/03/2024 00:00;;True;;;17/03/2024 15:34;[]
+1035;la proa;Despesa;-60,0;Restaurante;Black;08/03/2024 00:00;;False;;;17/03/2024 15:35;[]
+981;aluguel+condominio;Despesa;-1706,43;Casa;Itaú;08/03/2024 00:00;;False;;;17/03/2024 14:08;[]
+982;Mergulho;Despesa;-120,0;Lazer;Itaú;08/03/2024 00:00;;False;;;17/03/2024 14:12;[]
+983;Emprestimos mergulho;Despesa;-439,99;Outros;Itaú;08/03/2024 00:00;;True;;;17/03/2024 14:13;[]
+984;Elviane;Despesa;-10,0;Restaurante;Itaú;08/03/2024 00:00;;False;;;17/03/2024 14:13;[]
+1036;Youse ;Despesa;-148,96;Serviços;Black;09/03/2024 00:00;;False;;;17/03/2024 15:35;[]
+1037;Pag itech;Despesa;-33,0;Lazer;Black;10/03/2024 00:00;;False;;;17/03/2024 15:39;[]
+1038;Barraca;Despesa;-215,36;Restaurante;Black;10/03/2024 00:00;;False;;;17/03/2024 15:40;[]
+1039;raiadroga;Despesa;-6,69;Supermercado;Black;10/03/2024 00:00;;False;;;17/03/2024 15:40;[]
+1040;Cachakaria;Despesa;-44,0;Restaurante;Black;11/03/2024 00:00;;False;;;17/03/2024 15:44;[]
+1041;augumax;Despesa;-45,0;Compras;Black;11/03/2024 00:00;;False;;;17/03/2024 15:45;[]
+1042;josivaldo;Despesa;-80,0;Restaurante;Black;11/03/2024 00:00;;False;;;17/03/2024 15:45;[]
+1043;;Despesa;-40,0;Lazer;Black;11/03/2024 00:00;;False;;;17/03/2024 15:46;[]
+985;Lancha day use + fotos;Despesa;-155,0;Lazer;Itaú;11/03/2024 00:00;;False;;;17/03/2024 14:20;[]
+986;comidas e compras;Despesa;-106,0;Restaurante;Itaú;11/03/2024 00:00;;False;;;17/03/2024 14:21;[]
+987;emprestimo lancha dayuse fotos;Despesa;-620,0;Outros;Itaú;11/03/2024 00:00;;True;;;17/03/2024 14:22;[]
+989;Transferência;Transferência;62,88;Transferência;Cartão Nubank;12/03/2024 00:00;;False;;;17/03/2024 14:29;
+1044;potiguar bebes;Despesa;-22,0;Supermercado;Black;12/03/2024 00:00;;False;;;17/03/2024 15:48;[]
+1045;Donadel;Despesa;-150,0;Restaurante;Black;12/03/2024 00:00;;False;;;17/03/2024 15:48;[]
+1046;donadel;Despesa;-105,0;Lazer;Black;12/03/2024 00:00;;False;;;17/03/2024 15:49;[]
+1047;djair;Despesa;-30,0;Restaurante;Black;12/03/2024 00:00;;False;;;17/03/2024 15:49;[]
+988;amaro;Despesa;-16,0;Restaurante;Itaú;12/03/2024 00:00;;False;;;17/03/2024 14:25;[]
+989;Transferência;Transferência;-62,88;Transferência;Itaú;12/03/2024 00:00;;False;;;17/03/2024 14:29;
+1048;Estacionamento;Despesa;-51,31;Viagem;Black;13/03/2024 00:00;;False;;;17/03/2024 15:51;[]
+1049;emprestimo estacionamento;Despesa;-102,62;Outros;Black;13/03/2024 00:00;;True;;;17/03/2024 15:52;[]
+990;Bianca;Receita;235,0;Cobrança;Itaú;13/03/2024 00:00;;True;;;17/03/2024 14:33;[]
+1263;Rodosnack;Despesa;-21,8;Restaurante;VR;13/03/2024 00:00;;False;;;17/05/2024 13:52;[]
+1264;Jeronimo;Despesa;-48,8;Restaurante;VR;13/03/2024 00:00;;False;;;17/05/2024 13:54;[]
+1050;Servicecar;Despesa;-880,0;Serviços;Black;14/03/2024 00:00;;False;;;17/03/2024 15:54;[]
+1051;Recreio ouro;Despesa;-172,27;Transporte;Black;14/03/2024 00:00;;False;;;17/03/2024 15:54;[]
+1052;lava jato;Despesa;-55,0;Serviços;Black;14/03/2024 00:00;;False;;;17/03/2024 15:54;[]
+991;Resgate;Investimento;-2000,0;CDB;Ion;14/03/2024 00:00;;False;;;17/03/2024 14:36;
+991;Resgate;Investimento;2000,0;CDB;Itaú;14/03/2024 00:00;;False;;;17/03/2024 14:36;
+1265;Kaishi;Despesa;-226,8;Restaurante;VR;14/03/2024 00:00;;False;;;17/05/2024 13:55;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/03/2024 00:00;;False;3.0;15/01/2024;18/01/2024 09:49;[]
+1053;Amazon prime;Despesa;-14,9;TV,Internet,Telefone;Black;15/03/2024 00:00;;False;;;17/03/2024 15:55;[]
+994;IPVA;Despesa;-389,96;Serviços;Itaú;15/03/2024 00:00;;False;;;17/03/2024 14:39;[]
+992;Resgate;Investimento;-1700,52;CDB;Ion;15/03/2024 00:00;;False;;;17/03/2024 14:38;
+993;Resgate;Investimento;-200,84;CDB;Ion;15/03/2024 00:00;;False;;;17/03/2024 14:39;
+995;S23;Despesa;-1799,0;Compras;Itaú;15/03/2024 00:00;;False;;;17/03/2024 14:40;[]
+996;Caixinha;Despesa;-50,0;Viagem;Itaú;15/03/2024 00:00;;False;;;17/03/2024 14:40;[]
+992;Resgate;Investimento;1700,52;CDB;Itaú;15/03/2024 00:00;;False;;;17/03/2024 14:38;
+993;Resgate;Investimento;200,84;CDB;Itaú;15/03/2024 00:00;;False;;;17/03/2024 14:39;
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/03/2024 00:00;parcelamento;False;8.0;16/08/2023;30/07/2023 12:06;
+1054;Adega furias;Despesa;-20,3;Lazer;Black;16/03/2024 00:00;;False;;;17/03/2024 15:56;[]
+1055;autposto;Despesa;-84,52;Transporte;Black;16/03/2024 00:00;;False;;;17/03/2024 15:56;[]
+1056;google storage;Despesa;-11,99;TV,Internet,Telefone;Black;16/03/2024 00:00;;False;;;17/03/2024 15:56;[]
+1057;podrão;Despesa;-40,0;Restaurante;Black;16/03/2024 00:00;;False;;;17/03/2024 15:57;[]
+997;Transferência;Transferência;419,19;Transferência;Cartão Nubank;17/03/2024 00:00;;False;;;17/03/2024 14:42;
+1058;Oxxo agua;Despesa;-20,98;Supermercado;Black;17/03/2024 00:00;;False;;;17/03/2024 15:58;[]
+1059;cafe da manha;Despesa;-20,0;Restaurante;Black;17/03/2024 00:00;;False;;;17/03/2024 15:58;[]
+1060;drogasil;Despesa;-88,89;Supermercado;Black;17/03/2024 00:00;;False;;;17/03/2024 15:59;[]
+1061;oxxo;Despesa;-9,49;Supermercado;Black;17/03/2024 00:00;;False;;;17/03/2024 15:59;[]
+1062;joao rock;Despesa;-67,8;Viagem;Black;17/03/2024 00:00;;False;1.0;17/03/2024;17/03/2024 16:00;[]
+1063;430gradi;Despesa;-137,06;Restaurante;Black;17/03/2024 00:00;;False;;;21/03/2024 19:50;[]
+1064;Hamburgueria jolly;Despesa;-24,2;Restaurante;Black;17/03/2024 00:00;;False;;;21/03/2024 19:51;[]
+997;Transferência;Transferência;-419,19;Transferência;Itaú;17/03/2024 00:00;;False;;;17/03/2024 14:42;
+1266;Frutilla;Despesa;-30,0;Supermercado;VR;17/03/2024 00:00;;False;;;17/05/2024 13:56;[]
+1065;Oxxo francisco;Despesa;-16,71;Supermercado;Black;18/03/2024 00:00;;False;;;21/03/2024 19:51;[]
+1066;Top;Despesa;-20,0;Transporte;Black;18/03/2024 00:00;;False;;;21/03/2024 19:51;[]
+1067;Gran Coffe;Despesa;-1,0;Supermercado;Black;18/03/2024 00:00;;False;;;21/03/2024 19:52;[]
+1068;Frutilla;Despesa;-37,0;Restaurante;Black;18/03/2024 00:00;;False;;;21/03/2024 19:55;[]
+1069;Balança;Despesa;-25,78;Compras;Black;18/03/2024 00:00;;False;;;21/03/2024 19:56;[]
+1080;Saque;Despesa;-50,0;Outros;Itaú;18/03/2024 00:00;;False;;;21/03/2024 20:06;[]
+1081;Colchão Emma;Despesa;-728,19;Compras;Itaú;18/03/2024 00:00;;False;;;21/03/2024 20:07;[]
+1082;Pix companhia;Despesa;-95,22;Casa;Itaú;18/03/2024 00:00;Gas;False;;;21/03/2024 20:07;[]
+1083;Valdinei;Receita;1000,0;Cobrança;Itaú;18/03/2024 00:00;;True;;;21/03/2024 20:08;[]
+1070;Fran lanchonete;Despesa;-75,39;Restaurante;Black;19/03/2024 00:00;;False;;;21/03/2024 19:57;[]
+1071;Inefavel iphones;Despesa;-8,5;Compras;Black;20/03/2024 00:00;;False;;;21/03/2024 19:58;[]
+1072;Renner;Despesa;-59,9;Compras;Black;20/03/2024 00:00;;False;;;21/03/2024 19:58;[]
+1073;Capinha celular;Despesa;-89,0;Compras;Black;20/03/2024 00:00;;False;;;21/03/2024 19:59;[]
+1074;Ponto;Despesa;-39,0;Restaurante;Black;20/03/2024 00:00;;False;;;21/03/2024 19:59;[]
+1075;Fornatore;Despesa;-4,0;Restaurante;Black;20/03/2024 00:00;;False;;;21/03/2024 20:00;[]
+1076;Bacio;Despesa;-20,95;Restaurante;Black;20/03/2024 00:00;;False;;;21/03/2024 20:00;[]
+1077;Nunes clementino;Despesa;-6,0;Supermercado;Black;20/03/2024 00:00;;False;;;21/03/2024 20:00;[]
+1084;Divida bianca ;Receita;750,0;Cobrança;Itaú;20/03/2024 00:00;500 notebook + 150 celular + 100 viagem;True;;;21/03/2024 20:11;[]
+1085;credito cartão, não sei da onde;Receita;62,88;Outros;Itaú;20/03/2024 00:00;;False;;;21/03/2024 20:12;[]
+1078;O chopp;Despesa;-57,7;Restaurante;Black;21/03/2024 00:00;;False;;;21/03/2024 20:02;[]
+1079;mercado vergueiro;Despesa;-4,5;Supermercado;Black;21/03/2024 00:00;;False;;;21/03/2024 20:02;[]
+1088;Aplicação;Investimento;500,0;CDB;Ion;21/03/2024 00:00;;False;;;21/03/2024 20:14;itau
+1086;Manutenções;Despesa;-300,0;Serviços;Itaú;21/03/2024 00:00;;False;;;21/03/2024 20:13;[]
+1087;Mercados casa;Despesa;-123,96;Casa;Itaú;21/03/2024 00:00;;False;;;21/03/2024 20:13;[]
+1088;Aplicação;Investimento;-500,0;CDB;Itaú;21/03/2024 00:00;;False;;;21/03/2024 20:14;itau
+852;presente bianca;Despesa;-108,34;Presentes;Black;22/03/2024 00:00;;False;3.0;22/01/2024;25/01/2024 17:48;[]
+1096;Pereira distribuidora;Despesa;-16,0;Supermercado;Black;22/03/2024 00:00;;False;;;29/03/2024 15:17;[]
+1098;bunoa sera mais esfiha;Despesa;-68,97;Restaurante;Black;22/03/2024 00:00;;False;;;29/03/2024 15:21;[]
+1121;pix qrs limes comer;Despesa;-93,47;Presentes;Itaú;22/03/2024 00:00;Ovos de pascoa;False;;;01/04/2024 11:47;[]
+1122;rede integr;Despesa;-5,99;Supermercado;Itaú;22/03/2024 00:00;;False;;;01/04/2024 11:48;[]
+1099;Conect car;Despesa;-50,0;Transporte;Black;23/03/2024 00:00;;False;;;29/03/2024 15:21;[]
+1100;Jeronimo;Despesa;-28,0;Restaurante;Black;23/03/2024 00:00;;False;;;29/03/2024 15:22;[]
+1101;mc donalds;Despesa;-27,9;Restaurante;Black;23/03/2024 00:00;;False;;;29/03/2024 15:22;[]
+1102;Sra adega;Despesa;-48,29;Lazer;Black;23/03/2024 00:00;;False;;;29/03/2024 15:23;[]
+1103;Jatoba;Despesa;-50,0;Restaurante;Black;24/03/2024 00:00;;False;;;29/03/2024 15:23;[]
+1104;Yakis;Despesa;-74,8;Restaurante;Black;24/03/2024 00:00;;False;;;29/03/2024 15:24;[]
+1105;Conect car;Despesa;-50,0;Transporte;Black;25/03/2024 00:00;;False;;;29/03/2024 15:24;[]
+1106;atupostovictor;Despesa;-114,53;Transporte;Black;25/03/2024 00:00;gasosa;False;;;29/03/2024 15:25;[]
+1120;seg transação protegida;Despesa;-3,9;Serviços;Itaú;25/03/2024 00:00;;False;;;01/04/2024 11:45;[]
+1107;fraum lanchonete;Despesa;-66,59;Restaurante;Black;26/03/2024 00:00;;False;;;29/03/2024 15:25;[]
+1108;Clubw;Despesa;-34,65;Supermercado;Black;27/03/2024 00:00;;False;;;29/03/2024 15:26;[]
+1109;Totalpass;Despesa;-79,9;Saúde;Black;27/03/2024 00:00;;False;;;29/03/2024 15:26;[]
+1110;Veloso Bar;Despesa;-80,74;Lazer;Black;27/03/2024 00:00;;False;;;29/03/2024 15:27;[]
+1111;cafe;Despesa;-2,0;Supermercado;Black;27/03/2024 00:00;;False;;;29/03/2024 15:27;[]
+1112;uber;Despesa;-6,0;Transporte;Black;27/03/2024 00:00;;False;;;29/03/2024 15:27;[]
+1123;Salario;Receita;2979,88;Salário;Itaú;27/03/2024 00:00;;False;;;01/04/2024 11:48;[]
+1267;1060,84;Receita;1060,84;Salário;VR;27/03/2024 00:00;;False;;;17/05/2024 13:57;[]
+1268;Amareilinho das batidas;Despesa;-49,5;Restaurante;VR;27/03/2024 00:00;;False;;;17/05/2024 14:51;[]
+1115;Itaushop;Despesa;-45,8;Compras;Black;28/03/2024 00:00;Roupa de cama;False;;;29/03/2024 15:29;[]
+1124;ana mv divida;Receita;70,0;Cobrança;Itaú;28/03/2024 00:00;;True;;;01/04/2024 11:50;[]
+1125;banco c6 tim;Despesa;-70,0;TV,Internet,Telefone;Itaú;28/03/2024 00:00;;False;;;01/04/2024 11:51;[]
+1126;auttar;Despesa;-5,0;Supermercado;Itaú;28/03/2024 00:00;;False;;;01/04/2024 11:51;[]
+1093;Aplicação;Investimento;-8495,5;Tesouro Selic;Nubank;29/03/2024 00:00;;False;;;29/03/2024 14:54;
+1093;Aplicação;Investimento;8495,5;Tesouro Selic;Nuinvest;29/03/2024 00:00;;False;;;29/03/2024 14:54;
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/03/2024 00:00;escrivaninha + guarda roupa;False;1.0;29/03/2024;29/03/2024 15:19;[]
+1113;;Despesa;0,0;Supermercado;Black;29/03/2024 00:00;;False;;;29/03/2024 15:28;[]
+1114;são carlos lanches;Despesa;-51,75;Restaurante;Black;29/03/2024 00:00;;False;;;29/03/2024 15:28;[]
+1135;Connect car;Despesa;-50,0;Transporte;Black;29/03/2024 00:00;;False;;;04/04/2024 09:19;[]
+1269;Akatsue;Despesa;-202,29;Restaurante;VR;29/03/2024 00:00;;False;;;17/05/2024 14:54;[]
+1136;autoposto;Despesa;-102,61;Transporte;Black;31/03/2024 00:00;;False;;;04/04/2024 09:20;[]
+1127;Cartões pais;Receita;2145,0;Cobrança;Itaú;01/04/2024 00:00;;True;;;01/04/2024 11:56;[]
+1128;Resgate;Investimento;4000,35;CDB;Itaú;01/04/2024 00:00;;False;;;01/04/2024 11:57;
+1128;Resgate;Investimento;-4000,35;CDB;Ion;01/04/2024 00:00;;False;;;01/04/2024 11:57;
+1129;Transferência;Transferência;-9221,95;Transferência;Itaú;01/04/2024 00:00;;False;;;01/04/2024 11:57;
+1130;Sofa;Despesa;-415,79;Compras;Itaú;01/04/2024 00:00;;False;;;04/04/2024 08:38;[]
+1129;Transferência;Transferência;9221,95;Transferência;Black;01/04/2024 00:00;;False;;;01/04/2024 11:57;
+1182;presente gemeos;Despesa;-12,0;Presentes;Itaú;01/04/2024 00:00;;False;;;21/04/2024 12:04;[]
+1132;Transferência;Transferência;-401,52;Transferência;Itaú;02/04/2024 00:00;;False;;;04/04/2024 08:47;
+1133;iof;Despesa;-7,24;Multas;Itaú;02/04/2024 00:00;;False;;;04/04/2024 08:47;[]
+1132;Transferência;Transferência;401,52;Transferência;Cartão Nubank;02/04/2024 00:00;;False;;;04/04/2024 08:47;
+1134;saque;Despesa;-40,0;Transporte;Itaú;02/04/2024 00:00;;False;;;04/04/2024 08:47;[]
+1217;Mesa Mobly;Despesa;-164,17;Compras;Black;02/04/2024 00:00;;False;;;03/05/2024 12:11;[]
+1270;Amarilnho das batidas;Despesa;-44,0;Restaurante;VR;02/04/2024 00:00;;False;;;17/05/2024 14:55;[]
+1015;Lojas renner;Despesa;-113,2;Compras;Black;03/04/2024 00:00;;False;2.0;03/03/2024;17/03/2024 15:04;[]
+1271;Amarelinho;Despesa;-47,0;Restaurante;VR;03/04/2024 00:00;;False;;;17/05/2024 14:55;[]
+1137;Nath;Despesa;-210,0;Educação;Itaú;04/04/2024 00:00;;False;;;06/04/2024 12:29;[]
+1139;Tim;Despesa;-63,0;TV,Internet,Telefone;Itaú;04/04/2024 00:00;;False;;;06/04/2024 12:31;[]
+1140;Caixinha;Despesa;-50,0;Viagem;Itaú;04/04/2024 00:00;;False;;;06/04/2024 12:31;[]
+1141;Escrivainha joseils;Despesa;-80,0;Compras;Itaú;04/04/2024 00:00;;False;;;06/04/2024 12:32;[]
+1138;Nath;Despesa;-390,0;Educação;Black;04/04/2024 00:00;;False;;;06/04/2024 12:30;[]
+819;Airffryer magalu;Despesa;-52,45;Compras;Black;05/04/2024 00:00;;False;4.0;05/01/2024;07/01/2024 18:47;[]
+1142;Henriq;Receita;35,0;Cobrança;Itaú;05/04/2024 00:00;;True;;;06/04/2024 12:32;[]
+1143;JUROS;Despesa;-24,25;Multas;Itaú;05/04/2024 00:00;;False;;;06/04/2024 12:33;[]
+1144;Resgate;Investimento;-3000,18;CDB;Ion;05/04/2024 00:00;;False;;;06/04/2024 12:33;
+1144;Resgate;Investimento;3000,18;CDB;Itaú;05/04/2024 00:00;;False;;;06/04/2024 12:33;
+1145;Latam pass;Despesa;-49,9;Viagem;Black;05/04/2024 00:00;;False;;;06/04/2024 12:38;[]
+1146;Spotify;Despesa;-21,9;TV,Internet,Telefone;Black;05/04/2024 00:00;;False;;;06/04/2024 12:39;[]
+1147;Agua;Despesa;-8,0;Supermercado;Black;05/04/2024 00:00;;False;;;06/04/2024 12:40;[]
+1148;Ifood;Despesa;-63,69;Restaurante;Black;05/04/2024 00:00;;False;;;06/04/2024 12:41;[]
+1023;Pontiguar;Despesa;-293,12;Viagem;Black;06/04/2024 00:00;;False;2.0;06/03/2024;17/03/2024 15:12;[]
+1024;emprestimo pontiguar;Despesa;-586,0;Outros;Black;06/04/2024 00:00;;True;2.0;06/03/2024;17/03/2024 15:15;[]
+1149;zona azul;Despesa;-12,72;Transporte;Black;06/04/2024 00:00;;False;;;06/04/2024 12:41;[]
+1150;agua de coco;Despesa;-13,0;Supermercado;Black;06/04/2024 00:00;;False;;;06/04/2024 12:41;[]
+1151;Buona sera ;Despesa;-35,0;Restaurante;Black;06/04/2024 00:00;;False;;;07/04/2024 11:18;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/04/2024 00:00;;False;3.0;07/02/2024;14/02/2024 22:51;[]
+1152;teste;Despesa;0,0;Supermercado;Black;07/04/2024 00:00;;False;;;07/04/2024 13:16;[]
+1272;Frutilla;Despesa;-7,5;Restaurante;VR;07/04/2024 00:00;;False;;;17/05/2024 14:55;[]
+1273;Barakah;Despesa;-72,5;Restaurante;VR;07/04/2024 00:00;;False;;;17/05/2024 15:01;[]
+1153;Aluguel;Despesa;-1703,18;Casa;Itaú;08/04/2024 00:00;;False;;;08/04/2024 15:01;[]
+1156;MOP;Despesa;-18,89;Compras;Black;08/04/2024 00:00;;False;;;12/04/2024 08:33;[]
+1154;Lorena divida;Receita;35,0;Cobrança;Itaú;09/04/2024 00:00;;True;;;12/04/2024 08:21;[]
+1157;Youse;Despesa;-148,96;Serviços;Black;09/04/2024 00:00;;False;;;12/04/2024 08:33;[]
+1158;Oxxo;Despesa;-13,98;Supermercado;Black;09/04/2024 00:00;;False;;;12/04/2024 08:34;[]
+1159;Pereira distribuidora;Despesa;-8,0;Supermercado;Black;10/04/2024 00:00;Agua;False;;;12/04/2024 08:34;[]
+1274;Frutilla;Despesa;-61,0;Restaurante;VR;10/04/2024 00:00;;False;;;17/05/2024 15:02;[]
+1160;Vila das frutas;Despesa;-15,0;Supermercado;Black;11/04/2024 00:00;;False;;;12/04/2024 08:36;[]
+1161;Casa gijo linguiça;Despesa;-14,12;Supermercado;Black;11/04/2024 00:00;;False;;;12/04/2024 08:36;[]
+1275;Braz quintal;Despesa;-166,86;Restaurante;VR;11/04/2024 00:00;;False;;;17/05/2024 15:03;[]
+1155;Camiseta Polo;Despesa;-89,9;Compras;Itaú;12/04/2024 00:00;;False;;;12/04/2024 08:22;[]
+1276;Casa san pietro;Despesa;-42,67;Supermercado;VR;12/04/2024 00:00;;False;;;17/05/2024 15:03;[]
+1277;Oxxo;Despesa;-9,48;Supermercado;VR;12/04/2024 00:00;;False;;;17/05/2024 15:03;[]
+1278;Pizzaria;Despesa;-97,0;Restaurante;VR;12/04/2024 00:00;;False;;;17/05/2024 15:04;[]
+1162;bianca;Receita;60,6;Cobrança;Itaú;13/04/2024 00:00;;True;;;14/04/2024 22:08;[]
+1163;mc donalds;Despesa;-69,8;Restaurante;Black;13/04/2024 00:00;;False;;;14/04/2024 22:10;[]
+1164;Gasosa;Despesa;-142,63;Transporte;Black;14/04/2024 00:00;;False;;;14/04/2024 22:10;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/04/2024 00:00;;False;4.0;15/01/2024;18/01/2024 09:49;[]
+1165;Amazon Prime;Despesa;-19,9;TV,Internet,Telefone;Black;15/04/2024 00:00;;False;;;20/04/2024 11:50;[]
+1183;Bianca;Receita;38,0;Cobrança;Itaú;15/04/2024 00:00;;True;;;21/04/2024 12:14;[]
+1166;connect car;Despesa;-50,0;Transporte;Black;15/04/2024 00:00;;False;;;20/04/2024 11:50;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/04/2024 00:00;parcelamento;False;9.0;16/08/2023;30/07/2023 12:06;
+1167;Veloso Bar;Despesa;-70,19;Lazer;Black;16/04/2024 00:00;;False;;;20/04/2024 11:52;[]
+1062;joao rock;Despesa;-67,8;Viagem;Black;17/04/2024 00:00;;False;2.0;17/03/2024;17/03/2024 16:00;[]
+1168;Top;Despesa;-20,0;Transporte;Black;17/04/2024 00:00;;False;;;20/04/2024 11:55;[]
+1169;Salgado  cantina;Despesa;-8,5;Supermercado;Black;17/04/2024 00:00;;False;;;21/04/2024 11:31;[]
+833;IPVA onix;Despesa;-389,96;Serviços;Itaú;17/04/2024 00:00;;False;4.0;17/01/2024;18/01/2024 09:44;[]
+1170;jedeonpereirodoss;Despesa;-20,0;Supermercado;Black;17/04/2024 00:00;;False;;;21/04/2024 11:32;[]
+1279;Fraum;Despesa;-84,72;Restaurante;VR;17/04/2024 00:00;;False;;;17/05/2024 15:04;[]
+1171;universidade;Despesa;-60,0;Lazer;Black;18/04/2024 00:00;;False;;;21/04/2024 11:37;[]
+1172;HH vent;Despesa;-85,96;Lazer;Black;18/04/2024 00:00;;False;;;21/04/2024 11:37;[]
+1280;Nunes clementino;Despesa;-31,8;Restaurante;VR;18/04/2024 00:00;;False;;;17/05/2024 15:04;[]
+1173;pereira distribuidora;Despesa;-16,0;Supermercado;Black;19/04/2024 00:00;agua;False;;;21/04/2024 11:40;[]
+1174;Buona sera;Despesa;-87,0;Restaurante;Black;19/04/2024 00:00;;False;;;21/04/2024 11:41;[]
+1175;multi coisas;Despesa;-72,8;Compras;Black;20/04/2024 00:00;;False;;;21/04/2024 11:41;[]
+1176;agua coco;Despesa;-13,0;Supermercado;Black;20/04/2024 00:00;;False;;;21/04/2024 11:42;[]
+1177;zul 1 cartão;Despesa;-6,36;Transporte;Black;20/04/2024 00:00;;False;;;21/04/2024 11:42;[]
+1178;kibom;Despesa;-6,0;Restaurante;Black;20/04/2024 00:00;;False;;;21/04/2024 11:42;[]
+1179;confeutarua daniella;Despesa;-69,7;Restaurante;Black;20/04/2024 00:00;triste;False;;;21/04/2024 11:44;[]
+1180;Tokyo martinel;Despesa;-154,0;Lazer;Black;20/04/2024 00:00;;False;;;21/04/2024 11:44;[]
+1181;beer house;Despesa;-55,0;Lazer;Black;20/04/2024 00:00;;False;;;21/04/2024 11:44;[]
+1281;Confeitaria;Despesa;-50,0;Restaurante;VR;20/04/2024 00:00;;False;;;17/05/2024 15:05;[]
+1184;Bianca;Receita;450,0;Cobrança;Itaú;21/04/2024 00:00;200 celular + 250 passagem;True;;;21/04/2024 12:21;[]
+1185;Congas;Despesa;-52,02;Casa;Itaú;21/04/2024 00:00;;False;;;21/04/2024 12:29;[]
+1186;Pior cachorro quente;Despesa;-27,0;Restaurante;Black;21/04/2024 00:00;;False;;;22/04/2024 11:37;[]
+1187;acai do museu;Despesa;-9,5;Restaurante;Black;21/04/2024 00:00;;False;;;22/04/2024 11:38;[]
+1188;tranporte;Despesa;-20,0;Transporte;Black;21/04/2024 00:00;;False;;;22/04/2024 11:38;[]
+1195;pix transf;Receita;506,64;Cobrança;Itaú;22/04/2024 00:00;;True;;;26/04/2024 09:00;[]
+1189;Fraum lanchonete;Despesa;-78,0;Restaurante;Black;23/04/2024 00:00;;False;;;24/04/2024 10:53;[]
+1190;Tembici;Despesa;-37,9;Multas;Black;23/04/2024 00:00;;False;;;24/04/2024 10:53;[]
+1191;Nunes clementino ;Despesa;-32,8;Restaurante;Black;25/04/2024 00:00;bandejão;False;;;26/04/2024 08:57;[]
+1192;google joytunes;Despesa;-38,99;Compras;Black;25/04/2024 00:00;;False;;;26/04/2024 08:58;[]
+1193;churras;Despesa;-10,0;Restaurante;Black;25/04/2024 00:00;;False;;;26/04/2024 08:58;[]
+1196;Seguro;Despesa;-3,9;Serviços;Itaú;25/04/2024 00:00;;False;;;26/04/2024 11:47;[]
+1194;pastorinho;Despesa;-1,28;Supermercado;Black;25/04/2024 00:00;;False;;;26/04/2024 08:59;[]
+1197;salariooo inteirooo;Receita;6929,01;Salário;Itaú;26/04/2024 00:00;;False;;;26/04/2024 11:48;[]
+1198;Aplicação;Investimento;-1500,0;Tesouro Selic;Itaú;26/04/2024 00:00;;False;;;26/04/2024 13:48;
+1198;Aplicação;Investimento;1500,0;Tesouro Selic;Nuinvest;26/04/2024 00:00;;False;;;26/04/2024 13:48;
+1199;iphone;Despesa;-200,0;Presentes;Itaú;26/04/2024 00:00;;False;;;26/04/2024 13:49;[]
+1210;ifood;Despesa;-29,69;Restaurante;Itaú;26/04/2024 00:00;;False;;;29/04/2024 17:05;[]
+1282;;Receita;1060,84;Salário;VR;26/04/2024 00:00;;False;;;17/05/2024 15:06;[]
+1200;Clubwine;Despesa;-34,65;Supermercado;Black;27/04/2024 00:00;;False;;;29/04/2024 17:00;[]
+1201;Total pass;Despesa;-79,9;Saúde;Black;27/04/2024 00:00;;False;;;29/04/2024 17:00;[]
+1202;vila das frutas;Despesa;-12,8;Supermercado;Black;27/04/2024 00:00;;False;;;29/04/2024 17:01;[]
+1203;Conect Car;Despesa;-50,0;Transporte;Black;27/04/2024 00:00;;False;;;29/04/2024 17:01;[]
+1204;Fabio;Despesa;-80,0;Saúde;Black;27/04/2024 00:00;Barbeiro;False;;;29/04/2024 17:02;[]
+1205;drogal;Despesa;-101,08;Saúde;Black;27/04/2024 00:00;;False;;;29/04/2024 17:02;[]
+1206;Bloco 2;Despesa;-66,0;Lazer;Black;27/04/2024 00:00;;False;;;29/04/2024 17:03;[]
+1207;adegamar;Despesa;-15,0;Lazer;Black;27/04/2024 00:00;;False;;;29/04/2024 17:03;[]
+1283;Mc donalds;Despesa;-24,8;Restaurante;VR;27/04/2024 00:00;;False;;;17/05/2024 15:06;[]
+1208;Estação dos lanches;Despesa;-60,0;Restaurante;Black;28/04/2024 00:00;;False;;;29/04/2024 17:04;[]
+1284;Bar tropical;Despesa;-80,0;Restaurante;VR;28/04/2024 00:00;;False;;;17/05/2024 15:07;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/04/2024 00:00;escrivaninha + guarda roupa;False;2.0;29/03/2024;29/03/2024 15:19;[]
+1209;google storage;Despesa;-11,99;TV,Internet,Telefone;Black;29/04/2024 00:00;;False;;;29/04/2024 17:04;[]
+1285;Akatsue;Despesa;-202,29;Restaurante;VR;30/04/2024 00:00;;False;;;17/05/2024 15:07;[]
+1215;autoposto;Despesa;-138,06;Transporte;Black;01/05/2024 00:00;;False;;;02/05/2024 15:39;[]
+1214;doação tia;Despesa;-300,0;Presentes;Itaú;01/05/2024 00:00;;False;;;02/05/2024 15:37;[]
+1249;nath facul;Despesa;-600,0;Educação;C6 corrente;01/05/2024 00:00;;False;;;15/05/2024 14:20;[]
+1211;Transferência;Transferência;-6823,36;Transferência;Itaú;02/05/2024 00:00;;False;;;02/05/2024 15:35;
+1212;Recebimentos cartão;Receita;2330,0;Cobrança;Itaú;02/05/2024 00:00;mae - 600 / nath 2019 / pai 1505;True;;;02/05/2024 15:36;[]
+1213;Transferência;Transferência;-374,06;Transferência;Itaú;02/05/2024 00:00;;False;;;02/05/2024 15:36;signature
+1211;Transferência;Transferência;6823,36;Transferência;Black;02/05/2024 00:00;;False;;;02/05/2024 15:35;
+1213;Transferência;Transferência;374,06;Transferência;Black;02/05/2024 00:00;;False;;;02/05/2024 15:36;signature
+1216;spotify;Despesa;-34,9;TV,Internet,Telefone;Black;02/05/2024 00:00;;False;;;02/05/2024 15:40;[]
+1218;Conectar;Despesa;-50,0;Transporte;Black;02/05/2024 00:00;;False;;;05/05/2024 11:26;[]
+1015;Lojas renner;Despesa;-113,2;Compras;Black;03/05/2024 00:00;;False;3.0;03/03/2024;17/03/2024 15:04;[]
+1219;distribuidora;Despesa;-16,0;Supermercado;Black;03/05/2024 00:00;;False;;;05/05/2024 11:26;[]
+1220;seu osnir;Despesa;-61,0;Restaurante;Black;03/05/2024 00:00;;False;;;05/05/2024 11:27;[]
+1221;mercado vergueiro;Despesa;-19,07;Supermercado;Black;03/05/2024 00:00;;False;;;05/05/2024 11:28;[]
+1231;Pix vinicius;Receita;24,0;Cobrança;Itaú;03/05/2024 00:00;;True;;;10/05/2024 11:32;[]
+1232;IOF;Despesa;-6,37;Multas;Itaú;03/05/2024 00:00;;False;;;10/05/2024 11:33;[]
+1286;Frutilla;Despesa;-12,5;Restaurante;VR;03/05/2024 00:00;;False;;;17/05/2024 15:07;[]
+1287;Oxxo;Despesa;-10,11;Supermercado;VR;03/05/2024 00:00;;False;;;17/05/2024 15:08;[]
+1288;Arcos dourados;Despesa;-46,7;Restaurante;VR;03/05/2024 00:00;;False;;;17/05/2024 15:08;[]
+1222;top ;Despesa;-20,0;Transporte;Black;04/05/2024 00:00;;False;;;05/05/2024 11:28;[]
+1223;pag*zig;Despesa;-251,0;Lazer;Black;05/05/2024 00:00;;False;;;05/05/2024 11:29;[]
+1224;clube latam pass;Despesa;-40,9;Viagem;Black;05/05/2024 00:00;;False;;;05/05/2024 11:30;[]
+1225;Vergueiro;Despesa;-9,22;Supermercado;Black;05/05/2024 00:00;;False;;;10/05/2024 10:10;[]
+1226;pastorinho;Despesa;-30,0;Supermercado;Black;05/05/2024 00:00;;False;;;10/05/2024 10:11;[]
+1289;Frutilla;Despesa;-47,0;Restaurante;VR;05/05/2024 00:00;;False;;;17/05/2024 15:08;[]
+1233;Pix bianca;Despesa;-12,0;Presentes;Itaú;06/05/2024 00:00;;False;;;11/05/2024 09:57;[]
+1290;Z deli;Despesa;-128,82;Restaurante;VR;06/05/2024 00:00;;False;;;17/05/2024 15:08;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/05/2024 00:00;;False;4.0;07/02/2024;14/02/2024 22:51;[]
+1234;Aluguel ;Despesa;-1703,18;Casa;Itaú;07/05/2024 00:00;;False;;;11/05/2024 09:58;[]
+1227;espetinho;Despesa;-24,0;Supermercado;Black;08/05/2024 00:00;;False;;;10/05/2024 10:11;[]
+1235;Pix ana RS;Despesa;-50,0;Presentes;Itaú;08/05/2024 00:00;;False;;;11/05/2024 09:59;[]
+1291;Churr e pizz;Despesa;-97,17;Restaurante;VR;08/05/2024 00:00;;False;;;17/05/2024 15:09;[]
+1228;Youse;Despesa;-148,96;Serviços;Black;09/05/2024 00:00;;False;;;10/05/2024 10:11;[]
+1229;Top;Despesa;-50,0;Transporte;Black;09/05/2024 00:00;;False;;;10/05/2024 10:12;[]
+1230;Vetana HH;Despesa;-30,96;Lazer;Black;09/05/2024 00:00;;False;;;10/05/2024 10:53;[]
+1292;Restaurante Nunes;Despesa;-36,4;Restaurante;VR;09/05/2024 00:00;;False;;;17/05/2024 15:09;[]
+1236;ISIS;Receita;32,0;Cobrança;Itaú;10/05/2024 00:00;;True;;;11/05/2024 10:00;[]
+1237;Resgate;Investimento;-1200,0;CDB;Ion;10/05/2024 00:00;;False;;;11/05/2024 10:00;
+1237;Resgate;Investimento;1200,0;CDB;Itaú;10/05/2024 00:00;;False;;;11/05/2024 10:00;
+1238;Mr texas;Despesa;-100,0;Restaurante;Black;10/05/2024 00:00;;False;;;11/05/2024 11:12;[]
+1293;oxxo;Despesa;-15,48;Supermercado;VR;10/05/2024 00:00;;False;;;17/05/2024 15:10;[]
+1240;Presente;Despesa;-76,18;Presentes;Black;11/05/2024 00:00;flores dia das mães;False;;;12/05/2024 17:58;[]
+1241;conectar ;Despesa;-50,0;Transporte;Black;11/05/2024 00:00;;False;;;12/05/2024 17:59;[]
+1294;BK drive;Despesa;-48,9;Restaurante;VR;11/05/2024 00:00;;False;;;17/05/2024 15:10;[]
+1295;Marmarella;Despesa;-35,49;Restaurante;VR;11/05/2024 00:00;;False;;;17/05/2024 15:10;[]
+1250;Japa dia das mães;Despesa;-100,0;Restaurante;Black;12/05/2024 00:00;;False;;;15/05/2024 14:33;[]
+1242;Lava rapido;Despesa;-55,0;Serviços;Black;13/05/2024 00:00;;False;;;15/05/2024 14:11;[]
+1243;Gasosa;Despesa;-145,79;Transporte;Black;13/05/2024 00:00;;False;;;15/05/2024 14:12;[]
+1244;conectcar;Despesa;-50,0;Transporte;Black;13/05/2024 00:00;;False;;;15/05/2024 14:12;[]
+1247;caixinha;Despesa;-50,0;Viagem;Itaú;13/05/2024 00:00;;False;;;15/05/2024 14:14;[]
+1248;Vó selma;Despesa;-30,0;Compras;Itaú;13/05/2024 00:00;;False;;;15/05/2024 14:15;[]
+1245;cafes;Despesa;-3,0;Supermercado;Black;14/05/2024 00:00;;False;;;15/05/2024 14:12;[]
+1246;casa gjio;Despesa;-19,01;Supermercado;Black;14/05/2024 00:00;;False;;;15/05/2024 14:13;[]
+1296;Pua ;Despesa;-49,02;Restaurante;VR;14/05/2024 00:00;;False;;;17/05/2024 15:10;[]
+1297;Frutilla;Despesa;-8,0;Restaurante;VR;14/05/2024 00:00;;False;;;17/05/2024 15:11;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/05/2024 00:00;;False;5.0;15/01/2024;18/01/2024 09:49;[]
+1251;Capinha case;Despesa;-24,41;Supermercado;Black;15/05/2024 00:00;;False;1.0;15/05/2024;17/05/2024 11:43;[]
+352;cpfl piratininga;Despesa;-33,832;Casa;C6;16/05/2024 00:00;parcelamento;False;10.0;16/08/2023;30/07/2023 12:06;
+1298;Sushi guataoara;Despesa;-119,79;Restaurante;VR;16/05/2024 00:00;;False;;;17/05/2024 15:11;[]
+1299;auttar bilhete unico;Despesa;-10,0;Transporte;Itaú;16/05/2024 00:00;;False;;;18/05/2024 09:08;[]
+1303;cafe;Despesa;-3,85;Supermercado;Black;16/05/2024 00:00;;False;;;20/05/2024 10:48;[]
+1304;agua;Despesa;-8,0;Supermercado;Black;16/05/2024 00:00;;False;;;20/05/2024 10:49;[]
+1062;joao rock;Despesa;-67,8;Viagem;Black;17/05/2024 00:00;;False;3.0;17/03/2024;17/03/2024 16:00;[]
+1300;ipva;Despesa;-389,96;Serviços;Itaú;17/05/2024 00:00;;False;;;18/05/2024 09:09;[]
+1301;Comgas;Despesa;-25,33;Casa;Itaú;18/05/2024 00:00;;False;;;18/05/2024 09:10;[]
+1302;Parte comovido;Despesa;-25,32;Casa;Itaú;18/05/2024 00:00;;True;;;18/05/2024 09:10;[]
+1305;Veloso;Despesa;-138,43;Restaurante;Black;18/05/2024 00:00;;False;;;20/05/2024 10:49;[]
+1313;oxxo;Despesa;-28,72;Supermercado;VR;18/05/2024 00:00;;False;;;20/05/2024 10:56;[]
+1306;Youcom;Despesa;-39,96666667;Compras;Black;19/05/2024 00:00;;False;1.0;19/05/2024;20/05/2024 10:50;[]
+1307;Mercado vergueiro;Despesa;-3,5;Restaurante;Black;19/05/2024 00:00;;False;;;20/05/2024 10:51;[]
+1308;vergueiro;Despesa;-25,99;Restaurante;Black;19/05/2024 00:00;;False;;;20/05/2024 10:51;[]
+1309;oxxo;Despesa;-7,49;Supermercado;Black;19/05/2024 00:00;;False;;;20/05/2024 10:52;[]
+1310;ed martnelli;Despesa;-214,0;Lazer;Black;19/05/2024 00:00;;False;;;20/05/2024 10:53;[]
+1311;mc donalds;Despesa;-72,7;Restaurante;Black;19/05/2024 00:00;;False;;;20/05/2024 10:53;[]
+1312;uber;Despesa;-7,69;Transporte;Black;19/05/2024 00:00;;False;;;20/05/2024 10:54;[]
+1314;Frutilla;Despesa;-73,0;Restaurante;VR;19/05/2024 00:00;;False;;;20/05/2024 10:56;[]
+1315;Almoço lanchonete;Despesa;-80,0;Restaurante;Black;20/05/2024 00:00;;False;;;24/05/2024 14:55;[]
+1316;Tradicao pizza;Despesa;-77,5;Restaurante;Black;20/05/2024 00:00;;False;;;24/05/2024 14:55;[]
+1317;Oxxo;Despesa;-13,0;Supermercado;Black;20/05/2024 00:00;;False;;;24/05/2024 14:56;[]
+1320;Bianca ;Receita;250,0;Cobrança;Itaú;20/05/2024 00:00;;True;;;24/05/2024 14:59;[]
+1321;Rod;Receita;31,66;Cobrança;Itaú;20/05/2024 00:00;;True;;;24/05/2024 15:00;[]
+1318;Pua restaurante ;Despesa;-53,36;Restaurante;Black;21/05/2024 00:00;;False;;;24/05/2024 14:57;[]
+1319;Chopp bar;Despesa;-57,7;Restaurante;Black;22/05/2024 00:00;;False;;;24/05/2024 14:57;[]
+1322;Aposta;Despesa;-30,0;Outros;Itaú;22/05/2024 00:00;;True;;;24/05/2024 15:02;[]
+1323;Tim;Despesa;-65,0;TV,Internet,Telefone;Itaú;23/05/2024 00:00;;False;;;24/05/2024 15:03;[]
+1324;Nath Cartão;Receita;263,31;Cobrança;Itaú;23/05/2024 00:00;;True;;;24/05/2024 15:03;[]
+1327;;Despesa;-16,89;Supermercado;Black;24/05/2024 00:00;;False;;;25/05/2024 13:42;[]
+1328;veloso;Despesa;-7,5;Restaurante;Black;24/05/2024 00:00;;False;;;25/05/2024 13:42;[]
+1329;Braz quintal;Despesa;-145,49;Restaurante;Black;24/05/2024 00:00;;False;;;25/05/2024 13:43;[]
+1325;Salario;Receita;6929,01;Salário;Itaú;25/05/2024 00:00;;False;;;25/05/2024 13:40;[]
+1326;Decimo terceiro;Receita;4690,42;Salário;Itaú;25/05/2024 00:00;;False;;;25/05/2024 13:41;[]
+1330;Casa da esfiha;Despesa;-111,49;Restaurante;Black;25/05/2024 00:00;;False;;;27/05/2024 12:34;[]
+1331;Spotify;Despesa;-34,9;TV,Internet,Telefone;Black;26/05/2024 00:00;;False;;;27/05/2024 12:34;[]
+1332;Total pass;Despesa;-79,9;Saúde;Black;27/05/2024 00:00;;False;;;27/05/2024 12:35;[]
+1333;Clubwine;Despesa;-39,64;Supermercado;Black;27/05/2024 00:00;;False;;;27/05/2024 12:35;[]
+1334;autopostovictor;Despesa;-115,56;Transporte;Black;27/05/2024 00:00;;False;;;30/05/2024 19:20;[]
+1341;Iphone;Despesa;-200,0;Presentes;Itaú;27/05/2024 00:00;;False;;;30/05/2024 19:25;[]
+1346;;Receita;1060,84;Salário;VR;27/05/2024 00:00;;False;;;30/05/2024 19:28;[]
+1336;frutilla;Despesa;-10,0;Restaurante;Black;28/05/2024 00:00;;False;;;30/05/2024 19:21;[]
+1343;auttar;Despesa;-20,0;Transporte;Itaú;28/05/2024 00:00;;False;;;30/05/2024 19:26;[]
+1347;Pua;Despesa;-54,77;Restaurante;VR;28/05/2024 00:00;;False;;;30/05/2024 19:29;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/05/2024 00:00;escrivaninha + guarda roupa;False;3.0;29/03/2024;29/03/2024 15:19;[]
+1337;google storage;Despesa;-11,99;TV,Internet,Telefone;Black;29/05/2024 00:00;;False;;;30/05/2024 19:21;[]
+1338;cafe;Despesa;-3,0;Supermercado;Black;29/05/2024 00:00;;False;;;30/05/2024 19:22;[]
+1339;drograria;Despesa;-17,49;Saúde;Black;29/05/2024 00:00;;False;;;30/05/2024 19:22;[]
+1344;auttar;Despesa;-50,0;Transporte;Itaú;29/05/2024 00:00;onibus;False;;;30/05/2024 19:27;[]
+1348;Frutilla;Despesa;-7,0;Restaurante;VR;29/05/2024 00:00;;False;;;30/05/2024 19:30;[]
+1349;Tatu Bola;Despesa;-62,83;Restaurante;VR;29/05/2024 00:00;;False;;;30/05/2024 19:30;[]
+1335;conect car;Despesa;-50,0;Transporte;Black;30/05/2024 00:00;;False;;;30/05/2024 19:21;[]
+1340;Lotus carlos;Receita;40,0;Cobrança;Itaú;30/05/2024 00:00;;True;;;30/05/2024 19:24;[]
+1342;seguro;Despesa;-3,9;Compras;Itaú;30/05/2024 00:00;;False;;;30/05/2024 19:25;[]
+1345;Cuzi;Despesa;-13,5;Transporte;Itaú;30/05/2024 00:00;;False;;;30/05/2024 19:27;[]
+1350;Veloso;Despesa;-65,0;Lazer;Black;30/05/2024 00:00;;False;;;02/06/2024 10:36;[]
+1351;Choperia;Despesa;-34,5;Lazer;Black;30/05/2024 00:00;;False;;;02/06/2024 10:36;[]
+1352;distribuidora;Despesa;-16,0;Restaurante;Black;31/05/2024 00:00;;False;;;02/06/2024 10:37;[]
+1353;sc lanches;Despesa;-76,64;Restaurante;Black;31/05/2024 00:00;;False;;;02/06/2024 10:39;[]
+1355;pai + mae;Receita;956,0;Cobrança;Itaú;31/05/2024 00:00;;True;;;02/06/2024 10:41;[]
+1356;Aplicação;Investimento;-4600,0;CDB;Itaú;31/05/2024 00:00;;False;;;02/06/2024 10:42;Parte disso é provisiorio
+1356;Aplicação;Investimento;4600,0;CDB;Ion;31/05/2024 00:00;;False;;;02/06/2024 10:42;Parte disso é provisiorio
+1354;Uber;Despesa;-69,86;Transporte;Black;01/06/2024 00:00;;False;;;02/06/2024 10:39;[]
+1425;Oxxo;Despesa;-28,58;Supermercado;VR;01/06/2024 00:00;;False;;;23/06/2024 22:14;[]
+1370;OXXO;Despesa;-20,38;Supermercado;Black;02/06/2024 00:00;;False;;;19/06/2024 13:10;[]
+1426;Matsuya;Despesa;-200,0;Restaurante;VR;02/06/2024 00:00;;False;;;23/06/2024 22:14;[]
+1357;João ma;Despesa;-184,12;Lazer;Itaú;03/06/2024 00:00;;False;;;17/06/2024 10:56;[]
+1358;Transferência;Transferência;-5832,86;Transferência;Itaú;03/06/2024 00:00;;False;;;17/06/2024 10:56;
+1358;Transferência;Transferência;5832,86;Transferência;Black;03/06/2024 00:00;;False;;;17/06/2024 10:56;
+1359;;Despesa;-120,0;Lazer;Itaú;04/06/2024 00:00;frô;False;;;17/06/2024 11:00;[]
+1360;iof;Despesa;-8,87;Multas;Itaú;04/06/2024 00:00;;False;;;17/06/2024 11:01;[]
+1427;frutilla;Despesa;-12,5;Restaurante;VR;04/06/2024 00:00;;False;;;23/06/2024 22:15;[]
+1428;fraum;Despesa;-74,32;Restaurante;VR;04/06/2024 00:00;;False;;;23/06/2024 22:15;[]
+1361;Ronaldo polo bba;Despesa;-90,0;Compras;Itaú;05/06/2024 00:00;;False;;;17/06/2024 11:06;[]
+1371;Clube latam pass;Despesa;-40,88;Viagem;Black;05/06/2024 00:00;;False;;;19/06/2024 13:10;[]
+1372;Conect car;Despesa;-50,0;Transporte;Black;05/06/2024 00:00;;False;;;19/06/2024 13:11;[]
+1429;frutila;Despesa;-7,0;Restaurante;VR;05/06/2024 00:00;;False;;;23/06/2024 22:16;[]
+1430;pua restaunte;Despesa;-59,36;Restaurante;VR;05/06/2024 00:00;;False;;;23/06/2024 22:16;[]
+1362;Pix carla presente;Receita;220,0;Cobrança;Itaú;06/06/2024 00:00;;True;;;18/06/2024 14:50;[]
+1373;Hot caffe;Despesa;-17,0;Restaurante;Black;06/06/2024 00:00;;False;;;19/06/2024 13:11;[]
+1374;bravium;Despesa;-23,8;Supermercado;Black;06/06/2024 00:00;itau shop;False;;;19/06/2024 13:12;[]
+1375;TOP;Despesa;-50,0;Transporte;Black;06/06/2024 00:00;;False;;;19/06/2024 13:12;[]
+1431;restaurante nunes;Despesa;-31,8;Restaurante;VR;06/06/2024 00:00;;False;;;23/06/2024 22:16;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/06/2024 00:00;;False;5.0;07/02/2024;14/02/2024 22:51;[]
+1363;Pix transf viniciu;Despesa;-1703,18;Casa;Itaú;07/06/2024 00:00;;False;;;18/06/2024 14:52;[]
+1376;Jedeonpereiroa;Despesa;-24,0;Restaurante;Black;07/06/2024 00:00;;False;;;19/06/2024 13:13;[]
+1377;Autoposto;Despesa;-120,83;Transporte;Black;07/06/2024 00:00;;False;;;19/06/2024 13:14;[]
+1432;frutilla;Despesa;-32,0;Restaurante;VR;07/06/2024 00:00;;False;;;23/06/2024 22:16;[]
+1378;João Rock;Despesa;-277,0;Viagem;Black;08/06/2024 00:00; Transporte + Hospedagem + Estacionamento rachado em 5;False;;;23/06/2024 21:25;['João Rock']
+1379;Comes João rock;Despesa;-116,0;Restaurante;Black;08/06/2024 00:00;;False;;;23/06/2024 21:28;['João Rock']
+1380;Comes JR;Despesa;-24,0;Restaurante;Black;09/06/2024 00:00;;False;;;23/06/2024 21:28;['João Rock']
+1381;Ibis sertãozinho;Despesa;-17,0;Supermercado;Black;09/06/2024 00:00;;False;;;23/06/2024 21:29;['João Rock']
+1382;youse;Despesa;-148,96;Serviços;Black;09/06/2024 00:00;;False;;;23/06/2024 21:30;[]
+1433;mcdonalds;Despesa;-57,8;Restaurante;VR;09/06/2024 00:00;;False;;;23/06/2024 22:17;['João Rock']
+1434;china in box;Despesa;-54,32;Restaurante;VR;10/06/2024 00:00;;False;;;23/06/2024 22:17;[]
+1239;7027 iberapuera;Despesa;-93,16666667;Compras;Black;11/06/2024 00:00;Zara;False;1.0;11/06/2024;12/05/2024 17:57;[]
+1383;Conectar ;Despesa;-50,0;Transporte;Black;11/06/2024 00:00;;False;;;23/06/2024 21:31;[]
+1364;pix transf cintia;Despesa;-64,0;Presentes;Itaú;12/06/2024 00:00;Flor dia dos namorados;False;;;18/06/2024 14:53;[]
+1384;gran coffe;Despesa;-3,0;Supermercado;Black;12/06/2024 00:00;;False;;;23/06/2024 21:31;[]
+1435;frutila + mineiro;Despesa;-52,55;Restaurante;VR;12/06/2024 00:00;;False;;;23/06/2024 22:18;[]
+1385;gran coffe;Despesa;-2,0;Supermercado;Black;13/06/2024 00:00;;False;;;23/06/2024 21:32;[]
+1436;Nunes clementino;Despesa;-42,4;Restaurante;VR;13/06/2024 00:00;;False;;;23/06/2024 22:18;[]
+1365;Lucineia pnetodes;Despesa;-21,89;Lazer;Itaú;14/06/2024 00:00;;False;;;18/06/2024 14:59;[]
+1386;Presente bianca;Despesa;-393,68;Presentes;Black;14/06/2024 00:00;;False;;;23/06/2024 21:32;[]
+1387;sao carlos;Despesa;-38,79;Restaurante;Black;14/06/2024 00:00;;False;;;23/06/2024 21:33;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/06/2024 00:00;;False;6.0;15/01/2024;18/01/2024 09:49;[]
+1251;Capinha case;Despesa;-24,41;Supermercado;Black;15/06/2024 00:00;;False;2.0;15/05/2024;17/05/2024 11:43;[]
+1388;presente;Despesa;-15,0;Presentes;Black;15/06/2024 00:00;;False;;;23/06/2024 21:35;[]
+1389;Amazon prime;Despesa;-19,9;TV,Internet,Telefone;Black;15/06/2024 00:00;;False;;;23/06/2024 21:35;[]
+1390;Cia do salgado;Despesa;-96,9;Presentes;Black;15/06/2024 00:00;;False;;;23/06/2024 21:36;[]
+1391;Bloco2;Despesa;-82,3;Lazer;Black;15/06/2024 00:00;;False;;;23/06/2024 21:37;[]
+1437;frutila;Despesa;-8,0;Restaurante;VR;15/06/2024 00:00;;False;;;23/06/2024 22:18;[]
+1062;joao rock;Despesa;-67,8;Viagem;Black;17/06/2024 00:00;;False;4.0;17/03/2024;17/03/2024 16:00;[]
+1366;Aposta;Despesa;-50,0;Compras;Itaú;17/06/2024 00:00;;False;;;18/06/2024 15:01;[]
+1367;caixinha;Despesa;-52,0;Viagem;Itaú;17/06/2024 00:00;;False;;;18/06/2024 15:01;[]
+1368;Sebo bianca;Despesa;-49,99;Presentes;Itaú;17/06/2024 00:00;;False;;;18/06/2024 15:02;[]
+1392;Booking Monte Verde;Despesa;-750,0;Viagem;Black;17/06/2024 00:00;;False;;;23/06/2024 21:37;['MV']
+1369;Tim;Despesa;-68,99;TV,Internet,Telefone;Itaú;18/06/2024 00:00;;False;;;18/06/2024 15:02;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/06/2024 00:00;;False;1.0;18/06/2024;23/06/2024 21:40;[]
+1394;Monte carlo Pizza;Despesa;-43,6;Restaurante;Black;18/06/2024 00:00;;False;;;23/06/2024 21:40;[]
+1306;Youcom;Despesa;-39,96666667;Compras;Black;19/06/2024 00:00;;False;2.0;19/05/2024;20/05/2024 10:50;[]
+1395;Fabioferreira;Despesa;-45,0;Saúde;Black;19/06/2024 00:00;Barbeiro;False;;;23/06/2024 21:41;[]
+1419;gus joao rock;Receita;240,0;Cobrança;Itaú;19/06/2024 00:00;;True;;;23/06/2024 22:04;[]
+1438;Kaishi;Despesa;-232,8;Restaurante;VR;19/06/2024 00:00;;False;;;23/06/2024 22:19;[]
+1396;Gasosa;Despesa;-171,1;Viagem;Black;20/06/2024 00:00;;False;;;23/06/2024 21:46;['MV']
+1397;Conectar;Despesa;-50,0;Viagem;Black;20/06/2024 00:00;;False;;;23/06/2024 21:52;['MV']
+1398;chale tania;Despesa;-15,0;Supermercado;Black;20/06/2024 00:00;;False;;;23/06/2024 21:52;['MV']
+1399;trilha move;Despesa;-83,8;Lazer;Black;20/06/2024 00:00;;False;;;23/06/2024 21:53;['MV']
+1400;drogaria;Despesa;-38,2;Supermercado;Black;20/06/2024 00:00;;False;;;23/06/2024 21:53;['MV']
+1401;Mercado da vila;Despesa;-6,0;Supermercado;Black;20/06/2024 00:00;;False;;;23/06/2024 21:53;['MV']
+1402;Marmore;Despesa;-232,65;Restaurante;Black;20/06/2024 00:00;;False;;;23/06/2024 21:54;['MV']
+1420;bianca;Receita;200,0;Cobrança;Itaú;20/06/2024 00:00;;True;;;23/06/2024 22:04;[]
+1439;Panificadora;Despesa;-30,39;Restaurante;VR;20/06/2024 00:00;;False;;;23/06/2024 22:19;['MV']
+1403;Autoposto;Despesa;-50,0;Transporte;Black;21/06/2024 00:00;;False;;;23/06/2024 21:55;['MV']
+1404;Booking;Despesa;-450,0;Viagem;Black;21/06/2024 00:00;;False;;;23/06/2024 21:55;['MV']
+1405;rafael andrade pizza;Despesa;-76,12;Restaurante;Black;21/06/2024 00:00;;False;;;23/06/2024 21:56;['MV']
+1421;panetteria;Despesa;-62,0;Restaurante;Itaú;21/06/2024 00:00;;False;;;23/06/2024 22:05;['MV']
+1406;Google wikiloc;Despesa;-20,9;Lazer;Black;22/06/2024 00:00;;False;;;23/06/2024 21:57;['MV']
+1407;Cantinho do banho;Despesa;-46,7;Presentes;Black;22/06/2024 00:00;;False;;;23/06/2024 21:58;['MV']
+1408;Catinho do banho;Despesa;-24,0;Supermercado;Black;22/06/2024 00:00;;False;;;23/06/2024 21:58;['MV']
+1409;Arsenal da cerveja;Despesa;-50,0;Restaurante;Black;22/06/2024 00:00; petisco;False;;;23/06/2024 21:59;['MV']
+1410;Chops;Despesa;-70,89;Lazer;Black;22/06/2024 00:00;;False;;;23/06/2024 22:00;['MV']
+1411;gressoney;Despesa;-28,95;Restaurante;Black;22/06/2024 00:00;;False;;;23/06/2024 22:00;['MV']
+1412;anna rak lanche;Despesa;-41,0;Restaurante;Black;22/06/2024 00:00;;False;;;23/06/2024 22:00;['MV']
+1413;eduardo rak lanche;Despesa;-36,0;Restaurante;Black;22/06/2024 00:00;;False;;;23/06/2024 22:00;['MV']
+1414;Gosto da roca queijos;Despesa;-20,0;Supermercado;Black;23/06/2024 00:00;;False;;;23/06/2024 22:01;['MV']
+1415;Vanessa aparecida;Despesa;-90,0;Supermercado;Black;23/06/2024 00:00;;False;;;23/06/2024 22:01;['MV']
+1416;Victoriano;Despesa;-10,0;Restaurante;Black;23/06/2024 00:00;;False;;;23/06/2024 22:02;['MV']
+1417;lecadeaudecie;Despesa;-29,0;Compras;Black;23/06/2024 00:00;;False;;;23/06/2024 22:02;['MV']
+1418;Daniel;Despesa;-25,0;Supermercado;Black;23/06/2024 00:00;;False;;;23/06/2024 22:03;['MV']
+1422;transf va goni;Despesa;-41,0;Restaurante;Itaú;23/06/2024 00:00;;False;;;23/06/2024 22:07;['MV']
+1423;comida mineira;Despesa;-82,0;Restaurante;Itaú;23/06/2024 00:00;;False;;;23/06/2024 22:08;['MV']
+1424;Transf;Receita;277,0;Cobrança;Itaú;23/06/2024 00:00;;True;;;23/06/2024 22:08;[]
+1440;recarga;Receita;1060,84;Salário;VR;27/06/2024 00:00;;False;;;23/06/2024 22:19;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/06/2024 00:00;escrivaninha + guarda roupa;False;4.0;29/03/2024;29/03/2024 15:19;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/07/2024 00:00;;False;6.0;07/02/2024;14/02/2024 22:51;[]
+1239;7027 iberapuera;Despesa;-93,16666667;Compras;Black;11/07/2024 00:00;Zara;False;2.0;11/06/2024;12/05/2024 17:57;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/07/2024 00:00;;False;7.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/07/2024 00:00;;False;2.0;18/06/2024;23/06/2024 21:40;[]
+1306;Youcom;Despesa;-39,96666667;Compras;Black;19/07/2024 00:00;;False;3.0;19/05/2024;20/05/2024 10:50;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/07/2024 00:00;escrivaninha + guarda roupa;False;5.0;29/03/2024;29/03/2024 15:19;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/08/2024 00:00;;False;7.0;07/02/2024;14/02/2024 22:51;[]
+1239;7027 iberapuera;Despesa;-93,16666667;Compras;Black;11/08/2024 00:00;Zara;False;3.0;11/06/2024;12/05/2024 17:57;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/08/2024 00:00;;False;8.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/08/2024 00:00;;False;3.0;18/06/2024;23/06/2024 21:40;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/08/2024 00:00;escrivaninha + guarda roupa;False;6.0;29/03/2024;29/03/2024 15:19;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/09/2024 00:00;;False;8.0;07/02/2024;14/02/2024 22:51;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/09/2024 00:00;;False;9.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/09/2024 00:00;;False;4.0;18/06/2024;23/06/2024 21:40;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/09/2024 00:00;escrivaninha + guarda roupa;False;7.0;29/03/2024;29/03/2024 15:19;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/10/2024 00:00;;False;9.0;07/02/2024;14/02/2024 22:51;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/10/2024 00:00;;False;10.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/10/2024 00:00;;False;5.0;18/06/2024;23/06/2024 21:40;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/10/2024 00:00;escrivaninha + guarda roupa;False;8.0;29/03/2024;29/03/2024 15:19;[]
+908;world tennis;Despesa;-17,08;Compras;Black;07/11/2024 00:00;;False;10.0;07/02/2024;14/02/2024 22:51;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/11/2024 00:00;;False;11.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/11/2024 00:00;;False;6.0;18/06/2024;23/06/2024 21:40;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/11/2024 00:00;escrivaninha + guarda roupa;False;9.0;29/03/2024;29/03/2024 15:19;[]
+838;Emma sleep;Despesa;-130,33;Compras;Black;15/12/2024 00:00;;False;12.0;15/01/2024;18/01/2024 09:49;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/12/2024 00:00;;False;7.0;18/06/2024;23/06/2024 21:40;[]
+1097;madeira madeira;Despesa;-139,98;Compras;Black;29/12/2024 00:00;escrivaninha + guarda roupa;False;10.0;29/03/2024;29/03/2024 15:19;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/01/2025 00:00;;False;8.0;18/06/2024;23/06/2024 21:40;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/02/2025 00:00;;False;9.0;18/06/2024;23/06/2024 21:40;[]
+1393;Arca Indaiatuba pneu;Despesa;-111,6;Serviços;Black;18/03/2025 00:00;;False;10.0;18/06/2024;23/06/2024 21:40;[]
+1441;miranda;Despesa;-46,8;Restaurante;VR;27/06/2024 00:00;;False;;;28/06/2024 14:21;[]
+1442;viagem anna;Receita;277,0;Cobrança;Itaú;24/06/2024 00:00;;True;;;28/06/2024 14:22;[]
+1443;seguro;Despesa;-3,9;Serviços;Itaú;25/06/2024 00:00;;False;;;28/06/2024 14:23;[]
+1444;salario;Receita;6929,01;Salário;Itaú;27/06/2024 00:00;;False;;;28/06/2024 14:24;[]
+1445;osvaldo agua;Despesa;-8,0;Supermercado;Itaú;27/06/2024 00:00;;False;;;28/06/2024 14:24;[]
+1446;iphone ;Despesa;-200,0;Presentes;Itaú;27/06/2024 00:00;;False;;;28/06/2024 14:25;[]
+1447;parte do cumo;Despesa;-8,0;Supermercado;Itaú;27/06/2024 00:00;;True;;;28/06/2024 14:25;[]
+1448;Tv vó;Despesa;-300,0;Compras;Itaú;28/06/2024 00:00;;False;;;28/06/2024 14:26;[]
+1449;Conectar ;Despesa;-50,0;Transporte;Black;24/06/2024 00:00;;False;;;28/06/2024 14:28;[]
+1450;posto;Despesa;-138,74;Transporte;Black;24/06/2024 00:00;;False;;;28/06/2024 14:29;[]
+1451;lava jato;Despesa;-55,0;Restaurante;Black;24/06/2024 00:00;;False;;;28/06/2024 14:29;[]
+1452;oxxo;Despesa;-4,25;Supermercado;Black;25/06/2024 00:00;;False;;;28/06/2024 14:29;[]
+1453;vergueiro;Despesa;-13,09;Supermercado;Black;25/06/2024 00:00;;False;;;28/06/2024 14:30;[]
+1454;nunes clementino;Despesa;-31,8;Restaurante;Black;25/06/2024 00:00;;False;;;28/06/2024 14:30;[]
+1455;ebn spotify;Despesa;-34,9;TV,Internet,Telefone;Black;26/06/2024 00:00;;False;;;28/06/2024 14:30;[]
+1456;q pasa;Despesa;-52,25;Restaurante;Black;26/06/2024 00:00;;False;;;28/06/2024 14:31;[]
+1457;Club wine;Despesa;-39,65;Supermercado;Black;27/06/2024 00:00;;False;;;28/06/2024 14:31;[]
+1458;Total pass;Despesa;-79,9;Saúde;Black;27/06/2024 00:00;;False;;;28/06/2024 14:32;[]
+1459;Nath;Despesa;-600,0;Educação;Black;28/06/2024 00:00;;False;;;28/06/2024 14:39;[]
+1460;Transferência;Transferência;-7111,3;Transferência;Itaú;01/07/2024 00:00;;False;;;07/07/2024 13:39;
+1460;Transferência;Transferência;7111,3;Transferência;Black;01/07/2024 00:00;;False;;;07/07/2024 13:39;
+1461;ajuda tia;Despesa;-300,0;Presentes;Itaú;01/07/2024 00:00;;False;;;07/07/2024 13:39;[]
+1462;transf bruno;Despesa;-50,0;Lazer;Itaú;01/07/2024 00:00;;False;;;07/07/2024 13:41;[]
+1463;Juros;Despesa;-8,13;Multas;Itaú;05/07/2024 00:00;;False;;;07/07/2024 13:48;[]
+1464;Google storage;Despesa;-11,99;TV,Internet,Telefone;Black;29/06/2024 00:00;;False;;;07/07/2024 13:53;[]
+1465;santadega;Despesa;-5,89;Supermercado;Black;30/06/2024 00:00;;False;;;07/07/2024 13:53;[]
+1466;Conectar ;Despesa;-50,0;Lazer;Black;30/06/2024 00:00;;False;;;07/07/2024 13:54;[]
+1467;cinemark;Despesa;-68,0;Lazer;Black;30/06/2024 00:00;;False;;;07/07/2024 13:55;[]
+1468;Conectar;Despesa;-50,0;Transporte;Black;30/06/2024 00:00;;False;;;07/07/2024 13:55;[]
+1469;Posto;Despesa;-142,01;Transporte;Black;01/07/2024 00:00;;False;;;07/07/2024 13:55;[]
+1470;Frutilla;Despesa;-11,5;Restaurante;Black;02/07/2024 00:00;;False;;;07/07/2024 13:56;[]
+1471;Top;Despesa;-50,0;Restaurante;Black;02/07/2024 00:00;;False;;;07/07/2024 13:56;[]
+1472;Clube Latam Pass;Despesa;-40,9;Viagem;Black;05/07/2024 00:00;;False;;;07/07/2024 13:57;[]
+1473;Amazon;Despesa;-27,5;Compras;Black;05/07/2024 00:00;;False;;;07/07/2024 13:58;[]
+1474;ifd*br;Despesa;-49,42;Restaurante;Black;06/07/2024 00:00;;False;;;07/07/2024 13:58;[]
+1475;The pitcher;Despesa;-110,99;Restaurante;VR;28/06/2024 00:00;;False;;;07/07/2024 14:23;[]
+1476;Mc donalds;Despesa;-27,9;Restaurante;VR;30/06/2024 00:00;;False;;;07/07/2024 14:27;[]
+1477;Outback;Despesa;-166,51;Restaurante;VR;30/06/2024 00:00;;False;;;07/07/2024 14:28;[]
+1478;Restaurante Nunes;Despesa;-31,8;Restaurante;VR;02/07/2024 00:00;;False;;;07/07/2024 14:28;[]
+1479;Bugernator;Despesa;-51,0;Restaurante;VR;04/07/2024 00:00;;False;;;07/07/2024 14:30;[]
+1480;Ventana;Despesa;-93,39;Lazer;VR;04/07/2024 00:00;;False;;;07/07/2024 14:30;[]
+1481;San michelli;Despesa;-80,0;Restaurante;VR;05/07/2024 00:00;;False;;;07/07/2024 14:31;[]
+1482;;Despesa;-1704,0;Casa;Itaú;08/07/2024 00:00;;False;;;09/07/2024 13:00;[]
+1483;livro;Despesa;-6,99;Compras;Black;07/07/2024 00:00;;False;;;09/07/2024 13:02;[]
+1484;mc donalds ;Despesa;-69,8;Restaurante;Black;07/07/2024 00:00;;False;;;09/07/2024 13:03;[]
+1485;youse;Despesa;-149,12;Serviços;Black;07/07/2024 00:00;;False;;;09/07/2024 13:03;[]
+1486;sushizão (valeu a pena);Despesa;-43,47;Restaurante;Black;09/07/2024 00:00;;False;;;11/07/2024 22:12;[]
+1487;Churras;Despesa;-10,0;Restaurante;Black;10/07/2024 00:00;;False;;;11/07/2024 22:13;[]
+1488;Gastos em geral;Despesa;-141,09;Casa;Itaú;10/07/2024 00:00;;False;;;11/07/2024 22:15;[]
+1489;agua;Despesa;-16,0;Supermercado;Itaú;11/07/2024 00:00;;False;;;11/07/2024 22:17;[]
+1490;Resgate;Investimento;-3000,19;Tesouro Selic;Ion;11/07/2024 00:00;;False;;;11/07/2024 22:18;
+1490;Resgate;Investimento;3000,19;Tesouro Selic;Itaú;11/07/2024 00:00;;False;;;11/07/2024 22:18;
+1491;Bandejão maravilha;Despesa;-31,8;Restaurante;VR;10/07/2024 00:00;;False;;;11/07/2024 22:19;[]
+1492;Pua;Despesa;-46,98;Restaurante;VR;11/07/2024 00:00;;False;;;11/07/2024 22:20;[]
+1493;tim;Despesa;-70,72;TV,Internet,Telefone;Itaú;12/07/2024 00:00;;False;;;14/07/2024 17:29;[]
+1494;comgas;Despesa;-19,66;Casa;Itaú;14/07/2024 00:00;;False;;;14/07/2024 17:29;[]
+1495;comgas;Despesa;-19,67;Casa;Itaú;14/07/2024 00:00;;True;;;14/07/2024 17:30;[]
+1496;Bar moela;Despesa;-21,45;Lazer;Black;13/07/2024 00:00;;False;;;14/07/2024 17:37;[]
+1497;Restaurante rei dos reis;Despesa;-35,5;Restaurante;Black;13/07/2024 00:00;melhor yakissoba da vida;False;;;14/07/2024 17:37;[]
+1498;agua vergueiro;Despesa;-8,99;Supermercado;Black;14/07/2024 00:00;;False;;;14/07/2024 17:38;[]
+1499;Bagaceira;Despesa;-16,39;Lazer;Black;13/07/2024 00:00;;False;;;14/07/2024 17:40;[]
+1500;top;Despesa;-50,0;Transporte;Black;16/07/2024 00:00;whatsapp;False;;;16/07/2024 18:35;
+1501;bandejao;Despesa;-31,8;Restaurante;VR;17/07/2024 00:00;whatsapp;False;;;18/07/2024 08:17;
+1502;conectar;Despesa;-50,0;Transporte;Black;19/07/2024 00:00;whatsapp;False;;;19/07/2024 22:29;
+1503;caixinha;Despesa;-50,0;Viagem;Itaú;18/07/2024 00:00;whatsapp;False;;;20/07/2024 21:19;
+1504;frozinha;Despesa;-30,0;Presentes;Itaú;19/07/2024 00:00;whatsapp;False;;;20/07/2024 21:26;
+1505;estacionamento costela chao;Despesa;-10,0;Viagem;Itaú;22/07/2024 00:00;whatsapp;False;;;20/07/2024 21:30;
+1506;posto de abastecimento;Despesa;-117,51;Transporte;Black;19/07/2024 00:00;whatsapp;False;;;20/07/2024 21:50;
+1507;presente pai;Despesa;-150,0;Presentes;Black;19/07/2024 00:00;;False;;;21/07/2024 15:43;[]
+1508;conectar ;Despesa;-50,0;Viagem;Black;20/07/2024 00:00;;False;;;21/07/2024 15:46:36;[]
+1509;Fogo chao;Despesa;-90,76;Lazer;Black;20/07/2024 00:00;;False;;;21/07/2024 15:47:24;[]
+1510;emporio portugues;Despesa;-33,8;Restaurante;Black;20/07/2024 00:00;;False;;;21/07/2024 15:47:48;[]
+1511;vila das frutas;Despesa;-55,48;Supermercado;VR;21/07/2024 00:00;;False;;;21/07/2024 15:49:40;[]
