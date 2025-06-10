@@ -186,9 +186,9 @@ def adicionar_transferencia(df,opcao):
 
 def main():
     # Abre o arquivo de prompt do sistema
-    file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
-    with open(file_path, "r", encoding="utf-8") as file:
-        prompt_system = file.read()
+    # file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
+    # with open(file_path, "r", encoding="utf-8") as file:
+    #     prompt_system = file.read()
     df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     
     df['Valor'] =  df['Valor'].apply(lambda x:x.replace(',','.')).astype('float64')
