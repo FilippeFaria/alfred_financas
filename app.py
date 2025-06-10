@@ -11,7 +11,7 @@ st.set_page_config(
 layout="wide"
 )
 #path = r'C:\Users\lippe\Documents\Gestão Financeira'
-path = ''
+path = '.'
 
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
 
@@ -189,6 +189,10 @@ def main():
     # file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
     # with open(file_path, "r", encoding="utf-8") as file:
     #     prompt_system = file.read()
+    import os
+    st.write("Arquivos disponíveis:")
+    st.write(os.listdir("."))
+
     df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     
     df['Valor'] =  df['Valor'].apply(lambda x:x.replace(',','.')).astype('float64')
