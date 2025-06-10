@@ -10,7 +10,8 @@ from datetime import datetime
 st.set_page_config(
 layout="wide"
 )
-path = r'C:\Users\lippe\Documents\Gestão Financeira'
+#path = r'C:\Users\lippe\Documents\Gestão Financeira'
+path = ''
 
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
 
