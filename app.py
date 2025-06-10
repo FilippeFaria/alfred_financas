@@ -189,9 +189,6 @@ def main():
     # file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
     # with open(file_path, "r", encoding="utf-8") as file:
     #     prompt_system = file.read()
-    import os
-    st.write("Arquivos disponíveis:")
-    st.write(os.listdir("."))
 
     df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     
