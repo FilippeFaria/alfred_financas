@@ -5,14 +5,16 @@ import time
 from dateutil.relativedelta import relativedelta
 import analytics
 from datetime import datetime
+import google_sheets
 
 #import gpt_model
 st.set_page_config(
 layout="wide"
 )
-#path = r'C:\Users\lippe\Documents\Gestão Financeira'
 path = '.'
+path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
+sheet = google_sheets.get_sheet(path)
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
 
 contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
@@ -70,11 +72,14 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
     if (adicionar_transferencia == True) & (valor < 0):
         return df
     else:
-        df['Valor'] =  df['Valor'].astype('str').apply(lambda x:x.replace('.',','))
+        #df['Valor'] =  df['Valor'].astype('str').apply(lambda x:x.replace('.',','))
         df['Data'] = pd.to_datetime(df['Data'],format="%Y-%m-%d %H:%M:%S")
         df['Data'] =  df['Data'].dt.strftime('%d/%m/%Y %H:%M')
-        df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
-        df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
+        #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
+        #df_clean = df.fillna('')  # substitui NaN por string vazia
+        google_sheets.write_sheet(sheet, df)
+        #df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
+        
         st.success("Dados salvos com sucesso!")
 
 
@@ -191,9 +196,12 @@ def main():
     #     prompt_system = file.read()
 
     df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
-    
-    df['Valor'] =  df['Valor'].apply(lambda x:x.replace(',','.')).astype('float64')
+    df = google_sheets.read_sheet(path)
+    #df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
     df['Data'] = pd.to_datetime(df['Data'],format="%d/%m/%Y %H:%M")
+
+    st.write(df)
+    st.write(df.dtypes)
 
 
     last_date = df['Data'].iloc[-1]
