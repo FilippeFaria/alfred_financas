@@ -12,7 +12,7 @@ def authorize_google_sheets(path):
     ]
     
     creds = Credentials.from_service_account_file(
-        fr'{path}\credentials.json',
+        f'{path}\credentials.json',
         scopes=scopes
     )
     
