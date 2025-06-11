@@ -12,7 +12,7 @@ st.set_page_config(
 layout="wide"
 )
 path = '.'
-path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
+#path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
