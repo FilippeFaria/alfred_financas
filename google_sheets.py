@@ -1,22 +1,24 @@
 import streamlit as st
 import pandas as pd
 import gspread
+import json
 from google.oauth2.service_account import Credentials
 
 # Função para autenticar e abrir planilha
 @st.cache_resource
 def authorize_google_sheets(path):
+
+    # Carregar as credenciais dos secrets
+    creds_dict = json.loads(st.secrets["gcp_service_account"])
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+
+    credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    client = gspread.authorize(credentials)
+
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-    
-    creds = Credentials.from_service_account_file(
-        f'{path}/credentials.json',
-        scopes=scopes
-    )
-    
-    client = gspread.authorize(creds)
     return client
 
 def get_sheet(path):
