@@ -12,7 +12,7 @@ st.set_page_config(
 layout="wide"
 )
 path = '.'
-path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
+#path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
@@ -194,7 +194,7 @@ def main():
     # with open(file_path, "r", encoding="utf-8") as file:
     #     prompt_system = file.read()
 
-    df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
+    #df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     df = google_sheets.read_sheet(path)
     print('------------------------------',df.loc[10,'Valor'])
     #df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
