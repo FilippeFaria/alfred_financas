@@ -12,7 +12,7 @@ st.set_page_config(
 layout="wide"
 )
 path = '.'
-#path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
+path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
@@ -75,9 +75,8 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
         #df['Valor'] =  df['Valor'].astype('str').apply(lambda x:x.replace('.',','))
         df['Data'] = pd.to_datetime(df['Data'],format="%Y-%m-%d %H:%M:%S")
         df['Data'] =  df['Data'].dt.strftime('%d/%m/%Y %H:%M')
-        #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
-        #df_clean = df.fillna('')  # substitui NaN por string vazia
         google_sheets.write_sheet(sheet, df)
+        #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
         #df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
         
         st.success("Dados salvos com sucesso!")
@@ -197,7 +196,9 @@ def main():
 
     df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     df = google_sheets.read_sheet(path)
+    print('------------------------------',df.loc[10,'Valor'])
     #df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
+    
     df['Data'] = pd.to_datetime(df['Data'],format="%d/%m/%Y %H:%M")
 
     st.write(df)

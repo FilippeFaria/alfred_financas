@@ -7,10 +7,14 @@ from google.oauth2.service_account import Credentials
 # Função para autenticar e abrir planilha
 @st.cache_resource
 def authorize_google_sheets(path):
+    try:
+        # Carregar as credenciais dos secrets
+        creds_dict = json.loads(st.secrets["gcp_service_account"])
+    except:
+        # Se falhar, carrega do arquivo local (uso local)
+        with open(f'{path}/credentials.json') as f:
+            creds_dict = json.load(f)
 
-    # Carregar as credenciais dos secrets
-    creds_dict = json.loads(st.secrets["gcp_service_account"])
-    
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
@@ -31,7 +35,13 @@ def get_sheet(path):
 def read_sheet(path):
     sheet = get_sheet(path)  # pega o objeto worksheet
     data = sheet.get_all_records()
-    return pd.DataFrame(data)
+    st.write(data)
+    df = pd.DataFrame(data)
+    # Corrigir todas as colunas que contêm valores numéricos com vírgula decimal
+    for col in df.columns:
+        # Substitui vírgula por ponto e tenta converter para float
+        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='ignore')
+    return df
 
 def limpar_valores_invalidos(x):
     if isinstance(x, (list, dict)):
