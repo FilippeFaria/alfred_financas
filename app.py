@@ -198,7 +198,7 @@ def main():
     df = google_sheets.read_sheet(path)
     print('------------------------------',df.loc[10,'Valor'])
     #df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
-    
+    df['Valor'] =  df['Valor'].astype('float64')
     df['Data'] = pd.to_datetime(df['Data'],format="%d/%m/%Y %H:%M")
 
     st.write(df)
