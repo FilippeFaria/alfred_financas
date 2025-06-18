@@ -7,10 +7,13 @@ from google.oauth2.service_account import Credentials
 # Função para autenticar e abrir planilha
 @st.cache_resource
 def authorize_google_sheets(path):
-    try:
+    if path == '.':
         # Carregar as credenciais dos secrets
         creds_dict = json.loads(st.secrets["gcp_service_account"])
-    except:
+        print('Tamo online')
+    
+    else:
+        print('Tamo offline')
         # Se falhar, carrega do arquivo local (uso local)
         with open(f'{path}/credentials.json') as f:
             creds_dict = json.load(f)
@@ -22,8 +25,6 @@ def authorize_google_sheets(path):
 
     credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     client = gspread.authorize(credentials)
-
-
     return client
 
 def get_sheet(path):
@@ -35,7 +36,6 @@ def get_sheet(path):
 def read_sheet(path):
     sheet = get_sheet(path)  # pega o objeto worksheet
     data = sheet.get_all_records()
-    st.write(data)
     df = pd.DataFrame(data)
     # Corrigir todas as colunas que contêm valores numéricos com vírgula decimal
     for col in df.columns:
@@ -50,7 +50,8 @@ def limpar_valores_invalidos(x):
 
 # Escrever dados na planilha
 def write_sheet(sheet, df):
-    df = df.fillna('')  # ou outro valor que preferir
+    df = df.fillna('')  # ou outro valor que preferir]
+    df['Valor'] = df['Valor'].astype(str)
     df = df.applymap(limpar_valores_invalidos)
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
