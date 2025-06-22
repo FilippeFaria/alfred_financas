@@ -13,7 +13,7 @@ layout="wide"
 )
 
 path = '.'
-#path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
+path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
 contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
@@ -101,7 +101,7 @@ def adicionar_receita(df):
         desconsiderar = st.checkbox('Desconsiderar na análise')
     
     if st.button("Salvar"):
-        st.write(data)
+        
         salvar_dados(id,nome,df, tipo, valor, categoria, conta, data,obs,tag,desconsiderar = desconsiderar,)
         placeholder.empty()
         placeholder = st.empty()
@@ -199,8 +199,9 @@ def main():
 
     df = google_sheets.read_sheet(path)
     df['Valor'] =  df['Valor'].astype('float64')
-    
-    # st.write(df['Valor'])
+    df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
+    df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone','TV,Internet,Telefone')
+
 
     # df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
     # df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
@@ -210,6 +211,7 @@ def main():
 
     last_date = df['Data'].iloc[-1]
     last_account = df['Conta'].iloc[-1]
+    
     
     tab1, tab2, tab3,tab4,tab5 = st.tabs(["Transação", "Análise","Alfred","Patrimônio","Extrato",])
     with tab1:
@@ -241,6 +243,7 @@ def main():
        
     now = datetime.now()
     df = analytics.anomes(df)
+
     if now.month >= 10:
         anome = f'{now.year}{now.month}'
     else:
@@ -269,7 +272,7 @@ def main():
             day_to_date = st.checkbox('Comparar aos dias do mês')
             if day_to_date:
                 data_max = df[(df['anomes'] == anome) & (df['Parcela'].isna())].Data.dt.day.max()
-                st.write(data_max)
+                
                 df = df[df.Data.dt.day <= data_max]
 
         analytics.despesa_total(df,now,anome)
@@ -288,7 +291,8 @@ def main():
         with col1:
             st.markdown('### Categorias das despesas')
         with col2:
-            data_escolhida = st.selectbox('Escolha o anomes',df['anomes'].unique(),list(df['anomes'].unique()).index(anome)) 
+            #st.write(df['anomes'].unique())
+            data_escolhida = st.selectbox('Escolha o anomes',df['anomes'].unique(), list(df['anomes'].unique()).index(anome)) 
         col1, col2 = st.columns(2)     
         with col1:            
             if data_escolhida:

@@ -53,6 +53,7 @@ def saldo(df):
 def anomes(df):
     df['anomes'] = df['Data'].apply(lambda x: f'{x.year}0{x.month}' if x.month < 10 else f'{x.year}{x.month}')
     df['anomes'] = df['anomes'].apply(lambda x: -1 if x == 'nannan' else x)
+    #df['anomes'] = df['anomes'].astype(int)
     return df
 
 
@@ -117,14 +118,14 @@ def tendencia_mes(df, anome):
             idxs = data[data['anomes'] == a].index
             data.loc[idxs, 'cumulativo'] = data[data['anomes'] == a]['Valor'].cumsum()
 
-    # Calcula as médias para os períodos passado e corrente
-    data_passado = data[data['anomes'] < anome].groupby('dia_mes')['cumulativo'].mean().reset_index()
-    data_corrente = data[data['anomes'] == anome].groupby('dia_mes')['cumulativo'].mean().reset_index()
+    # # Calcula as médias para os períodos passado e corrente
+    # data_passado = data[data['anomes'] < anome].groupby('dia_mes')['cumulativo'].mean().reset_index()
+    # data_corrente = data[data['anomes'] == anome].groupby('dia_mes')['cumulativo'].mean().reset_index()
 
+    
     # Plota o gráfico
     fig = px.line(data, x='dia_mes', y='cumulativo', color='anomes', markers=True)
     st.plotly_chart(fig)
-
 
 
 def receitas_despesas(df,now,contas_invest,anome=None):
@@ -133,9 +134,7 @@ def receitas_despesas(df,now,contas_invest,anome=None):
     
     forecast_df = forecast(df,anome)
     forecast_data = abs(forecast_df.groupby('Tipo')['Valor'].sum())
-        
     df = df[(df['desconsiderar'] == False) & (df['anomes'].astype(int) <= anome) & (df['Tipo'] != 'Transferência') & (df['Tipo'] != 'Investimento')]
-    
     data = abs(df.groupby(['anomes','Tipo'])['Valor'].sum()).reset_index()
     data['anomes'] = data['anomes'].astype(str)
     data['text'] = data['Valor'].apply(lambda x: f'{round(x/1000,2)}k')
@@ -152,6 +151,7 @@ def receitas_despesas(df,now,contas_invest,anome=None):
             textposition='auto',
             text=group['text'],
         ))
+
     fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
     X = np.array(range(len(group))).reshape(-1, 1)  # Índices temporais
     
@@ -234,6 +234,7 @@ def categorias(df,anomes):
 
     forecast_df = forecast(df_full,anomes).set_index('Categoria')
     fig = px.bar(data,x = 'Categoria',y='Valor',color='Categoria', text_auto='.2s',color_discrete_map=color_map)
+    
     
     for c in forecast_df.index:
         fig.add_trace(go.Bar(
@@ -529,11 +530,10 @@ def tendencia_saldo(df,conta,anome):
     df_temp['dia_mes'] = df_temp['Data'].dt.day
     
     data = abs(df_temp.groupby(['anomes','dia_mes'])['Valor'].sum()).reset_index()
-    st.write(data)
+
     for a in data['anomes'].unique():
         idxs = data[data['anomes'] == a].index
         data.loc[idxs,'cumulativo'] = data[data['anomes'] == a]['Valor'].cumsum()
-
 
     data_passado = data[data['anomes'] < anome].groupby('dia_mes')['cumulativo'].mean().sort_index().reset_index()
     data_corrente = data[data['anomes'] == anome].groupby('dia_mes')['cumulativo'].mean().sort_index().reset_index()
