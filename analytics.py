@@ -223,6 +223,12 @@ def monthly_spending_by_category_pie(df,anome):
     fig = px.pie(data, values='Valor', color= coluna,names=coluna,color_discrete_map=color_map, hole=0.4)
     fig.update_layout(showlegend=True)
     st.plotly_chart(fig,use_container_width =False)
+    st.markdown('''
+Proporção ideal:
+                - Necessidades: 50%
+                - Desejos: 30%
+                - Investimento: 20%
+                ''')
 
 
 def categorias(df,anomes):
