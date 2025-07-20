@@ -59,7 +59,7 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
                 'Obs': obs,
                 'desconsiderar': desconsiderar,
                 'Parcela': i + 1,
-                "Data origem": data,
+                "Data origem": data.strftime("%Y-%m-%d %H:%M:%S"),
                 'Data Criacao': data_criacao,
                 'TAG': tag
             }])
