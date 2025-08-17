@@ -67,6 +67,7 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
             # Concatenando o novo DataFrame ao existente
             df = pd.concat([df, nova_linha], ignore_index=True)
             st.cache_data.clear()  # Limpa o cache
+            st.experimental_rerun()
         st.write('parcelas')
    
     
