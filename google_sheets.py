@@ -34,7 +34,7 @@ def get_sheet(path):
     return sheet
 
 @st.cache_data
-def read_sheet(path):
+def read_sheet(path,trigger=None):
     sheet = get_sheet(path)  # pega o objeto worksheet
     data = sheet.get_all_records()
     df = pd.DataFrame(data)

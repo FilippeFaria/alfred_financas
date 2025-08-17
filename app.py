@@ -80,7 +80,7 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
         
         google_sheets.write_sheet(sheet, df)
         st.cache_data.clear()  # Limpa o cache
-        st.experimental_rerun()
+        st.session_state.last_update = datetime.now().timestamp()
         #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
         #df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
         
@@ -199,8 +199,11 @@ def main():
     # with open(file_path, "r", encoding="utf-8") as file:
     #     prompt_system = file.read()
 
+    # Variável global para guardar o timestamp do último update
+    if "last_update" not in st.session_state:
+        st.session_state.last_update = None
 
-    df = google_sheets.read_sheet(path)
+    df = google_sheets.read_sheet(path,trigger=st.session_state.last_update)    
     df['Valor'] =  df['Valor'].astype('float64')
     df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
     df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone','TV,Internet,Telefone')
