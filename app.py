@@ -66,8 +66,7 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
 
             # Concatenando o novo DataFrame ao existente
             df = pd.concat([df, nova_linha], ignore_index=True)
-            st.cache_data.clear()  # Limpa o cache
-            st.experimental_rerun()
+
         st.write('parcelas')
    
     
@@ -80,7 +79,8 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
         df['Data'] =  df['Data'].dt.strftime('%d/%m/%Y %H:%M')
         
         google_sheets.write_sheet(sheet, df)
-        
+        st.cache_data.clear()  # Limpa o cache
+        st.experimental_rerun()
         #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
         #df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
         
