@@ -265,6 +265,7 @@ def main():
             if desconsiderar:
                 grandes_transacoes = [98,99,103,229,245,558,549,701,771,1012,1014,1018,995,978,971,
                                       1081,1050,1326,1733,1663,1744,1756,1766,1867,2327,2350,2327,2625]
+                
                 idx = df[df['id'].isin(grandes_transacoes)].index
                 df = df.drop(idx)
             if va:

@@ -127,21 +127,30 @@ def tendencia_mes(df, anome):
     fig = px.line(data, x='dia_mes', y='cumulativo', color='anomes', markers=True)
     st.plotly_chart(fig)
 
+import streamlit as st
+import plotly.graph_objects as go
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
-def receitas_despesas(df,now,contas_invest,anome=None):
+def receitas_despesas(df, now, contas_invest, anome=None):
     anome = int(anome)
     st.markdown('### Evolução das receitas e despesas no tempo')
     
-    forecast_df = forecast(df,anome)
+    forecast_df = forecast(df, anome)
     forecast_data = abs(forecast_df.groupby('Tipo')['Valor'].sum())
     df = df[(df['desconsiderar'] == False) & (df['anomes'].astype(int) <= anome) & (df['Tipo'] != 'Transferência') & (df['Tipo'] != 'Investimento')]
     data = abs(df.groupby(['anomes','Tipo'])['Valor'].sum()).reset_index()
     data['anomes'] = data['anomes'].astype(str)
     data['text'] = data['Valor'].apply(lambda x: f'{round(x/1000,2)}k')
     
+    # Slider para controlar quantos meses mostrar
+    total_meses = len(data['anomes'].unique())
+    meses_mostrar = st.slider('Número de meses para mostrar', min_value=1, max_value=total_meses, value=min(12,total_meses))
+    
+    meses_unicos = sorted(data['anomes'].unique())[-meses_mostrar:]  # pega últimos N meses
+    data = data[data['anomes'].isin(meses_unicos)]
     
     fig = go.Figure()
-    
     for tipo, group in data.groupby('Tipo'):
         fig.add_trace(go.Bar(
             x=group['anomes'],
@@ -151,48 +160,27 @@ def receitas_despesas(df,now,contas_invest,anome=None):
             textposition='auto',
             text=group['text'],
         ))
-
-    fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
-    X = np.array(range(len(group))).reshape(-1, 1)  # Índices temporais
-    
-    y = group['Valor'].values
-    model = LinearRegression().fit(X, y)
-    trend = model.predict(X)
-
-    fig.add_trace(go.Scatter(
+        # Tendência
+        X = np.arange(len(group)).reshape(-1,1)
+        y = group['Valor'].values
+        model = LinearRegression().fit(X, y)
+        trend = model.predict(X)
+        fig.add_trace(go.Scatter(
             x=group['anomes'],
             y=trend,
             mode='lines',
             name=f'Tendência {tipo}',
-            line=dict(color='red' if tipo == 'Despesa' else 'green', dash='dash'),
-        ),
-)
-
-    # fig.add_trace(go.Bar(
-    #     x=[str(int(anome) + 1)],
-    #     y=[forecast_data.loc['Despesa']],
-    #     name='Despesa',
-    #     marker_color='red',
-    #     opacity=0.6,
-    #     text=f"{round(forecast_data.loc['Despesa']/1000,2)}k",
-    #     textposition='auto',
-    # ))
-
-    # fig.add_trace(go.Bar(
-    #     x=[str(int(anome) + 1)],
-    #     y=[forecast_data.loc['Receita']],
-    #     name='Receita',
-    #     marker_color='green',
-    #     opacity=0.6,
-    #     text=f"{round(forecast_data.loc['Receita']/1000,2)}k",
-    #     textposition='auto',
-    # ))
+            line=dict(color='red' if tipo=='Despesa' else 'green', dash='dash'),
+        ))
     
+    fig.update_layout(
+        barmode='group',
+        xaxis_type='category',
+        xaxis_rangeslider_visible=True  # permite arrastar horizontalmente
+    )
     
-    fig.update_layout(barmode='group')
-    fig.update_xaxes(type='category')
-    st.plotly_chart(fig)
-
+    st.plotly_chart(fig, use_container_width=True)
+    
 
 def monthly_spending_by_category_pie(df,anome):
     depara_50_30_20 = {
