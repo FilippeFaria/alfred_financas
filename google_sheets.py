@@ -33,6 +33,7 @@ def get_sheet(path):
     sheet = spreadsheet.sheet1  # pega a primeira aba (Worksheet)
     return sheet
 
+@st.cache_data
 def read_sheet(path):
     sheet = get_sheet(path)  # pega o objeto worksheet
     data = sheet.get_all_records()
@@ -42,6 +43,9 @@ def read_sheet(path):
         # Substitui vírgula por ponto e tenta converter para float
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='ignore')
     return df
+
+
+
 
 def limpar_valores_invalidos(x):
     if isinstance(x, (list, dict)):

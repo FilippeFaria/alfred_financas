@@ -66,6 +66,7 @@ def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcel
 
             # Concatenando o novo DataFrame ao existente
             df = pd.concat([df, nova_linha], ignore_index=True)
+            st.cache_data.clear()  # Limpa o cache
         st.write('parcelas')
    
     
@@ -196,6 +197,7 @@ def main():
     # file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
     # with open(file_path, "r", encoding="utf-8") as file:
     #     prompt_system = file.read()
+
 
     df = google_sheets.read_sheet(path)
     df['Valor'] =  df['Valor'].astype('float64')
