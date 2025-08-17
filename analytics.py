@@ -180,7 +180,7 @@ def receitas_despesas(df, now, contas_invest, anome=None):
     )
     
     st.plotly_chart(fig, use_container_width=True)
-    
+
 
 def monthly_spending_by_category_pie(df,anome):
     depara_50_30_20 = {
@@ -245,15 +245,37 @@ def categorias(df,anomes):
     st.plotly_chart(fig)
 
 
+import streamlit as st
+import plotly.express as px
+
 def categorias_tempo(df):
     st.markdown('### Evolução de cada categoria no montante de despesas')
+    
     df = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
     df['Valor'] = abs(df['Valor'])
     data = df.groupby(['anomes','Categoria'])['Valor'].sum().reset_index()
-    fig = px.bar(data,x = 'anomes',y='Valor',color='Categoria',color_discrete_map=color_map)
+    
+    # Slider para controlar quantos meses mostrar
+    total_meses = len(data['anomes'].unique())
+    meses_mostrar = st.slider('Número de meses para mostrar', min_value=1, max_value=total_meses, value=min(12,total_meses))
+    
+    meses_unicos = sorted(data['anomes'].unique())[-meses_mostrar:]  # pega últimos N meses
+    data = data[data['anomes'].isin(meses_unicos)]
+    
+    fig = px.bar(
+        data,
+        x='anomes',
+        y='Valor',
+        color='Categoria',
+        color_discrete_map=color_map
+    )
+    
     fig.update_xaxes(type='category')
     fig.update_xaxes(categoryorder='category ascending')
-    st.plotly_chart(fig)
+    fig.update_layout(xaxis_rangeslider_visible=True)  # habilita o scroll horizontal
+    
+    st.plotly_chart(fig, use_container_width=True)
+
 
 
 def custo_fixo(df,custo_fixo,anome):
