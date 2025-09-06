@@ -203,6 +203,12 @@ def main():
     if "last_update" not in st.session_state:
         st.session_state.last_update = None
 
+    atualizar = st.button('Atualizar dados')
+    if atualizar:
+        st.session_state.last_update = datetime.now().timestamp()
+        st.cache_data.clear()
+    
+    # Lê os dados
     df = google_sheets.read_sheet(path,trigger=st.session_state.last_update)    
     df['Valor'] =  df['Valor'].astype('float64')
     df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
