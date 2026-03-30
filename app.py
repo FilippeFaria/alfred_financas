@@ -335,7 +335,7 @@ def main():
         with col2:
             
             analytics.monthly_spending_by_category_pie(df_temp,anome)
-            analytics.tendencia_saldo(df_temp,'Itaú',anome)
+            analytics.tendencia_saldo(df_temp,'Itaú CC',anome)
             
             #analytics.custo_fixo(df,custo_fixo,anome)
 
