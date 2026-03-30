@@ -268,6 +268,11 @@ def main():
             desconsiderar = st.checkbox('Desconsiderar grandes transacoes',value =True)
             va = st.checkbox('Desconsiderar VA',value =False)
             vr = st.checkbox('Desconsiderar VR',value =False)
+        with col2:
+            bianca = st.checkbox('Recorte Bianca',value =False)
+            filippe = st.checkbox('Recorte Filippe',value =False)
+
+
 
             if desconsiderar:
                 grandes_transacoes = [98,99,103,229,245,558,549,701,771,1012,1014,1018,995,978,971,
@@ -282,22 +287,35 @@ def main():
             if vr:
                 idx = df[df['Conta'].isin(['VR'])].index
                 df = df.drop(idx)
-        with col2:
+            if bianca:
+                df_temp = df.copy()
+                contas_filtradas = ['Cartão Bianca', 'Inter', 'Itaú CC', 'Cartão Nath', 'VA', 'VR']
+                df_temp = df_temp[df_temp['Conta'].isin(contas_filtradas)]
+                contas_multiplicar = ['Itaú CC', 'Cartão Nath', 'VA', 'VR']
+                df_temp.loc[df_temp['Conta'].isin(contas_multiplicar), 'Valor'] *= 0.3
+            elif filippe:
+                df_temp = df.copy()
+                contas_filtradas = ['Cartão Filippe', 'Nubank', 'Itaú CC', 'Cartão Nath', 'VA', 'VR']
+                df_temp = df_temp[df_temp['Conta'].isin(contas_filtradas)]
+                contas_multiplicar = ['Itaú CC', 'Cartão Nath', 'VA', 'VR']
+                df_temp.loc[df_temp['Conta'].isin(contas_multiplicar), 'Valor'] *= 0.7
+            else:
+                df_temp = df
             day_to_date = st.checkbox('Comparar aos dias do mês')
             if day_to_date:
                 data_max = df[(df['anomes'] == anome) & (df['Parcela'].isna())].Data.dt.day.max()
                 
                 df = df[df.Data.dt.day <= data_max]
 
-        analytics.despesa_total(df,now,anome)
+        analytics.despesa_total(df_temp,now,anome)
         col1, col2 = st.columns(2)
    
         with col2:
-            analytics.categorias_tempo(df)
-            df_tendencia = analytics.evolucao_categoria(df,anome,now)
+            analytics.categorias_tempo(df_temp)
+            df_tendencia = analytics.evolucao_categoria(df_temp,anome,now)
         with col1:
             
-            analytics.receitas_despesas(df,now,contas_invest,anome=anome) 
+            analytics.receitas_despesas(df_temp,now,contas_invest,anome=anome) 
             analytics.tendencia_mes(df_tendencia,anome)   
         
         
@@ -306,18 +324,18 @@ def main():
             st.markdown('### Categorias das despesas')
         with col2:
             #st.write(df['anomes'].unique())
-            data_escolhida = st.selectbox('Escolha o anomes',df['anomes'].unique(), list(df['anomes'].unique()).index(anome)) 
+            data_escolhida = st.selectbox('Escolha o anomes',df_temp['anomes'].unique(), list(df_temp['anomes'].unique()).index(anome)) 
         col1, col2 = st.columns(2)     
         with col1:            
             if data_escolhida:
                 anome = data_escolhida
             
-            analytics.categorias(df,anome)                  
+            analytics.categorias(df_temp,anome)                  
         
         with col2:
             
-            analytics.monthly_spending_by_category_pie(df,anome)
-            analytics.tendencia_saldo(df,'Itaú',anome)
+            analytics.monthly_spending_by_category_pie(df_temp,anome)
+            analytics.tendencia_saldo(df_temp,'Itaú',anome)
             
             #analytics.custo_fixo(df,custo_fixo,anome)
 
