@@ -16,7 +16,8 @@ path = '.'
 #path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
-contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
+# contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
+contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
 
 contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
 
@@ -242,15 +243,15 @@ def main():
         col1,col2,col3,col4,col5 = st.columns(5)
 
         with col1:
-            st.metric('Itaú',saldo_s['Itaú'])
+            st.metric('Itaú CC',saldo_s['Itaú'])
         with col2:
-            st.metric('Nubank',saldo_s['Nubank'])
+            st.metric('Cartão Filippe',saldo_s['Cartão Filippe'])
         with col3:
-            st.metric('Black',saldo_s['Black'])
+            st.metric('Cartão Bianca',saldo_s['Cartão Bianca'])
         with col4:
-            st.metric('VR',saldo_s['VR'])
+            st.metric('VA',saldo_s['VA'])
         with col5:
-            st.metric('Ion',saldo_s['Ion'])
+            st.metric('VR',saldo_s['VR'])
 
        
     now = datetime.now()
