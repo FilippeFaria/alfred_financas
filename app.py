@@ -243,7 +243,7 @@ def main():
         col1,col2,col3,col4,col5 = st.columns(5)
 
         with col1:
-            st.metric('Itaú CC',saldo_s['Itaú'])
+            st.metric('Itaú CC',saldo_s['Itaú CC'])
         with col2:
             st.metric('Cartão Filippe',saldo_s['Cartão Filippe'])
         with col3:
