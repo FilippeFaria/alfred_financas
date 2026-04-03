@@ -16,7 +16,6 @@ path = '.'
 #path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
 
 sheet = google_sheets.get_sheet(path)
-# contas = ['Itaú','Black','VR','VA','99Pay', 'Nubank','Cartão Nubank','C6','C6 corrente']
 contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
 
 contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
@@ -276,7 +275,7 @@ def main():
 
             if desconsiderar:
                 grandes_transacoes = [98,99,103,229,245,558,549,701,771,1012,1014,1018,995,978,971,
-                                      1081,1050,1326,1733,1663,1744,1756,1766,1867,2327,2350,2327,2625]
+                                      1081,1050,1326,1733,1663,1744,1756,1766,1867,2327,2350,2327,2625,3341]
                 
                 idx = df[df['id'].isin(grandes_transacoes)].index
                 df = df.drop(idx)
