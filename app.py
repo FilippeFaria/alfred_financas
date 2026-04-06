@@ -134,7 +134,7 @@ def adicionar_despesa(df,last_date,last_account):
                 parcelas = None
                 
         
-        categoria = st.selectbox("Tipo da despesa", ['Restaurante',"Supermercado",'Viagem',"Transporte", 'TV,Internet,Telefone',"Lazer", 'Compras','Educação',
+        categoria = st.selectbox("Tipo da despesa", ['Restaurante',"Supermercado", "Cosméticos",'Viagem',"Transporte", 'Assinaturas',"Lazer", 'Compras','Educação',
                                 'Multas','Casa','Serviços','Saúde','Presentes', "Outros",'Onix','Investimento'])
         
         if last_account in contas:
@@ -212,7 +212,7 @@ def main():
     df = google_sheets.read_sheet(path,trigger=st.session_state.last_update)    
     df['Valor'] =  df['Valor'].astype('float64')
     df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
-    df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone','TV,Internet,Telefone')
+    df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone','Assinaturas')
 
 
     # df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')

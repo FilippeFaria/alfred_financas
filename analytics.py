@@ -16,7 +16,8 @@ color_map = {
     "Restaurante": "#e63946",    # Red - Associated with appetite and excitement.
     "Viagem": "#47a847",         # Green - Associated with growth and relaxation.
     "Transporte": "#ff9000",     # Orange - Associated with energy and enthusiasm.
-    "TV,Internet,Telefone": "#9c26b2",   # Purple - Associated with creativity and luxury.
+    "Assinaturas": "#9c26b2",   # Purple - Associated with creativity and luxury.
+    "Cosméticos": "#ff69b4",     # Pink - Associated with beauty and self-care.
     "Lazer": "#ffd400",          # Yellow - Associated with happiness and optimism.
     "Compras": "#00b0c3",        # Cyan - Associated with clarity and confidence.
     "Educação": "#d82d7f",       # Magenta - Associated with imagination and passion.
@@ -195,7 +196,8 @@ def monthly_spending_by_category_pie(df,anome):
     "Presentes": "Desejos",
     "Saúde": "Necessidades",
     "Serviços": "Necessidades",
-    "TV,Internet,Telefone": "Necessidades",
+    "Assinaturas": "Necessidades",
+    "Cosméticos": "Desejos",
     "Outros": "Desejos",  # ou revisar individualmente,
     "Multas": "Desejos"
 }
