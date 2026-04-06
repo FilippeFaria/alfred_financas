@@ -407,25 +407,33 @@ def forecast(df,anome):
 def extrato(df,anome):
     anomes = st.selectbox('Escolha o anomes para o extrato',df['anomes'].unique(),list(df['anomes'].unique()).index(anome))
     st.markdown('#### Contas bancárias')
-    col1,col2,col3,col4 = st.columns(4)
+    col1,col2,col3,col4,col5,col6 = st.columns(6)
     sector_list = []
     
     with col1:
-        PDA = st.checkbox('Black')
+        PDA = st.checkbox('Cartão Filippe')
         if PDA:
-            sector_list.append('Black')
+            sector_list.append('Cartão Filippe')
     with col2:
-        itau = st.checkbox('Itaú')
+        itau = st.checkbox('Itaú CC')
         if itau:
-            sector_list.append('Itaú')
+            sector_list.append('Itaú CC')
     with col3:
         nubank = st.checkbox('Nubank')
         if nubank:
             sector_list.append('Nubank')
     with col4:
-        C6 = st.checkbox('C6')
+        C6 = st.checkbox('Cartão Bianca')
         if C6:
-            sector_list.append('C6')
+            sector_list.append('Cartão Bianca')
+    with col5:
+        nath = st.checkbox('Cartão Nath')
+        if nath:
+            sector_list.append('Cartão Nath')
+    with col6:
+        inter = st.checkbox('Inter')
+        if inter:
+            sector_list.append('Inter')
     
     col1,col2,col3,col4 = st.columns(4)
     with col1:
