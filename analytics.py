@@ -26,11 +26,10 @@ color_map = {
     "Serviços": "#a0a0a0",       # Gray - Associated with neutrality and balance.
     "Saúde": "#008877",          # Teal - Associated with healing and calmness.
     "Presentes": "#8bcd48",      # Lime Green - Associated with freshness and joy.
-    "Outros": "#5c7682",         # Dark Gray - Associated with neutrality and formality.
+    "Outros": "#c0c0c0",         # Light Gray - Associated with simplicity and balance.
     "Onix": "#000080",           # Navy Blue - Associated with professionalism and authority.
     "Salário": "#04d204",        # Bright Green - Associated with abundance and prosperity.
     "Cobrança": "#800000",       # Dark Red - Associated with urgency and attention.
-    "Outros": "#c0c0c0",         # Light Gray - Associated with simplicity and balance.
 }
 
 
@@ -236,7 +235,7 @@ def categorias(df,anomes):
         fig.add_trace(go.Bar(
             x=[c],
             y=[forecast_df.loc[c,'Valor']],
-            marker_color=color_map[c],
+            marker_color=color_map.get(c, '#cccccc'),
             opacity=0.5,
             showlegend=False,
             text=f"{abs(round(forecast_df.loc[c,'Valor'],2))}",
