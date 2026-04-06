@@ -406,7 +406,10 @@ def forecast(df,anome):
 
 
 def extrato(df,anome):
-    anomes = st.selectbox('Escolha o anomes para o extrato',df['anomes'].unique(),list(df['anomes'].unique()).index(anome))
+    anomes_disponiveis = sorted(df['anomes'].unique(), key=lambda x: int(x))
+    if anome not in anomes_disponiveis:
+        anome = anomes_disponiveis[-1] if anomes_disponiveis else anome
+    anomes = st.select_slider('Escolha o anomes para o extrato', options=anomes_disponiveis, value=anome)
     st.markdown('#### Contas bancárias')
     col1,col2,col3,col4,col5,col6 = st.columns(6)
     sector_list = []
