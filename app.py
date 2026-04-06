@@ -322,17 +322,18 @@ def main():
             analytics.tendencia_mes(df_tendencia,anome)   
         
         
+        anomes_disponiveis = sorted(df_temp['anomes'].unique(), key=lambda x: int(x))
+        data_escolhida = st.select_slider('Escolha o anomes', options=anomes_disponiveis, value=anome)
+        if data_escolhida:
+            anome = data_escolhida
+
         col1,col2,col3 = st.columns([2,1,5])
         with col1:
             st.markdown('### Categorias das despesas')
         with col2:
-            #st.write(df['anomes'].unique())
-            data_escolhida = st.selectbox('Escolha o anomes',df_temp['anomes'].unique(), list(df_temp['anomes'].unique()).index(anome)) 
+            st.write(f'Anomes selecionado: {anome}')
         col1, col2 = st.columns(2)     
         with col1:            
-            if data_escolhida:
-                anome = data_escolhida
-            
             analytics.categorias(df_temp,anome)                  
         
         with col2:
