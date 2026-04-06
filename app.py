@@ -242,19 +242,19 @@ def main():
         col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
 
         with col1:
-            st.metric('Itaú CC',saldo_s['Itaú CC'])
+            st.metric('Itaú CC', saldo_s.get('Itaú CC', 0))
         with col2:
-            st.metric('Cartão Filippe',saldo_s['Cartão Filippe'])
+            st.metric('Cartão Filippe', saldo_s.get('Cartão Filippe', 0))
         with col3:
-            st.metric('Cartão Bianca',saldo_s['Cartão Bianca'])
+            st.metric('Cartão Bianca', saldo_s.get('Cartão Bianca', 0))
         with col4:
-            st.metric('Cartão Nath',saldo_s['Cartão Nath'])
+            st.metric('Cartão Nath', saldo_s.get('Cartão Nath', 0))
         with col5:
-            st.metric('Inter',saldo_s['Inter'])
+            st.metric('Inter', saldo_s.get('Inter', 0))
         with col6:
-            st.metric('VA',saldo_s['VA'])
+            st.metric('VA', saldo_s.get('VA', 0))
         with col7:
-            st.metric('VR',saldo_s['VR'])
+            st.metric('VR', saldo_s.get('VR', 0))
 
        
     now = datetime.now()
