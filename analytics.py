@@ -59,11 +59,53 @@ def anomes(df):
 
 def despesa_total(df,now,anome):
     df = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
-    gasto_total = abs(round(df[(df['Data'].dt.month == now.month) & (df['Data'].dt.year == now.year)]['Valor'].sum(),2))
-    ultima_data = df[df['Data'].dt.month == now.month]['Data'].dt.day.max()
-    gasto_anterior = abs(round(df[(df['Data'].dt.month == now.month - 1)]['Valor'].sum(),2))
-    delta = (gasto_total-gasto_anterior)/gasto_anterior
-    st.metric(f'Gasto no mês de {now.month}',value=gasto_total,delta=f'{round(delta,2)*100}%',delta_color='inverse')
+    anome_str = str(anome)
+    year = int(anome_str[:4])
+    month = int(anome_str[4:])
+
+    current_month_start = pd.Timestamp(year=year, month=month, day=1)
+    next_month_start = current_month_start + pd.DateOffset(months=1)
+    previous_month_start = current_month_start - pd.DateOffset(months=1)
+    month_before_previous_start = previous_month_start - pd.DateOffset(months=1)
+    last_3_months_start = current_month_start - pd.DateOffset(months=3)
+    previous_quarter_start = current_month_start - pd.DateOffset(months=6)
+
+    gasto_atual = abs(round(df[(df['Data'] >= current_month_start) & (df['Data'] < next_month_start)]['Valor'].sum(), 2))
+    gasto_anterior = abs(round(df[(df['Data'] >= previous_month_start) & (df['Data'] < current_month_start)]['Valor'].sum(), 2))
+    gasto_mes_antes = abs(round(df[(df['Data'] >= month_before_previous_start) & (df['Data'] < previous_month_start)]['Valor'].sum(), 2))
+    gasto_3m_media = abs(round(df[(df['Data'] >= last_3_months_start) & (df['Data'] < current_month_start)]['Valor'].sum() / 3, 2))
+    gasto_trimestre_anterior_media = abs(round(df[(df['Data'] >= previous_quarter_start) & (df['Data'] < last_3_months_start)]['Valor'].sum() / 3, 2))
+
+    delta_anterior = (gasto_anterior - gasto_mes_antes) / gasto_mes_antes if gasto_mes_antes != 0 else None
+    delta_atual = (gasto_atual - gasto_anterior) / gasto_anterior if gasto_anterior != 0 else None
+    delta_3m = (gasto_3m_media - gasto_trimestre_anterior_media) / gasto_trimestre_anterior_media if gasto_trimestre_anterior_media != 0 else None
+
+    label_prev = previous_month_start.strftime('%m/%Y')
+    label_curr = current_month_start.strftime('%m/%Y')
+    label_3m = f'{last_3_months_start.strftime("%m/%Y")} - {previous_month_start.strftime("%m/%Y")}'
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            f'Gasto mês anterior ({label_prev})',
+            value=gasto_anterior,
+            delta=f'{round(delta_anterior,2)*100}%' if delta_anterior is not None else None,
+            delta_color='inverse'
+        )
+    with col2:
+        st.metric(
+            f'Gasto mês atual ({label_curr})',
+            value=gasto_atual,
+            delta=f'{round(delta_atual,2)*100}%' if delta_atual is not None else None,
+            delta_color='inverse'
+        )
+    with col3:
+        st.metric(
+            f'Média últimos 3 meses ({label_3m})',
+            value=gasto_3m_media,
+            delta=f'{round(delta_3m,2)*100}%' if delta_3m is not None else None,
+            delta_color='inverse'
+        )
 
 
 import streamlit as st
