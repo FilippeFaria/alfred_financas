@@ -239,21 +239,19 @@ def main():
 
         saldo_s = analytics.saldo(df)
         
-        col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
+        col1,col2,col3,col4 = st.columns(4)
 
         with col1:
             st.metric('Itaú CC', saldo_s.get('Itaú CC', 0))
-        with col2:
             st.metric('Cartão Filippe', saldo_s.get('Cartão Filippe', 0))
-        with col3:
+        with col2:
             st.metric('Cartão Bianca', saldo_s.get('Cartão Bianca', 0))
-        with col4:
             st.metric('Cartão Nath', saldo_s.get('Cartão Nath', 0))
-        with col5:
+        with col3:
             st.metric('Inter', saldo_s.get('Inter', 0))
-        with col6:
+            st.metric('Nubank', saldo_s.get('Nubank', 0))
+        with col4:
             st.metric('VA', saldo_s.get('VA', 0))
-        with col7:
             st.metric('VR', saldo_s.get('VR', 0))
 
        
