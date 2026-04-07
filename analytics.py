@@ -540,10 +540,12 @@ def extrato(df,anome):
             path = '.'
             sheet = google_sheets.get_sheet(path)
             
-            # Atualizar valores no dataframe original
-            for idx in edited_data.index:
-                row = edited_data.loc[idx]
-                df.loc[idx] = row
+            # Atualizar valores no dataframe original usando ID como chave
+            for idx, row in edited_data.iterrows():
+                # Encontrar a linha correspondente no df original usando o ID
+                df_idx = df[df['id'] == row['id']].index
+                if len(df_idx) > 0:
+                    df.loc[df_idx[0]] = row
             
             # Formatar data antes de salvar
             df['Data'] = pd.to_datetime(df['Data'])
@@ -551,6 +553,7 @@ def extrato(df,anome):
             
             google_sheets.write_sheet(sheet, df)
             st.cache_data.clear()
+            st.rerun()
             st.success('✅ Alterações salvas com sucesso!')
     
     st.markdown('---')
