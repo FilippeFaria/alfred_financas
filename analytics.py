@@ -526,7 +526,63 @@ def extrato(df,anome):
     else:
         data = df[(df['anomes'] == anomes)]
 
-    st.dataframe(data)
+    st.markdown('#### Gerenciar Extrato')
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        edited_data = st.data_editor(data, use_container_width=True, key='extrato_editor')
+    
+    with col2:
+        st.markdown('')
+        if st.button('💾 Salvar Alterações', key='save_extrato'):
+            # Importar aqui para evitar erro circular
+            import google_sheets
+            path = '.'
+            sheet = google_sheets.get_sheet(path)
+            
+            # Atualizar valores no dataframe original
+            for idx in edited_data.index:
+                row = edited_data.loc[idx]
+                df.loc[idx] = row
+            
+            # Formatar data antes de salvar
+            df['Data'] = pd.to_datetime(df['Data'])
+            df['Data'] = df['Data'].dt.strftime('%d/%m/%Y %H:%M')
+            
+            google_sheets.write_sheet(sheet, df)
+            st.cache_data.clear()
+            st.success('✅ Alterações salvas com sucesso!')
+    
+    st.markdown('---')
+    st.markdown('#### Deletar Linhas')
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        ids_para_deletar = st.multiselect(
+            'Selecione os IDs das linhas para deletar:',
+            options=edited_data['id'].tolist(),
+            key='delete_ids'
+        )
+    
+    with col2:
+        st.markdown('')
+        if st.button('🗑️ Deletar Selecionadas', key='delete_extrato'):
+            if ids_para_deletar:
+                df = df[~df['id'].isin(ids_para_deletar)]
+                
+                import google_sheets
+                path = '.'
+                sheet = google_sheets.get_sheet(path)
+                
+                df['Data'] = pd.to_datetime(df['Data'])
+                df['Data'] = df['Data'].dt.strftime('%d/%m/%Y %H:%M')
+                
+                google_sheets.write_sheet(sheet, df)
+                st.cache_data.clear()
+                st.success(f'✅ {len(ids_para_deletar)} linha(s) deletada(s) com sucesso!')
+                st.rerun()
+            else:
+                st.warning('⚠️ Selecione pelo menos uma linha para deletar')
 
 
 def acumulo_patrimio(df,contas_invest):
