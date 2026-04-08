@@ -19,7 +19,7 @@ sheet = google_sheets.get_sheet(path)
 contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
 
 #contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
-contas_invest = ['Ion','Nuinvest','99Pay','C6Invest','Inter Invest']
+contas_invest = ['Ion','Nuinvest','99Pay','C6Invest','InterInvest']
 
 def excluir_registro(id, df):
     """Exclui um registro do dataframe pelo ID e atualiza no Google Sheets"""
@@ -369,20 +369,20 @@ def main():
     with tab4:
         col1,col2,col3 = st.columns(3)
         with col2:
-            st.metric('Patrimônio Total',saldo_s[contas_invest].sum())
+            st.metric('Patrimônio Total',saldo_s.reindex(contas_invest).fillna(0).sum())
             st.write(saldo_s[contas_invest])
         
         col1,col2,col3,col4,col5 = st.columns(5)
         with col1:
-            st.metric('Ion',saldo_s['Ion'])
+            st.metric('Ion',saldo_s.get('Ion', 0))
         with col2:
-            st.metric('Nuinvest',saldo_s['Nuinvest'])
+            st.metric('Nuinvest',saldo_s.get('Nuinvest', 0))
         with col3:
-            st.metric('99Pay',saldo_s['99Pay'])
+            st.metric('99Pay',saldo_s.get('99Pay', 0))
         with col4:
-            st.metric('C6Invest',saldo_s['C6Invest'])
+            st.metric('C6Invest',saldo_s.get('C6Invest', 0))
         with col5:
-            st.metric('Inter Invest',saldo_s['Inter Invest'])
+            st.metric('InterInvest',saldo_s.get('InterInvest', 0))
 
             
         analytics.aplicacoes_resgates(df,contas_invest)
