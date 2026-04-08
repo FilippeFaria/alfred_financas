@@ -370,7 +370,7 @@ def main():
         col1,col2,col3 = st.columns(3)
         with col2:
             st.metric('Patrimônio Total',saldo_s.reindex(contas_invest).fillna(0).sum())
-            st.write(saldo_s[contas_invest])
+            st.write(saldo_s.reindex(contas_invest).fillna(0))
         
         col1,col2,col3,col4,col5 = st.columns(5)
         with col1:
