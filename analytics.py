@@ -527,6 +527,8 @@ def extrato(df,anome):
         data = df[(df['anomes'] == anomes)]
 
     st.dataframe(data)
+    
+    return data
 
 
 def acumulo_patrimio(df,contas_invest):

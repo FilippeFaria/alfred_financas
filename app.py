@@ -20,6 +20,25 @@ contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','V
 
 contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
 
+def excluir_registro(id, df):
+    """Exclui um registro do dataframe pelo ID e atualiza no Google Sheets"""
+    df_atualizado = df[df['id'] != id].copy()
+    
+    if len(df_atualizado) == len(df):
+        st.error(f"Nenhum registro encontrado com o ID {id}")
+        return df
+    
+    # Formatar a data corretamente antes de salvar
+    df_atualizado['Data'] = pd.to_datetime(df_atualizado['Data'], format="%Y-%m-%d %H:%M:%S", errors='coerce')
+    df_atualizado['Data'] = df_atualizado['Data'].dt.strftime('%d/%m/%Y %H:%M')
+    
+    google_sheets.write_sheet(sheet, df_atualizado)
+    st.cache_data.clear()
+    st.session_state.last_update = datetime.now().timestamp()
+    st.success(f"Registro com ID {id} excluído com sucesso!")
+    return df_atualizado
+
+
 def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcelas=None,desconsiderar=False,adicionar_transferencia=False):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -370,6 +389,14 @@ def main():
     with tab5:
         df = analytics.anomes(df)
         analytics.extrato(df,anome)
+        
+        st.markdown('#### Excluir registro')
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            id_excluir = st.number_input('ID do registro a excluir', min_value=1, step=1, key='id_excluir_input')
+        with col2:
+            if st.button('Excluir registro', key='btn_excluir_record'):
+                excluir_registro(id_excluir, df)
 
 
 if __name__ == "__main__":
