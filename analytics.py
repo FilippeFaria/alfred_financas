@@ -526,7 +526,7 @@ def extrato(df,anome):
     else:
         data = df[(df['anomes'] == anomes)]
 
-    st.dataframe(data)
+    st.dataframe(data, hide_index=True)
     
     return data
 
