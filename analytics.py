@@ -518,77 +518,15 @@ def extrato(df,anome):
         df = df[df['Parcela'].isnull() == False]
     
     if Ion|C6Invest|Nuinvest|Pay:
-        data = df[(df['Conta'].isin(sector_list))].copy()
+        data = df[(df['Conta'].isin(sector_list))]
 
     elif PDA|itau|nubank|C6|VR|VA:
-        data = df[(df['anomes'] == anomes) & (df['Conta'].isin(sector_list))].copy()
+        data = df[(df['anomes'] == anomes) & (df['Conta'].isin(sector_list))]
 
     else:
-        data = df[(df['anomes'] == anomes)].copy()
+        data = df[(df['anomes'] == anomes)]
 
-    st.markdown('#### Gerenciar Extrato')
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        # Remover coluna id para exibição e manter os índices
-        data_display = data.drop(columns=['id']).reset_index(drop=True)
-        edited_data = st.data_editor(data_display, use_container_width=True, key='extrato_editor')
-        # Readdionar a coluna id usando os índices do data original
-        edited_data['id'] = data['id'].reset_index(drop=True).values
-        # Restaurar os índices originais do dataframe
-        edited_data.index = data.index
-    
-    with col2:
-        st.markdown('')
-        if st.button('💾 Salvar Alterações', key='save_extrato'):
-            # Importar aqui para evitar erro circular
-            import google_sheets
-            path = '.'
-            sheet = google_sheets.get_sheet(path)
-            
-            # Atualizar valores no dataframe original usando o índice
-            for idx, row in edited_data.iterrows():
-                df.loc[idx] = row
-            
-            # Formatar data antes de salvar
-            df['Data'] = pd.to_datetime(df['Data'])
-            df['Data'] = df['Data'].dt.strftime('%d/%m/%Y %H:%M')
-            
-            google_sheets.write_sheet(sheet, df)
-            st.cache_data.clear()
-            st.rerun()
-            st.success('✅ Alterações salvas com sucesso!')
-    
-    st.markdown('---')
-    st.markdown('#### Deletar Linhas')
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        indices_para_deletar = st.multiselect(
-            'Selecione os índices das linhas para deletar:',
-            options=edited_data.index.tolist(),
-            key='delete_ids'
-        )
-    
-    with col2:
-        st.markdown('')
-        if st.button('🗑️ Deletar Selecionadas', key='delete_extrato'):
-            if indices_para_deletar:
-                df = df.drop(indices_para_deletar)
-                
-                import google_sheets
-                path = '.'
-                sheet = google_sheets.get_sheet(path)
-                
-                df['Data'] = pd.to_datetime(df['Data'])
-                df['Data'] = df['Data'].dt.strftime('%d/%m/%Y %H:%M')
-                
-                google_sheets.write_sheet(sheet, df)
-                st.cache_data.clear()
-                st.success(f'✅ {len(indices_para_deletar)} linha(s) deletada(s) com sucesso!')
-                st.rerun()
-            else:
-                st.warning('⚠️ Selecione pelo menos uma linha para deletar')
+    st.dataframe(data)
 
 
 def acumulo_patrimio(df,contas_invest):
