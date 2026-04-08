@@ -18,7 +18,8 @@ path = '.'
 sheet = google_sheets.get_sheet(path)
 contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
 
-contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
+#contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
+contas_invest = ['Ion', 'InterInvest']
 
 def excluir_registro(id, df):
     """Exclui um registro do dataframe pelo ID e atualiza no Google Sheets"""
