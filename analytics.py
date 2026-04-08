@@ -530,7 +530,11 @@ def extrato(df,anome):
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        edited_data = st.data_editor(data, use_container_width=True, key='extrato_editor')
+        # Remover coluna id para exibição
+        data_display = data.drop(columns=['id'])
+        edited_data = st.data_editor(data_display, use_container_width=True, key='extrato_editor')
+        # Readdionar a coluna id do original
+        edited_data['id'] = data['id'].values
     
     with col2:
         st.markdown('')
@@ -540,12 +544,9 @@ def extrato(df,anome):
             path = '.'
             sheet = google_sheets.get_sheet(path)
             
-            # Atualizar valores no dataframe original usando ID como chave
+            # Atualizar valores no dataframe original usando o índice
             for idx, row in edited_data.iterrows():
-                # Encontrar a linha correspondente no df original usando o ID
-                df_idx = df[df['id'] == row['id']].index
-                if len(df_idx) > 0:
-                    df.loc[df_idx[0]] = row
+                df.loc[idx] = row
             
             # Formatar data antes de salvar
             df['Data'] = pd.to_datetime(df['Data'])
@@ -561,17 +562,17 @@ def extrato(df,anome):
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        ids_para_deletar = st.multiselect(
-            'Selecione os IDs das linhas para deletar:',
-            options=edited_data['id'].tolist(),
+        indices_para_deletar = st.multiselect(
+            'Selecione os índices das linhas para deletar:',
+            options=edited_data.index.tolist(),
             key='delete_ids'
         )
     
     with col2:
         st.markdown('')
         if st.button('🗑️ Deletar Selecionadas', key='delete_extrato'):
-            if ids_para_deletar:
-                df = df[~df['id'].isin(ids_para_deletar)]
+            if indices_para_deletar:
+                df = df.drop(indices_para_deletar)
                 
                 import google_sheets
                 path = '.'
@@ -582,7 +583,7 @@ def extrato(df,anome):
                 
                 google_sheets.write_sheet(sheet, df)
                 st.cache_data.clear()
-                st.success(f'✅ {len(ids_para_deletar)} linha(s) deletada(s) com sucesso!')
+                st.success(f'✅ {len(indices_para_deletar)} linha(s) deletada(s) com sucesso!')
                 st.rerun()
             else:
                 st.warning('⚠️ Selecione pelo menos uma linha para deletar')
