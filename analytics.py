@@ -518,23 +518,25 @@ def extrato(df,anome):
         df = df[df['Parcela'].isnull() == False]
     
     if Ion|C6Invest|Nuinvest|Pay:
-        data = df[(df['Conta'].isin(sector_list))]
+        data = df[(df['Conta'].isin(sector_list))].copy()
 
     elif PDA|itau|nubank|C6|VR|VA:
-        data = df[(df['anomes'] == anomes) & (df['Conta'].isin(sector_list))]
+        data = df[(df['anomes'] == anomes) & (df['Conta'].isin(sector_list))].copy()
 
     else:
-        data = df[(df['anomes'] == anomes)]
+        data = df[(df['anomes'] == anomes)].copy()
 
     st.markdown('#### Gerenciar Extrato')
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        # Remover coluna id para exibição
-        data_display = data.drop(columns=['id'])
+        # Remover coluna id para exibição e manter os índices
+        data_display = data.drop(columns=['id']).reset_index(drop=True)
         edited_data = st.data_editor(data_display, use_container_width=True, key='extrato_editor')
-        # Readdionar a coluna id do original
-        edited_data['id'] = data['id'].values
+        # Readdionar a coluna id usando os índices do data original
+        edited_data['id'] = data['id'].reset_index(drop=True).values
+        # Restaurar os índices originais do dataframe
+        edited_data.index = data.index
     
     with col2:
         st.markdown('')
