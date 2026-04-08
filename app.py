@@ -19,7 +19,7 @@ sheet = google_sheets.get_sheet(path)
 contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
 
 #contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
-contas_invest = ['Ion', 'InterInvest']
+contas_invest = ['Ion','Nuinvest','99Pay','C6Invest','Inter Invest']
 
 def excluir_registro(id, df):
     """Exclui um registro do dataframe pelo ID e atualiza no Google Sheets"""
@@ -372,7 +372,7 @@ def main():
             st.metric('Patrimônio Total',saldo_s[contas_invest].sum())
             st.write(saldo_s[contas_invest])
         
-        col1,col2,col3,col4 = st.columns(4)
+        col1,col2,col3,col4,col5 = st.columns(5)
         with col1:
             st.metric('Ion',saldo_s['Ion'])
         with col2:
@@ -381,6 +381,8 @@ def main():
             st.metric('99Pay',saldo_s['99Pay'])
         with col4:
             st.metric('C6Invest',saldo_s['C6Invest'])
+        with col5:
+            st.metric('Inter Invest',saldo_s['Inter Invest'])
 
             
         analytics.aplicacoes_resgates(df,contas_invest)
