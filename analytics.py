@@ -544,7 +544,7 @@ def aplicacoes_resgates(df,contas_invest):
     st.markdown('### Evolução das receitas e despesas no tempo')
     
     df = df[(df['Conta'].isin(contas_invest)) & (df['Tipo'] == 'Investimento')]
-    data = abs(df.groupby(['anomes','Categoria'])['Valor'].sum()).reset_index()
+    data = abs(df.groupby(['anomes','Nome'])['Valor'].sum()).reset_index()
     data['anomes'] = data['anomes'].astype(str)
     data['text'] = data['Valor'].apply(lambda x: f'{round(x/1000,2)}k')
     
