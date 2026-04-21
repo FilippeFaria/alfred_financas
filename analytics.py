@@ -520,7 +520,7 @@ def extrato(df,anome):
     if Ion|C6Invest|Nuinvest|Pay:
         data = df[(df['Conta'].isin(sector_list))]
 
-    elif PDA|itau|nubank|C6|VR|VA:
+    elif PDA|itau|nubank|C6|VR|VA|inter|nath:
         data = df[(df['anomes'] == anomes) & (df['Conta'].isin(sector_list))]
 
     else:
