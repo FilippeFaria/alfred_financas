@@ -386,6 +386,10 @@ def main():
 
             
         analytics.aplicacoes_resgates(df,contas_invest)
+        
+        st.markdown('### Extrato de Investimentos')
+        df_invest = df[df['Tipo'] == 'Investimento']
+        st.dataframe(df_invest, hide_index=True)
     
 
 
