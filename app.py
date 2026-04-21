@@ -393,13 +393,6 @@ def main():
         df = analytics.anomes(df)
         analytics.extrato(df,anome)
         
-        st.markdown('#### Excluir registro')
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            id_excluir = st.number_input('ID do registro a excluir', min_value=1, step=1, key='id_excluir_input')
-        with col2:
-            if st.button('Excluir registro', key='btn_excluir_record'):
-                excluir_registro(id_excluir, df)
 
 
 if __name__ == "__main__":
