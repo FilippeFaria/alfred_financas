@@ -324,9 +324,9 @@ def main():
                 df_temp = df
             day_to_date = st.checkbox('Comparar aos dias do mês')
             if day_to_date:
-                data_max = df[(df['anomes'] == anome) & (df['Parcela'].isna())].Data.dt.day.max()
+                data_max = df_temp[(df_temp['anomes'] == anome) & (df_temp['Parcela'].isna())].Data.dt.day.max()
                 
-                df = df[df.Data.dt.day <= data_max]
+                df_temp = df_temp[df_temp.Data.dt.day <= data_max]
 
         analytics.despesa_total(df_temp,now,anome)
         col1, col2 = st.columns(2)
