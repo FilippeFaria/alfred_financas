@@ -262,30 +262,105 @@ Proporção ideal:
                 ''')
 
 
-def categorias(df,anomes):
+def categorias(df, anomes):
+    import streamlit as st
+    
     df_full = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
-    df = df[(df['desconsiderar'] == False) & (df['anomes'] == anomes) & (df['Tipo'] == 'Despesa')]
-    df['Valor'] = abs(df['Valor'])
-    data = df.groupby('Categoria')['Valor'].sum().reset_index()
-    data = data.sort_values('Valor',ascending=False)
-
-    forecast_df = forecast(df_full,anomes).set_index('Categoria')
-    fig = px.bar(data,x = 'Categoria',y='Valor',color='Categoria', text_auto='.2s',color_discrete_map=color_map)
+    df_mes = df[(df['desconsiderar'] == False) & (df['anomes'] == anomes) & (df['Tipo'] == 'Despesa')]
+    df_mes['Valor'] = abs(df_mes['Valor'])
+    data = df_mes.groupby('Categoria')['Valor'].sum().reset_index()
+    data = data.sort_values('Valor', ascending=False)
     
+    # Obtém todas as categorias de despesa
+    todas_categorias = sorted(df_full['Categoria'].unique())
     
-    for c in forecast_df.index:
-        fig.add_trace(go.Bar(
-            x=[c],
-            y=[forecast_df.loc[c,'Valor']],
-            marker_color=color_map.get(c, '#cccccc'),
-            opacity=0.5,
-            showlegend=False,
-            text=f"{abs(round(forecast_df.loc[c,'Valor'],2))}",
-            textposition='auto',
-        ))
-    fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
-    fig.update_layout(barmode='overlay',xaxis=dict(showticklabels=False))
+    # Cria dicionário com valores reais do mês
+    valores_reais = dict(zip(data['Categoria'], data['Valor']))
+    
+    # Interface para usuário definir valores desejados
+    st.markdown("#### Defina os valores desejados por categoria:")
+    
+    col1, col2 = st.columns(2)
+    
+    valores_desejados = {}
+    
+    with col1:
+        st.markdown("**Categorias 1-8**")
+        for i, cat in enumerate(todas_categorias[:8]):
+            valor_real = valores_reais.get(cat, 0)
+            valores_desejados[cat] = st.number_input(
+                f"{cat} (real: R$ {valor_real:,.2f})",
+                min_value=0.0,
+                value=float(valor_real),
+                step=50.0,
+                key=f"cat_{i}"
+            )
+    
+    with col2:
+        st.markdown("**Categorias 9+**")
+        for i, cat in enumerate(todas_categorias[8:], start=8):
+            valor_real = valores_reais.get(cat, 0)
+            valores_desejados[cat] = st.number_input(
+                f"{cat} (real: R$ {valor_real:,.2f})",
+                min_value=0.0,
+                value=float(valor_real),
+                step=50.0,
+                key=f"cat_{i}"
+            )
+    
+    # Cria DataFrame com valores desejados
+    df_desejado = pd.DataFrame([
+        {'Categoria': cat, 'Valor': val} 
+        for cat, val in valores_desejados.items()
+    ])
+    df_desejado = df_desejado.sort_values('Valor', ascending=False)
+    
+    # Gráfico comparando valores reais vs desejados
+    fig = go.Figure()
+    
+    # Barras valores reais
+    fig.add_trace(go.Bar(
+        x=data['Categoria'],
+        y=data['Valor'],
+        name='Valor Real',
+        marker_color='steelblue',
+        text=data['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
+        textposition='auto'
+    ))
+    
+    # Barras valores desejados (offset)
+    fig.add_trace(go.Bar(
+        x=df_desejado['Categoria'],
+        y=df_desejado['Valor'],
+        name='Valor Desejado',
+        marker_color='orange',
+        opacity=0.7,
+        text=df_desejado['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
+        textposition='auto'
+    ))
+    
+    fig.update_layout(
+        barmode='group',
+        title=f"Comparativo: Real vs Desejado ({anomes})",
+        xaxis_title="Categoria",
+        yaxis_title="Valor (R$)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
     st.plotly_chart(fig)
+    
+    # Summary
+    total_real = sum(valores_reais.values())
+    total_desejado = sum(valores_desejados.values())
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Real", f"R$ {total_real:,.2f}")
+    with col2:
+        st.metric("Total Desejado", f"R$ {total_desejado:,.2f}")
+    with col3:
+        diff = total_desejado - total_real
+        st.metric("Diferença", f"R$ {diff:,.2f}", delta=f"{diff:,.2f}", delta_color="inverse" if diff > 0 else "normal")
 
 
 import streamlit as st
