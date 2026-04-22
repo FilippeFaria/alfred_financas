@@ -34,7 +34,7 @@ def render(df, path):
                 sheet = get_sheet(path)
                 df = excluir_registro(sheet, df, id_to_delete)
                 # Forçar recarregamento da página
-                #st.rerun()
+                st.rerun()
             else:
                 st.error("Por favor, insira um ID válido.")
     

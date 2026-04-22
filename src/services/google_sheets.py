@@ -111,8 +111,15 @@ def write_sheet(sheet: gspread.Worksheet, df: pd.DataFrame) -> None:
     """
     df = df.fillna('')
     df['Valor'] = df['Valor'].astype(str)
-    # Usar map em vez de applymap (compatível com versões recentes do pandas)
-    df = df.applymap(_limpar_valores_invalidos) if hasattr(df, 'applymap') else df.map(_limpar_valores_invalidos)
+    # Aplicar limpeza de valores inválidos
+    try:
+        df = df.applymap(_limpar_valores_invalidos)
+    except AttributeError:
+        # Para versões recentes do pandas, applymap foi renomeado para map
+        df = df.map(_limpar_valores_invalidos)
+    
+    # Atualizar a planilha com os dados
+    sheet.clear()
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
 
