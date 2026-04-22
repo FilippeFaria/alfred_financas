@@ -3,6 +3,7 @@ Página de Transações.
 Gerencia adição de receitas, despesas, transferências e investimentos.
 """
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -10,6 +11,12 @@ from src.config import CONTAS, CONTAS_INVEST, CATEGORIAS_DESPESA, CATEGORIAS_REC
 from src.services.data_handler import salvar_transacao
 from src.services.google_sheets import get_sheet
 from src.analytics.calculations import calcular_saldo
+
+
+def verificar_duplicata(df, valor, conta, data):
+    """Verifica se existe transação com mesmo valor, conta e data."""
+    # data é datetime
+    return df[(df['Valor'] == valor) & (df['Conta'] == conta) & (df['Data'].dt.date == data.date)]
 
 
 def adicionar_receita(df, path: str = '.'):
@@ -28,17 +35,47 @@ def adicionar_receita(df, path: str = '.'):
         desconsiderar = st.checkbox('Desconsiderar na análise')
 
     if st.button("Salvar"):
-        sheet = get_sheet(path)
-        salvar_transacao(
-            sheet, df, id, nome, tipo, valor, categoria, conta, 
-            datetime.combine(data, datetime.min.time()), obs, tag,
-            desconsiderar=desconsiderar
-        )
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
+        duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
+        if not duplicatas.empty:
+            st.warning("⚠️ Transação similar encontrada!")
+            st.write("**Detalhes da transação existente:**")
+            existente = duplicatas.iloc[0]
+            st.write(f"- Nome: {existente['Nome']}")
+            st.write(f"- Tipo: {existente['Tipo']}")
+            st.write(f"- Categoria: {existente['Categoria']}")
+            st.write(f"- Valor: R$ {existente['Valor']:.2f}")
+            st.write(f"- Conta: {existente['Conta']}")
+            st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+            if existente['Obs']:
+                st.write(f"- Observação: {existente['Obs']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Confirmar (adicionar mesmo assim)"):
+                    sheet = get_sheet(path)
+                    salvar_transacao(
+                        sheet, df, id, nome, tipo, valor, categoria, conta, 
+                        datetime.combine(data, datetime.min.time()), obs, tag,
+                        desconsiderar=desconsiderar
+                    )
+                    placeholder.empty()
+                    st.success("Transação adicionada com sucesso!")
+                    st.rerun()
+            with col2:
+                if st.button("❌ Ignorar"):
+                    st.info("Transação ignorada. Você pode ajustar os dados e tentar novamente.")
+        else:
+            sheet = get_sheet(path)
+            salvar_transacao(
+                sheet, df, id, nome, tipo, valor, categoria, conta, 
+                datetime.combine(data, datetime.min.time()), obs, tag,
+                desconsiderar=desconsiderar
+            )
+            placeholder.empty()
+            placeholder = st.empty()
+            with placeholder.container():
+                if not st.button('ok'):
+                    st.stop()
 
 
 def adicionar_despesa(df, last_date, last_account, path: str = '.'):
@@ -72,17 +109,47 @@ def adicionar_despesa(df, last_date, last_account, path: str = '.'):
         desconsiderar = st.checkbox('Desconsiderar na análise')
 
     if st.button("Salvar"):
-        sheet = get_sheet(path)
-        salvar_transacao(
-            sheet, df, id, nome, tipo, valor, categoria, conta,
-            datetime.combine(data, datetime.min.time()), obs, tag,
-            parcelas=parcelas, desconsiderar=desconsiderar
-        )
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
+        duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
+        if not duplicatas.empty:
+            st.warning("⚠️ Transação similar encontrada!")
+            st.write("**Detalhes da transação existente:**")
+            existente = duplicatas.iloc[0]
+            st.write(f"- Nome: {existente['Nome']}")
+            st.write(f"- Tipo: {existente['Tipo']}")
+            st.write(f"- Categoria: {existente['Categoria']}")
+            st.write(f"- Valor: R$ {existente['Valor']:.2f}")
+            st.write(f"- Conta: {existente['Conta']}")
+            st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+            if existente['Obs']:
+                st.write(f"- Observação: {existente['Obs']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Confirmar (adicionar mesmo assim)"):
+                    sheet = get_sheet(path)
+                    salvar_transacao(
+                        sheet, df, id, nome, tipo, valor, categoria, conta,
+                        datetime.combine(data, datetime.min.time()), obs, tag,
+                        parcelas=parcelas, desconsiderar=desconsiderar
+                    )
+                    placeholder.empty()
+                    st.success("Transação adicionada com sucesso!")
+                    st.rerun()
+            with col2:
+                if st.button("❌ Ignorar"):
+                    st.info("Transação ignorada. Você pode ajustar os dados e tentar novamente.")
+        else:
+            sheet = get_sheet(path)
+            salvar_transacao(
+                sheet, df, id, nome, tipo, valor, categoria, conta,
+                datetime.combine(data, datetime.min.time()), obs, tag,
+                parcelas=parcelas, desconsiderar=desconsiderar
+            )
+            placeholder.empty()
+            placeholder = st.empty()
+            with placeholder.container():
+                if not st.button('ok'):
+                    st.stop()
 
 
 def adicionar_transferencia(df, opcao: str, path: str = '.'):
@@ -117,23 +184,67 @@ def adicionar_transferencia(df, opcao: str, path: str = '.'):
             tag = ''
 
     if st.button("Salvar"):
-        # Débito na conta origem
-        salvar_transacao(
-            sheet, df, id, nome, tipo, -valor, categoria, conta_origem,
-            datetime.combine(data, datetime.min.time()), tag, obs,
-            adicionar_transferencia=True
-        )
-        # Crédito na conta destino
-        salvar_transacao(
-            sheet, df, id, nome, tipo, valor, categoria, conta_destino,
-            datetime.combine(data, datetime.min.time()), tag, obs,
-            adicionar_transferencia=True
-        )
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
+        # Verificar duplicatas para débito
+        duplicatas_debito = verificar_duplicata(df, -valor, conta_origem, datetime.combine(data, datetime.min.time()))
+        # Verificar duplicatas para crédito
+        duplicatas_credito = verificar_duplicata(df, valor, conta_destino, datetime.combine(data, datetime.min.time()))
+        
+        duplicatas = pd.concat([duplicatas_debito, duplicatas_credito])
+        
+        if not duplicatas.empty:
+            st.warning("⚠️ Transação similar encontrada!")
+            st.write("**Detalhes da(s) transação(ões) existente(s):**")
+            for idx, existente in duplicatas.iterrows():
+                st.write(f"**Transação {idx+1}:**")
+                st.write(f"- Nome: {existente['Nome']}")
+                st.write(f"- Tipo: {existente['Tipo']}")
+                st.write(f"- Categoria: {existente['Categoria']}")
+                st.write(f"- Valor: R$ {existente['Valor']:.2f}")
+                st.write(f"- Conta: {existente['Conta']}")
+                st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+                if existente['Obs']:
+                    st.write(f"- Observação: {existente['Obs']}")
+                st.write("---")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Confirmar (adicionar mesmo assim)"):
+                    # Débito na conta origem
+                    salvar_transacao(
+                        sheet, df, id, nome, tipo, -valor, categoria, conta_origem,
+                        datetime.combine(data, datetime.min.time()), tag, obs,
+                        adicionar_transferencia=True
+                    )
+                    # Crédito na conta destino
+                    salvar_transacao(
+                        sheet, df, id, nome, tipo, valor, categoria, conta_destino,
+                        datetime.combine(data, datetime.min.time()), tag, obs,
+                        adicionar_transferencia=True
+                    )
+                    placeholder.empty()
+                    st.success("Transferência adicionada com sucesso!")
+                    st.rerun()
+            with col2:
+                if st.button("❌ Ignorar"):
+                    st.info("Transferência ignorada. Você pode ajustar os dados e tentar novamente.")
+        else:
+            # Débito na conta origem
+            salvar_transacao(
+                sheet, df, id, nome, tipo, -valor, categoria, conta_origem,
+                datetime.combine(data, datetime.min.time()), tag, obs,
+                adicionar_transferencia=True
+            )
+            # Crédito na conta destino
+            salvar_transacao(
+                sheet, df, id, nome, tipo, valor, categoria, conta_destino,
+                datetime.combine(data, datetime.min.time()), tag, obs,
+                adicionar_transferencia=True
+            )
+            placeholder.empty()
+            placeholder = st.empty()
+            with placeholder.container():
+                if not st.button('ok'):
+                    st.stop()
 
 
 def render(df, path: str = '.'):
