@@ -61,7 +61,7 @@ def main():
     
     with tab5:
         from paginas.extrato import render as render_extrato
-        render_extrato(df)
+        df = render_extrato(df, PATH)
 
 
 if __name__ == "__main__":
