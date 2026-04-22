@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sklearn.linear_model import LinearRegression
 import numpy as np
+from datetime import datetime
 
 from src.analytics.calculations import COLOR_MAP, forecast
 
