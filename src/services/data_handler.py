@@ -52,14 +52,29 @@ def excluir_registro(sheet, df: pd.DataFrame, id: int) -> pd.DataFrame:
         st.error(f"Nenhum registro encontrado com o ID {id}")
         return df
     
-    # Formatar a data corretamente antes de salvar
-    df_atualizado['Data'] = pd.to_datetime(df_atualizado['Data'], format="%Y-%m-%d %H:%M:%S", errors='coerce')
-    df_atualizado['Data'] = df_atualizado['Data'].dt.strftime('%d/%m/%Y %H:%M')
-    
-    write_sheet(sheet, df_atualizado)
-    st.cache_data.clear()
-    st.session_state.last_update = datetime.now().timestamp()
-    st.success(f"Registro com ID {id} excluído com sucesso!")
+    try:
+        # Preparar dados para salvar
+        df_para_salvar = df_atualizado.copy()
+        
+        # Garantir que Data está em formato string correto
+        if 'Data' in df_para_salvar.columns:
+            df_para_salvar['Data'] = pd.to_datetime(
+                df_para_salvar['Data'], 
+                errors='coerce'
+            ).dt.strftime('%d/%m/%Y %H:%M')
+        
+        # Salvar no Google Sheets
+        write_sheet(sheet, df_para_salvar)
+        
+        # Limpar cache e atualizar timestamp
+        st.cache_data.clear()
+        st.session_state.last_update = datetime.now().timestamp()
+        
+        st.success(f"✅ Registro com ID {id} e todas as suas parcelas foram excluídos com sucesso!")
+        
+    except Exception as e:
+        st.error(f"❌ Erro ao excluir registro: {str(e)}")
+        return df
     
     return df_atualizado
 

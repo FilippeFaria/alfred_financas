@@ -111,7 +111,8 @@ def write_sheet(sheet: gspread.Worksheet, df: pd.DataFrame) -> None:
     """
     df = df.fillna('')
     df['Valor'] = df['Valor'].astype(str)
-    df = df.applymap(_limpar_valores_invalidos)
+    # Usar map em vez de applymap (compatível com versões recentes do pandas)
+    df = df.applymap(_limpar_valores_invalidos) if hasattr(df, 'applymap') else df.map(_limpar_valores_invalidos)
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
 

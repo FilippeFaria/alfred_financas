@@ -25,13 +25,18 @@ def render(df, path):
     
     # Campo para excluir registro por ID
     st.markdown("### Excluir Registro")
-    id_to_delete = st.number_input("Digite o ID do registro a excluir:", min_value=0, step=1)
-    if st.button("Excluir Registro"):
-        if id_to_delete > 0:
-            sheet = get_sheet(path)
-            df = excluir_registro(sheet, df, id_to_delete)
-        else:
-            st.error("Por favor, insira um ID válido.")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        id_to_delete = st.number_input("Digite o ID do registro a excluir:", min_value=0, step=1, key="id_delete_input")
+    with col2:
+        if st.button("Excluir Registro", key="delete_button"):
+            if id_to_delete > 0:
+                sheet = get_sheet(path)
+                df = excluir_registro(sheet, df, id_to_delete)
+                # Forçar recarregamento da página
+                st.rerun()
+            else:
+                st.error("Por favor, insira um ID válido.")
     
     extrato(df, anome)
     
