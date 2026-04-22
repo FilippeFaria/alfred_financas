@@ -265,74 +265,103 @@ Proporção ideal:
 def categorias(df, anomes):
     import streamlit as st
     
+    # Inicializa session state para valores desejados se não existir
+    if 'valores_desejados' not in st.session_state:
+        st.session_state.valores_desejados = {}
+    if 'editando_categorias' not in st.session_state:
+        st.session_state.editando_categorias = False
+    
     df_full = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
     df_mes = df[(df['desconsiderar'] == False) & (df['anomes'] == anomes) & (df['Tipo'] == 'Despesa')]
     df_mes['Valor'] = abs(df_mes['Valor'])
     data = df_mes.groupby('Categoria')['Valor'].sum().reset_index()
     data = data.sort_values('Valor', ascending=False)
     
-    # Obtém todas as categorias de despesa
-    todas_categorias = sorted(df_full['Categoria'].unique())
-    
     # Cria dicionário com valores reais do mês
     valores_reais = dict(zip(data['Categoria'], data['Valor']))
+    todas_categorias = sorted(df_full['Categoria'].unique())
     
-    # Interface para usuário definir valores desejados
-    st.markdown("#### Defina os valores desejados por categoria:")
+    # Botão para editar valores
+    if not st.session_state.editando_categorias:
+        if st.button("✏️ Definir valores desejados"):
+            st.session_state.editando_categorias = True
+            st.rerun()
     
-    col1, col2 = st.columns(2)
+    # Se estiver editando, mostra o formulário
+    if st.session_state.editando_categorias:
+        with st.expander("Editar valores desejados por categoria", expanded=True):
+            col1, col2 = st.columns(2)
+            
+            valores_input = {}
+            
+            with col1:
+                st.markdown("**Categorias 1-8**")
+                for i, cat in enumerate(todas_categorias[:8]):
+                    valor_real = valores_reais.get(cat, 0)
+                    valor_default = st.session_state.valores_desejados.get(cat, valor_real)
+                    valores_input[cat] = st.number_input(
+                        f"{cat}",
+                        min_value=0.0,
+                        value=float(valor_default),
+                        step=50.0,
+                        key=f"cat_input_{cat}"
+                    )
+            
+            with col2:
+                st.markdown("**Categorias 9+**")
+                for i, cat in enumerate(todas_categorias[8:], start=8):
+                    valor_real = valores_reais.get(cat, 0)
+                    valor_default = st.session_state.valores_desejados.get(cat, valor_real)
+                    valores_input[cat] = st.number_input(
+                        f"{cat}",
+                        min_value=0.0,
+                        value=float(valor_default),
+                        step=50.0,
+                        key=f"cat_input_{cat}"
+                    )
+            
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("💾 Salvar"):
+                    st.session_state.valores_desejados = valores_input.copy()
+                    st.session_state.editando_categorias = False
+                    st.success("Valores salvos!")
+                    st.rerun()
+            with col_btn2:
+                if st.button("❌ Cancelar"):
+                    st.session_state.editando_categorias = False
+                    st.rerun()
     
-    valores_desejados = {}
+    # Verifica se há valores desejados salvos
+    tem_desejados = bool(st.session_state.valores_desejados)
     
-    with col1:
-        st.markdown("**Categorias 1-8**")
-        for i, cat in enumerate(todas_categorias[:8]):
-            valor_real = valores_reais.get(cat, 0)
-            valores_desejados[cat] = st.number_input(
-                f"{cat} (real: R$ {valor_real:,.2f})",
-                min_value=0.0,
-                value=float(valor_real),
-                step=50.0,
-                key=f"cat_{i}"
-            )
+    # Prepara dados para o gráfico
+    if tem_desejados:
+        df_desejado = pd.DataFrame([
+            {'Categoria': cat, 'Valor': val} 
+            for cat, val in st.session_state.valores_desejados.items()
+        ])
+    else:
+        df_desejado = data.copy()
     
-    with col2:
-        st.markdown("**Categorias 9+**")
-        for i, cat in enumerate(todas_categorias[8:], start=8):
-            valor_real = valores_reais.get(cat, 0)
-            valores_desejados[cat] = st.number_input(
-                f"{cat} (real: R$ {valor_real:,.2f})",
-                min_value=0.0,
-                value=float(valor_real),
-                step=50.0,
-                key=f"cat_{i}"
-            )
-    
-    # Cria DataFrame com valores desejados
-    df_desejado = pd.DataFrame([
-        {'Categoria': cat, 'Valor': val} 
-        for cat, val in valores_desejados.items()
-    ])
-    df_desejado = df_desejado.sort_values('Valor', ascending=False)
-    
-    # Gráfico comparando valores reais vs desejados
+    # Gráfico: barras para cima (real) e barras para baixo (desejado)
     fig = go.Figure()
     
-    # Barras valores reais
+    # Barras para cima (valores reais) - positivo
     fig.add_trace(go.Bar(
         x=data['Categoria'],
         y=data['Valor'],
-        name='Valor Real',
+        name='Real (↑)',
         marker_color='steelblue',
         text=data['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
         textposition='auto'
     ))
     
-    # Barras valores desejados (offset)
+    # Barras para baixo (valores desejados) - negativo
     fig.add_trace(go.Bar(
         x=df_desejado['Categoria'],
-        y=df_desejado['Valor'],
-        name='Valor Desejado',
+        y=-df_desejado['Valor'],
+        name='Desejado (↓)',
         marker_color='orange',
         opacity=0.7,
         text=df_desejado['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
@@ -340,8 +369,8 @@ def categorias(df, anomes):
     ))
     
     fig.update_layout(
-        barmode='group',
-        title=f"Comparativo: Real vs Desejado ({anomes})",
+        barmode='overlay',
+        title=f"Categorias das despesas - {anomes}" + (" (Real vs Desejado)" if tem_desejados else ""),
         xaxis_title="Categoria",
         yaxis_title="Valor (R$)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -351,7 +380,7 @@ def categorias(df, anomes):
     
     # Summary
     total_real = sum(valores_reais.values())
-    total_desejado = sum(valores_desejados.values())
+    total_desejado = sum(st.session_state.valores_desejados.values()) if tem_desejados else total_real
     
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -361,6 +390,12 @@ def categorias(df, anomes):
     with col3:
         diff = total_desejado - total_real
         st.metric("Diferença", f"R$ {diff:,.2f}", delta=f"{diff:,.2f}", delta_color="inverse" if diff > 0 else "normal")
+    
+    # Botão para limpar valores desejados
+    if tem_desejados:
+        if st.button("🗑️ Limpar valores desejados"):
+            st.session_state.valores_desejados = {}
+            st.rerun()
 
 
 import streamlit as st
