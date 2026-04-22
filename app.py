@@ -1,479 +1,68 @@
-from ssl import Options
+﻿"""
+Alfred Finanças - Aplicação principal Streamlit.
+Ponto de entrada da aplicação.
+"""
 import streamlit as st
-import pandas as pd
-import time
-from dateutil.relativedelta import relativedelta
-import analytics
 from datetime import datetime
-import google_sheets
 
-#import gpt_model
-st.set_page_config(
-layout="wide"
-)
+from src.config import CONTAS, CONTAS_INVEST
+from src.services.data_handler import carregar_dados
+from src.services.google_sheets import get_sheet
+from src.analytics.calculations import adicionar_anomes, calcular_saldo
 
-path = '.'
-#path = r'C:\Users\lippe\OneDrive - Unesp\Documentos\GitHub\alfred_financas'
+# Configuração da página
+st.set_page_config(layout="wide")
 
-sheet = google_sheets.get_sheet(path)
-contas = ['Itaú CC','Cartão Filippe', 'Cartão Bianca', 'Cartão Nath','VR','VA', 'Nubank', 'Inter',]
+# Caminho para credentials
+PATH = '.'
 
-#contas_invest = ['Ion','Nuinvest','99Pay','C6Invest']
-contas_invest = ['Ion','Nuinvest','99Pay','C6Invest','InterInvest']
+# Inicializar session state
+if "last_update" not in st.session_state:
+    st.session_state.last_update = None
 
-def excluir_registro(id, df):
-    """Exclui um registro do dataframe pelo ID e atualiza no Google Sheets"""
-    df_atualizado = df[df['id'] != id].copy()
-    
-    if len(df_atualizado) == len(df):
-        st.error(f"Nenhum registro encontrado com o ID {id}")
-        return df
-    
-    # Formatar a data corretamente antes de salvar
-    df_atualizado['Data'] = pd.to_datetime(df_atualizado['Data'], format="%Y-%m-%d %H:%M:%S", errors='coerce')
-    df_atualizado['Data'] = df_atualizado['Data'].dt.strftime('%d/%m/%Y %H:%M')
-    
-    google_sheets.write_sheet(sheet, df_atualizado)
-    st.cache_data.clear()
-    st.session_state.last_update = datetime.now().timestamp()
-    st.success(f"Registro com ID {id} excluído com sucesso!")
-    return df_atualizado
-
-
-def salvar_dados(id, nome,df, tipo, valor, categoria, conta, data,obs,tag,parcelas=None,desconsiderar=False,adicionar_transferencia=False):
-    now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    data_criacao = dt_string
-
-    if parcelas == None:
-        # Criando um DataFrame temporário com a nova linha
-        nova_linha = pd.DataFrame([{
-            'id': id,
-            'Nome': nome,
-            "Tipo": tipo,
-            "Valor": valor,
-            "Categoria": categoria,
-            "Conta": conta,
-            "Data": data.strftime("%Y-%m-%d %H:%M:%S"),
-            'Obs': obs,
-            'desconsiderar': desconsiderar,
-            'Data Criacao': data_criacao,
-            'TAG': tag
-        }])
-
-        # Concatenando o novo DataFrame ao existente
-        df = pd.concat([df, nova_linha], ignore_index=True)
-        #st.write(len(df))
-        
-    else:
-        for i in range(0,parcelas):
-            # Criando um DataFrame temporário com a nova linha
-            nova_linha = pd.DataFrame([{
-                'id': id,
-                'Nome': nome,
-                "Tipo": tipo,
-                "Valor": valor,
-                "Categoria": categoria,
-                "Conta": conta,
-                "Data": (data + relativedelta(months=i)).strftime("%Y-%m-%d %H:%M:%S"),
-                'Obs': obs,
-                'desconsiderar': desconsiderar,
-                'Parcela': i + 1,
-                "Data origem": data.strftime("%Y-%m-%d %H:%M:%S"),
-                'Data Criacao': data_criacao,
-                'TAG': tag
-            }])
-
-            # Concatenando o novo DataFrame ao existente
-            df = pd.concat([df, nova_linha], ignore_index=True)
-
-        st.write('parcelas')
-   
-    
-    # Corrigir o bug da transferencia.
-    if (adicionar_transferencia == True) & (valor < 0):
-        return df
-    else:
-        #df['Valor'] =  df['Valor'].astype('str').apply(lambda x:x.replace('.',','))
-        df['Data'] = pd.to_datetime(df['Data'],format="%Y-%m-%d %H:%M:%S")
-        df['Data'] =  df['Data'].dt.strftime('%d/%m/%Y %H:%M')
-        
-        google_sheets.write_sheet(sheet, df)
-        st.cache_data.clear()  # Limpa o cache
-        st.session_state.last_update = datetime.now().timestamp()
-        #df.to_csv(fr"{path}/fluxo_de_caixa.csv",sep=';', index=False,encoding='iso-8859-1')
-        #df.to_csv(fr"{path}/historico_fluxo/fluxo_de_caixa_{now.day}{now.month}{now.year}.csv",sep=';', index=False,encoding='iso-8859-1')
-        
-        st.success("Dados salvos com sucesso!")
-
-
-def adicionar_receita(df):
-    placeholder = st.empty()
-    with placeholder.container():
-        id = df['id'].max() + 1
-        nome = st.text_input('Nome')
-        obs = st.text_input('Comentário')
-        tipo = "Receita"
-        valor = st.number_input("Valor")
-        categoria = st.selectbox("Tipo da Receita", ["Salário", "Cobrança", "Outros"])
-        conta = st.selectbox("Conta", contas)
-        data = st.date_input("Data")
-        tag = st.multiselect("TAG",df['TAG'].dropna().drop_duplicates())
-        
-        desconsiderar = st.checkbox('Desconsiderar na análise')
-    
-    if st.button("Salvar"):
-        
-        salvar_dados(id,nome,df, tipo, valor, categoria, conta, data,obs,tag,desconsiderar = desconsiderar,)
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
-
-
-
-
-def adicionar_despesa(df,last_date,last_account):
-    placeholder = st.empty()
-    with placeholder.container():
-        id = df['id'].max() + 1
-        nome = st.text_input('Nome')
-        obs = st.text_input('Comentário')
-        tag = st.multiselect("TAG",df['TAG'].dropna().drop_duplicates())
-        tipo = "Despesa"
-        valor = -st.number_input("Valor")
-    
-        col1,col2 = st.columns([3,1])
-        with col1:
-            parcelado = st.checkbox('Compra parcelada?')
-        with col2:
-            if parcelado == True:
-                parcelas = st.number_input('Quantas Parcelas?',min_value=1,step=1)
-            else:
-                parcelas = None
-                
-        
-        categoria = st.selectbox("Tipo da despesa", ['Restaurante',"Supermercado", "Cosméticos",'Viagem',"Transporte", 'Assinaturas',"Lazer", 'Compras','Educação',
-                                'Multas','Casa','Serviços','Saúde','Presentes', "Outros",'Onix','Investimento'])
-        
-        if last_account in contas:
-            conta = st.selectbox("Conta", contas,contas.index(last_account))
-        else:
-            conta = st.selectbox("Conta", contas)
-        data = st.date_input("Data")
-        
-        desconsiderar = st.checkbox('Desconsiderar na análise')
-
-    if st.button("Salvar"):
-        salvar_dados(id,nome,df, tipo, valor, categoria, conta, data,obs,tag,parcelas=parcelas,desconsiderar=desconsiderar)
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
-        
-
-
-def adicionar_transferencia(df,opcao):
-    placeholder = st.empty()
-    if opcao == 'Transferência':
-        with placeholder.container():
-            id = df['id'].max() + 1
-            nome = opcao
-            obs = st.text_input('Comentário')
-            tipo = opcao
-            valor = st.number_input("Valor")
-            categoria = opcao
-            conta_origem = st.selectbox("Conta de origem", contas)
-            conta_destino = st.selectbox("Conta de destino", contas)
-            data = st.date_input("Data")
-            tag = ''
-    if opcao == 'Investimento':
-        with placeholder.container():
-            id = df['id'].max() + 1
-            nome = st.selectbox("Tipo transação", ['Aplicação','Resgate'])
-            obs = st.text_input('Comentário')
-            tipo = opcao
-            valor = st.number_input("Valor")
-            categoria = st.selectbox("Tipo investimento", ['Tesouro Selic','CDB','Fundos','LCI','LCA','Ações'])
-            conta_origem = st.selectbox("Conta de origem", contas+contas_invest)
-            conta_destino = st.selectbox("Conta de destino", contas_invest+contas)
-            data = st.date_input("Data")
-            tag = ''
-        
-
-    if st.button("Salvar"):
-        df = salvar_dados(id,nome,df, tipo, -valor, categoria, conta_origem, data,tag,obs,adicionar_transferencia= True)
-        salvar_dados(id,nome,df, tipo, valor, categoria, conta_destino, data,tag,obs, adicionar_transferencia = True)
-        placeholder.empty()
-        placeholder = st.empty()
-        with placeholder.container():
-            if not st.button('ok'):
-                st.stop()
-        
 
 def main():
-    # Abre o arquivo de prompt do sistema
-    # file_path = "C:\\Users\\lippe\\Documents\\Gestão Financeira\\prompt_system.txt"
-    # with open(file_path, "r", encoding="utf-8") as file:
-    #     prompt_system = file.read()
-
-    # Variável global para guardar o timestamp do último update
-    if "last_update" not in st.session_state:
-        st.session_state.last_update = None
-
+    # Botão de atualização
     atualizar = st.button('Atualizar dados')
     if atualizar:
         st.session_state.last_update = datetime.now().timestamp()
         st.cache_data.clear()
     
-    # Lê os dados
-    df = google_sheets.read_sheet(path,trigger=st.session_state.last_update)    
-    df['Valor'] =  df['Valor'].astype('float64')
-    df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
-    df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone','Assinaturas')
-
-
-    # df = pd.read_csv(fr"{path}/fluxo_de_caixa.csv",encoding='iso-8859-1',sep=';')
-    # df['Valor'] =  df['Valor'].astype(str).apply(lambda x:x.replace(',','.')).astype('float64')
-    # print('Base Offline lida')
+    # Carregar dados
+    df = carregar_dados(PATH, trigger=st.session_state.last_update)
     
-    df['Data'] = pd.to_datetime(df['Data'],format="%d/%m/%Y %H:%M")
-
+    # Obter última data e conta para uso nos formulários
     last_date = df['Data'].iloc[-1]
     last_account = df['Conta'].iloc[-1]
     
+    # Calcular saldo
+    saldo_s = calcular_saldo(df)
     
-    tab1, tab2, tab3,tab4,tab5 = st.tabs(["Transação", "Análise","Alfred","Patrimônio","Extrato",])
+    # Criar abas
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "Transação", "Análise", "Alfred", "Patrimônio", "Extrato"
+    ])
+    
     with tab1:
-        st.title("Gerenciador Financeiro 💰") 
-        opcao = st.selectbox("Tipo de transação", ["Receita", "Despesa", "Transferência","Investimento"])
-        st.markdown('#')
-        if opcao == "Receita":
-            adicionar_receita(df)
-        elif opcao == "Despesa":
-            adicionar_despesa(df,last_date,last_account)
-        else:
-            adicionar_transferencia(df,opcao)
-
-        saldo_s = analytics.saldo(df)
-        
-        col1,col2,col3,col4 = st.columns(4)
-
-        with col1:
-            st.metric('Itaú CC', saldo_s.get('Itaú CC', 0))
-            st.metric('Cartão Filippe', saldo_s.get('Cartão Filippe', 0))
-        with col2:
-            st.metric('Cartão Bianca', saldo_s.get('Cartão Bianca', 0))
-            st.metric('Cartão Nath', saldo_s.get('Cartão Nath', 0))
-        with col3:
-            st.metric('Inter', saldo_s.get('Inter', 0))
-            st.metric('Nubank', saldo_s.get('Nubank', 0))
-        with col4:
-            st.metric('VA', saldo_s.get('VA', 0))
-            st.metric('VR', saldo_s.get('VR', 0))
-
-       
-    now = datetime.now()
-    df = analytics.anomes(df)
-
-    if now.month >= 10:
-        anome = f'{now.year}{now.month}'
-    else:
-        anome = f'{now.year}0{now.month}'
-
-    with tab2:        
-        col1,col2 = st.columns(2)
-        with col1:
-            desconsiderar = st.checkbox('Desconsiderar grandes transacoes',value =True)
-            va = st.checkbox('Desconsiderar VA',value =False)
-            vr = st.checkbox('Desconsiderar VR',value =False)
-        with col2:
-            bianca = st.checkbox('Recorte Bianca',value =False)
-            filippe = st.checkbox('Recorte Filippe',value =False)
-
-
-
-            if desconsiderar:
-                grandes_transacoes = [98,99,103,229,245,558,549,701,771,1012,1014,1018,995,978,971,
-                                      1081,1050,1326,1733,1663,1744,1756,1766,1867,2327,2350,2327,2625,3341, 3580]
-                
-                idx = df[df['id'].isin(grandes_transacoes)].index
-                df = df.drop(idx)
-            if va:
-                idx = df[df['Conta'].isin(['VA'])].index
-                df = df.drop(idx)
-
-            if vr:
-                idx = df[df['Conta'].isin(['VR'])].index
-                df = df.drop(idx)
-            if bianca:
-                df_temp = df.copy()
-                contas_filtradas = ['Cartão Bianca', 'Inter', 'Itaú CC', 'Cartão Nath', 'VA', 'VR']
-                df_temp = df_temp[df_temp['Conta'].isin(contas_filtradas)]
-                contas_multiplicar = ['Itaú CC', 'Cartão Nath', 'VA', 'VR']
-                df_temp.loc[df_temp['Conta'].isin(contas_multiplicar), 'Valor'] *= 0.3
-            elif filippe:
-                df_temp = df.copy()
-                contas_filtradas = ['Cartão Filippe', 'Nubank', 'Itaú CC', 'Cartão Nath', 'VA', 'VR']
-                df_temp = df_temp[df_temp['Conta'].isin(contas_filtradas)]
-                contas_multiplicar = ['Itaú CC', 'Cartão Nath', 'VA', 'VR']
-                df_temp.loc[df_temp['Conta'].isin(contas_multiplicar), 'Valor'] *= 0.7
-            else:
-                df_temp = df
-            day_to_date = st.checkbox('Comparar aos dias do mês')
-            if day_to_date:
-                data_max = df_temp[(df_temp['anomes'] == anome) & (df_temp['Parcela'].isna())].Data.dt.day.max()
-                
-                df_temp = df_temp[df_temp.Data.dt.day <= data_max]
-
-        analytics.despesa_total(df_temp,now,anome)
-        col1, col2 = st.columns(2)
-   
-        with col2:
-            analytics.categorias_tempo(df_temp)
-            df_tendencia = analytics.evolucao_categoria(df_temp,anome,now)
-        with col1:
-            
-            analytics.receitas_despesas(df_temp,now,contas_invest,anome=anome) 
-            analytics.tendencia_mes(df_tendencia,anome)   
-        
-        
-        anomes_disponiveis = sorted(df_temp['anomes'].unique(), key=lambda x: int(x))
-        data_escolhida = st.select_slider('Escolha o anomes', options=anomes_disponiveis, value=anome)
-        if data_escolhida:
-            anome = data_escolhida
-
-        col1,col2,col3 = st.columns([2,1,5])
-        with col1:
-            st.markdown('### Categorias das despesas')
-        with col2:
-            st.write(f'Anomes selecionado: {anome}')
-        col1, col2 = st.columns(2)     
-        with col1:            
-            analytics.categorias(df_temp, anome, path)
-            
-            # Botão para editar valores desejados (fora do container de categorias)
-            if 'editando_categorias' not in st.session_state:
-                st.session_state.editando_categorias = False
-            
-            if not st.session_state.editando_categorias:
-                if st.button("✏️ Definir valores desejados"):
-                    st.session_state.editando_categorias = True
-                    st.rerun()
-            
-            # Se estiver editando, mostra o formulário
-            if st.session_state.editando_categorias:
-                with st.expander("Editar valores desejados por categoria", expanded=True):
-                    # Obtém os valores reais para usar como default
-                    df_mes_temp = df_temp[(df_temp['desconsiderar'] == False) & (df_temp['anomes'] == anome) & (df_temp['Tipo'] == 'Despesa')]
-                    df_mes_temp = df_mes_temp.copy()
-                    df_mes_temp['Valor'] = abs(df_mes_temp['Valor'])
-                    data_temp = df_mes_temp.groupby('Categoria')['Valor'].sum().reset_index()
-                    valores_reais_temp = dict(zip(data_temp['Categoria'], data_temp['Valor']))
-                    todas_categorias_temp = sorted(df_temp[(df_temp['desconsiderar'] == False) & (df_temp['Tipo'] == 'Despesa')]['Categoria'].unique())
-                    
-                    col_ed1, col_ed2 = st.columns(2)
-                    valores_input = {}
-                    
-                    with col_ed1:
-                        st.markdown("**Categorias 1-8**")
-                        for i, cat in enumerate(todas_categorias_temp[:8]):
-                            valor_real = valores_reais_temp.get(cat, 0)
-                            valor_default = st.session_state.get('valores_desejados', {}).get(cat, valor_real)
-                            valores_input[cat] = st.number_input(
-                                f"{cat}",
-                                min_value=0.0,
-                                value=float(valor_default),
-                                step=50.0,
-                                key=f"cat_input_{cat}"
-                            )
-                    
-                    with col_ed2:
-                        st.markdown("**Categorias 9+**")
-                        for i, cat in enumerate(todas_categorias_temp[8:], start=8):
-                            valor_real = valores_reais_temp.get(cat, 0)
-                            valor_default = st.session_state.get('valores_desejados', {}).get(cat, valor_real)
-                            valores_input[cat] = st.number_input(
-                                f"{cat}",
-                                min_value=0.0,
-                                value=float(valor_default),
-                                step=50.0,
-                                key=f"cat_input_{cat}"
-                            )
-                    
-                    col_btn1, col_btn2 = st.columns(2)
-                    with col_btn1:
-                        if st.button("💾 Salvar"):
-                            st.session_state.valores_desejados = valores_input.copy()
-                            st.session_state.editando_categorias = False
-                            
-                            # Salva no Google Sheets
-                            try:
-                                now = datetime.now()
-                                df_salvar = pd.DataFrame([
-                                    {'Data': now.strftime('%d/%m/%Y'), 'Categoria': cat, 'Valor': val}
-                                    for cat, val in valores_input.items()
-                                ])
-                                google_sheets.write_valores_desejados(path, df_salvar)
-                                st.success("Valores salvos no Google Sheets!")
-                            except Exception as e:
-                                st.error(f"Erro ao salvar no Google Sheets: {e}")
-                            
-                            st.rerun()
-                    with col_btn2:
-                        if st.button("❌ Cancelar"):
-                            st.session_state.editando_categorias = False
-                            st.rerun()
-        
-        with col2:
-            
-            analytics.monthly_spending_by_category_pie(df_temp,anome)
-            analytics.tendencia_saldo(df_temp,'Itaú CC',anome)
-            
-            #analytics.custo_fixo(df,custo_fixo,anome)
-
-    with tab3:
-        st.write('## Em breve')
-        #gpt_model.main_chat(prompt_system,df)
-
-
-    with tab4:
-        col1,col2,col3 = st.columns(3)
-        with col2:
-            st.metric('Patrimônio Total',saldo_s.reindex(contas_invest).fillna(0).sum())
-            st.write(saldo_s.reindex(contas_invest).fillna(0))
-        
-        col1,col2,col3,col4,col5 = st.columns(5)
-        with col1:
-            st.metric('Ion',saldo_s.get('Ion', 0))
-        with col2:
-            st.metric('Nuinvest',saldo_s.get('Nuinvest', 0))
-        with col3:
-            st.metric('99Pay',saldo_s.get('99Pay', 0))
-        with col4:
-            st.metric('C6Invest',saldo_s.get('C6Invest', 0))
-        with col5:
-            st.metric('InterInvest',saldo_s.get('InterInvest', 0))
-
-            
-        analytics.aplicacoes_resgates(df,contas_invest)
-        
-        st.markdown('### Extrato de Investimentos')
-        df_invest = df[df['Tipo'] == 'Investimento']
-        st.dataframe(df_invest, hide_index=True)
+        from pages.1_transacao import render as render_transacao
+        render_transacao(df, PATH)
     
-
-
+    with tab2:
+        from pages.2_analise import render as render_analise
+        render_analise(df, PATH)
+    
+    with tab3:
+        from pages.3_alfred import render as render_alfred
+        render_alfred()
+    
+    with tab4:
+        from pages.4_patrimonio import render as render_patrimonio
+        render_patrimonio(df)
+    
     with tab5:
-        df = analytics.anomes(df)
-        analytics.extrato(df,anome)
-        
+        from pages.5_extrato import render as render_extrato
+        render_extrato(df)
 
 
 if __name__ == "__main__":
     main()
-
-#input('Pressione ENTER para sair')
-
