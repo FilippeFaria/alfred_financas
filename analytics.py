@@ -347,26 +347,41 @@ def categorias(df, anomes):
     # Gráfico: barras para cima (real) e barras para baixo (desejado)
     fig = go.Figure()
     
-    # Barras para cima (valores reais) - positivo
-    fig.add_trace(go.Bar(
-        x=data['Categoria'],
-        y=data['Valor'],
-        name='Real (↑)',
-        marker_color='steelblue',
-        text=data['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
-        textposition='auto'
-    ))
+    # Adiciona apenas duas traces para legenda (primeira de cada tipo)
+    primeiro_real = True
+    primeiro_desejado = True
     
-    # Barras para baixo (valores desejados) - negativo
-    fig.add_trace(go.Bar(
-        x=df_desejado['Categoria'],
-        y=-df_desejado['Valor'],
-        name='Desejado (↓)',
-        marker_color='orange',
-        opacity=0.7,
-        text=df_desejado['Valor'].apply(lambda x: f"R$ {x:,.0f}"),
-        textposition='auto'
-    ))
+    # Barras para cima (valores reais) - opaco, com cores do color_map
+    for cat in data['Categoria']:
+        valor = data[data['Categoria'] == cat]['Valor'].values[0]
+        cor = color_map.get(cat, '#cccccc')
+        fig.add_trace(go.Bar(
+            x=[cat],
+            y=[valor],
+            name='Real (↑)' if primeiro_real else None,
+            marker_color=cor,
+            opacity=1.0,  # opaco
+            text=f"R$ {valor:,.0f}",
+            textposition='auto',
+            showlegend=primeiro_real
+        ))
+        primeiro_real = False
+    
+    # Barras para baixo (valores desejados) - transparente, com cores do color_map
+    for cat in df_desejado['Categoria']:
+        valor = df_desejado[df_desejado['Categoria'] == cat]['Valor'].values[0]
+        cor = color_map.get(cat, '#cccccc')
+        fig.add_trace(go.Bar(
+            x=[cat],
+            y=[-valor],
+            name='Desejado (↓)' if primeiro_desejado else None,
+            marker_color=cor,
+            opacity=0.4,  # transparente
+            text=f"R$ {valor:,.0f}",
+            textposition='auto',
+            showlegend=primeiro_desejado
+        ))
+        primeiro_desejado = False
     
     fig.update_layout(
         barmode='overlay',
