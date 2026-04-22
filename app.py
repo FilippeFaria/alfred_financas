@@ -44,23 +44,23 @@ def main():
     ])
     
     with tab1:
-        from pages.transacao import render as render_transacao
+        from paginas.transacao import render as render_transacao
         render_transacao(df, PATH)
     
     with tab2:
-        from pages.analise import render as render_analise
+        from paginas.analise import render as render_analise
         render_analise(df, PATH)
     
     with tab3:
-        from pages.alfred import render as render_alfred
+        from paginas.alfred import render as render_alfred
         render_alfred()
     
     with tab4:
-        from pages.patrimonio import render as render_patrimonio
+        from paginas.patrimonio import render as render_patrimonio
         render_patrimonio(df)
     
     with tab5:
-        from pages.extrato import render as render_extrato
+        from paginas.extrato import render as render_extrato
         render_extrato(df)
 
 
