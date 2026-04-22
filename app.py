@@ -19,17 +19,19 @@ PATH = '.'
 # Inicializar session state
 if "last_update" not in st.session_state:
     st.session_state.last_update = None
+if "df" not in st.session_state:
+    st.session_state.df = None
 
 
 def main():
     # Botão de atualização
     atualizar = st.button('Atualizar dados')
-    if atualizar:
+    if atualizar or st.session_state.df is None:
         st.session_state.last_update = datetime.now().timestamp()
         st.cache_data.clear()
+        st.session_state.df = carregar_dados(PATH, trigger=st.session_state.last_update)
     
-    # Carregar dados
-    df = carregar_dados(PATH, trigger=st.session_state.last_update)
+    df = st.session_state.df
     
     # Obter última data e conta para uso nos formulários
     last_date = df['Data'].iloc[-1]

@@ -15,8 +15,8 @@ from src.analytics.calculations import calcular_saldo
 
 def verificar_duplicata(df, valor, conta, data):
     """Verifica se existe transação com mesmo valor, conta e data."""
-    # data é datetime
-    return df[(df['Valor'] == valor) & (df['Conta'] == conta) & (df['Data'].dt.date == data.date)]
+    data_str = data.strftime('%d/%m/%Y %H:%M')
+    return df[(df['Valor'] == valor) & (df['Conta'] == conta) & (df['Data'] == data_str)]
 
 
 def adicionar_receita(df, path: str = '.'):
@@ -53,11 +53,12 @@ def adicionar_receita(df, path: str = '.'):
             with col1:
                 if st.button("✅ Confirmar (adicionar mesmo assim)"):
                     sheet = get_sheet(path)
-                    salvar_transacao(
+                    df_atualizado = salvar_transacao(
                         sheet, df, id, nome, tipo, valor, categoria, conta, 
                         datetime.combine(data, datetime.min.time()), obs, tag,
                         desconsiderar=desconsiderar
                     )
+                    st.session_state.df = df_atualizado
                     placeholder.empty()
                     st.success("Transação adicionada com sucesso!")
                     st.rerun()
@@ -66,11 +67,12 @@ def adicionar_receita(df, path: str = '.'):
                     st.info("Transação ignorada. Você pode ajustar os dados e tentar novamente.")
         else:
             sheet = get_sheet(path)
-            salvar_transacao(
+            df_atualizado = salvar_transacao(
                 sheet, df, id, nome, tipo, valor, categoria, conta, 
                 datetime.combine(data, datetime.min.time()), obs, tag,
                 desconsiderar=desconsiderar
             )
+            st.session_state.df = df_atualizado
             placeholder.empty()
             placeholder = st.empty()
             with placeholder.container():
@@ -127,11 +129,12 @@ def adicionar_despesa(df, last_date, last_account, path: str = '.'):
             with col1:
                 if st.button("✅ Confirmar (adicionar mesmo assim)"):
                     sheet = get_sheet(path)
-                    salvar_transacao(
+                    df_atualizado = salvar_transacao(
                         sheet, df, id, nome, tipo, valor, categoria, conta,
                         datetime.combine(data, datetime.min.time()), obs, tag,
                         parcelas=parcelas, desconsiderar=desconsiderar
                     )
+                    st.session_state.df = df_atualizado
                     placeholder.empty()
                     st.success("Transação adicionada com sucesso!")
                     st.rerun()
@@ -140,11 +143,12 @@ def adicionar_despesa(df, last_date, last_account, path: str = '.'):
                     st.info("Transação ignorada. Você pode ajustar os dados e tentar novamente.")
         else:
             sheet = get_sheet(path)
-            salvar_transacao(
+            df_atualizado = salvar_transacao(
                 sheet, df, id, nome, tipo, valor, categoria, conta,
                 datetime.combine(data, datetime.min.time()), obs, tag,
                 parcelas=parcelas, desconsiderar=desconsiderar
             )
+            st.session_state.df = df_atualizado
             placeholder.empty()
             placeholder = st.empty()
             with placeholder.container():
@@ -210,17 +214,18 @@ def adicionar_transferencia(df, opcao: str, path: str = '.'):
             with col1:
                 if st.button("✅ Confirmar (adicionar mesmo assim)"):
                     # Débito na conta origem
-                    salvar_transacao(
+                    df_atualizado = salvar_transacao(
                         sheet, df, id, nome, tipo, -valor, categoria, conta_origem,
                         datetime.combine(data, datetime.min.time()), tag, obs,
                         adicionar_transferencia=True
                     )
                     # Crédito na conta destino
-                    salvar_transacao(
-                        sheet, df, id, nome, tipo, valor, categoria, conta_destino,
+                    df_atualizado = salvar_transacao(
+                        sheet, df_atualizado, id, nome, tipo, valor, categoria, conta_destino,
                         datetime.combine(data, datetime.min.time()), tag, obs,
                         adicionar_transferencia=True
                     )
+                    st.session_state.df = df_atualizado
                     placeholder.empty()
                     st.success("Transferência adicionada com sucesso!")
                     st.rerun()
@@ -229,17 +234,18 @@ def adicionar_transferencia(df, opcao: str, path: str = '.'):
                     st.info("Transferência ignorada. Você pode ajustar os dados e tentar novamente.")
         else:
             # Débito na conta origem
-            salvar_transacao(
+            df_atualizado = salvar_transacao(
                 sheet, df, id, nome, tipo, -valor, categoria, conta_origem,
                 datetime.combine(data, datetime.min.time()), tag, obs,
                 adicionar_transferencia=True
             )
             # Crédito na conta destino
-            salvar_transacao(
-                sheet, df, id, nome, tipo, valor, categoria, conta_destino,
+            df_atualizado = salvar_transacao(
+                sheet, df_atualizado, id, nome, tipo, valor, categoria, conta_destino,
                 datetime.combine(data, datetime.min.time()), tag, obs,
                 adicionar_transferencia=True
             )
+            st.session_state.df = df_atualizado
             placeholder.empty()
             placeholder = st.empty()
             with placeholder.container():

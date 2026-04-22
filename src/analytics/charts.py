@@ -39,7 +39,7 @@ def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
                  (df['anomes'] >= anomes_inicio) & 
                  (df['anomes'] <= anome)].copy()
 
-    df_temp['Data'] = pd.to_datetime(df_temp['Data'])
+    df_temp['Data'] = pd.to_datetime(df_temp['Data'], format='%d/%m/%Y %H:%M')
     df_temp['dia_mes'] = df_temp['Data'].dt.day
 
     data = abs(df_temp.groupby(['anomes', 'dia_mes'])['Valor'].sum()).reset_index()

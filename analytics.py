@@ -36,14 +36,14 @@ color_map = {
 
 def tratar_df(df):
     
-    df['Data'] = pd.to_datetime(df['Data'],format='%d/%m/%Y')
+    df['Data'] = pd.to_datetime(df['Data'],format='%d/%m/%Y %H:%M')
     df['anomes'] = [(str(e.year) + str(e.month)) if len(str(e.month)) == 2 else (str(e.year) + '0' +str(e.month)) for e in df['Data']]
     return df
 
 
 def saldo(df):
     
-    df['Data'] = pd.to_datetime(df['Data'],format='%d/%m/%Y')
+    df['Data'] = pd.to_datetime(df['Data'],format='%d/%m/%Y %H:%M')
     today = date.today()
     saldo_s = df[df['Data'].dt.date <= today].groupby('Conta')['Valor'].sum()
     saldo_s = round(saldo_s,2)
