@@ -24,13 +24,14 @@ def authorize_google_sheets(path: str = '.') -> gspread.Client:
     Returns:
         Cliente autenticado do gspread
     """
-    if path == '.':
+    creds_path = Path(f'{path}/credentials.json')
+    if creds_path.exists():
+        # Desenvolvimento local: carregar do arquivo
+        with open(creds_path) as f:
+            creds_dict = json.load(f)
+    else:
         # Produção: usar secrets do Streamlit
         creds_dict = json.loads(st.secrets["gcp_service_account"])
-    else:
-        # Desenvolvimento local: carregar do arquivo
-        with open(f'{path}/credentials.json') as f:
-            creds_dict = json.load(f)
 
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
@@ -87,9 +88,11 @@ def read_sheet(path: str = '.', trigger: Optional[float] = None) -> pd.DataFrame
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
     
-    # Converter colunas numéricas
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='ignore')
+    # Converter colunas numéricas específicas
+    numeric_cols = ['Valor', 'id', 'Parcela']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
     
     return df
 
