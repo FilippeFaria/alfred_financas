@@ -262,14 +262,28 @@ Proporção ideal:
                 ''')
 
 
-def categorias(df, anomes):
+def categorias(df, anomes, path='.'):
     import streamlit as st
+    import google_sheets
+    from datetime import datetime
     
     # Inicializa session state para valores desejados se não existir
     if 'valores_desejados' not in st.session_state:
         st.session_state.valores_desejados = {}
     if 'editando_categorias' not in st.session_state:
         st.session_state.editando_categorias = False
+    if 'valores_desejados_carregados' not in st.session_state:
+        st.session_state.valores_desejados_carregados = False
+    
+    # Carrega valores do Google Sheets uma vez
+    if not st.session_state.valores_desejados_carregados:
+        try:
+            df_valores = google_sheets.read_valores_desejados(path)
+            if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
+                st.session_state.valores_desejados = dict(zip(df_valores['Categoria'], df_valores['Valor']))
+            st.session_state.valores_desejados_carregados = True
+        except Exception as e:
+            st.warning(f"Não foi possível carregar valores do Google Sheets: {e}")
     
     df_full = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
     df_mes = df[(df['desconsiderar'] == False) & (df['anomes'] == anomes) & (df['Tipo'] == 'Despesa')]
@@ -325,7 +339,19 @@ def categorias(df, anomes):
                 if st.button("💾 Salvar"):
                     st.session_state.valores_desejados = valores_input.copy()
                     st.session_state.editando_categorias = False
-                    st.success("Valores salvos!")
+                    
+                    # Salva no Google Sheets
+                    try:
+                        now = datetime.now()
+                        df_salvar = pd.DataFrame([
+                            {'Data': now.strftime('%d/%m/%Y'), 'Categoria': cat, 'Valor': val}
+                            for cat, val in valores_input.items()
+                        ])
+                        google_sheets.write_valores_desejados(path, df_salvar)
+                        st.success("Valores salvos no Google Sheets!")
+                    except Exception as e:
+                        st.error(f"Erro ao salvar no Google Sheets: {e}")
+                    
                     st.rerun()
             with col_btn2:
                 if st.button("❌ Cancelar"):

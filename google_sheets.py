@@ -33,6 +33,13 @@ def get_sheet(path):
     sheet = spreadsheet.sheet1  # pega a primeira aba (Worksheet)
     return sheet
 
+def get_sheet_valores_desejados(path):
+    """Abre a planilha de valores desejados"""
+    client = authorize_google_sheets(path)
+    spreadsheet = client.open("valores_desejados")
+    sheet = spreadsheet.sheet1
+    return sheet
+
 @st.cache_data
 def read_sheet(path,trigger=None):
     sheet = get_sheet(path)  # pega o objeto worksheet
@@ -55,6 +62,28 @@ def limpar_valores_invalidos(x):
 # Escrever dados na planilha
 def write_sheet(sheet, df):
     df = df.fillna('')  # ou outro valor que preferir]
+    df['Valor'] = df['Valor'].astype(str)
+    df = df.applymap(limpar_valores_invalidos)
+    sheet.update([df.columns.values.tolist()] + df.values.tolist())
+
+
+# --- Funções para valores desejados ---
+@st.cache_data
+def read_valores_desejados(path, trigger=None):
+    """Lê os valores desejados do Google Sheets"""
+    sheet = get_sheet_valores_desejados(path)
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
+    # Converte Valor para numérico
+    if 'Valor' in df.columns:
+        df['Valor'] = pd.to_numeric(df['Valor'].astype(str).str.replace(',', '.'), errors='ignore')
+    return df
+
+
+def write_valores_desejados(path, df):
+    """Salva os valores desejados no Google Sheets"""
+    sheet = get_sheet_valores_desejados(path)
+    df = df.fillna('')
     df['Valor'] = df['Valor'].astype(str)
     df = df.applymap(limpar_valores_invalidos)
     sheet.update([df.columns.values.tolist()] + df.values.tolist())

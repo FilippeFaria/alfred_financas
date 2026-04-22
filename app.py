@@ -352,7 +352,7 @@ def main():
             st.write(f'Anomes selecionado: {anome}')
         col1, col2 = st.columns(2)     
         with col1:            
-            analytics.categorias(df_temp,anome)                  
+            analytics.categorias(df_temp, anome, path)                  
         
         with col2:
             
