@@ -4,7 +4,7 @@ Gráficos e métricas de despesas, receitas e tendências.
 """
 import streamlit as st
 from datetime import datetime
-
+import pandas as pd
 from src.config import CONTAS_INVEST
 from src.services.data_handler import aplicar_filtros
 from src.analytics.calculations import adicionar_anomes, exibir_despesa_total
@@ -127,8 +127,6 @@ def render(df, path: str = '.'):
                         st.session_state.editando_categorias = False
                         
                         from src.services.google_sheets import write_valores_desejados
-                        from datetime import datetime
-                        import pandas as pd
                         
                         now = datetime.now()
                         df_salvar = pd.DataFrame([
