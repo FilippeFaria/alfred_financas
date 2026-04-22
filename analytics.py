@@ -270,8 +270,6 @@ def categorias(df, anomes, path='.'):
     # Inicializa session state para valores desejados se não existir
     if 'valores_desejados' not in st.session_state:
         st.session_state.valores_desejados = {}
-    if 'editando_categorias' not in st.session_state:
-        st.session_state.editando_categorias = False
     if 'valores_desejados_carregados' not in st.session_state:
         st.session_state.valores_desejados_carregados = False
     
@@ -294,69 +292,6 @@ def categorias(df, anomes, path='.'):
     # Cria dicionário com valores reais do mês
     valores_reais = dict(zip(data['Categoria'], data['Valor']))
     todas_categorias = sorted(df_full['Categoria'].unique())
-    
-    # Botão para editar valores
-    if not st.session_state.editando_categorias:
-        if st.button("✏️ Definir valores desejados"):
-            st.session_state.editando_categorias = True
-            st.rerun()
-    
-    # Se estiver editando, mostra o formulário
-    if st.session_state.editando_categorias:
-        with st.expander("Editar valores desejados por categoria", expanded=True):
-            col1, col2 = st.columns(2)
-            
-            valores_input = {}
-            
-            with col1:
-                st.markdown("**Categorias 1-8**")
-                for i, cat in enumerate(todas_categorias[:8]):
-                    valor_real = valores_reais.get(cat, 0)
-                    valor_default = st.session_state.valores_desejados.get(cat, valor_real)
-                    valores_input[cat] = st.number_input(
-                        f"{cat}",
-                        min_value=0.0,
-                        value=float(valor_default),
-                        step=50.0,
-                        key=f"cat_input_{cat}"
-                    )
-            
-            with col2:
-                st.markdown("**Categorias 9+**")
-                for i, cat in enumerate(todas_categorias[8:], start=8):
-                    valor_real = valores_reais.get(cat, 0)
-                    valor_default = st.session_state.valores_desejados.get(cat, valor_real)
-                    valores_input[cat] = st.number_input(
-                        f"{cat}",
-                        min_value=0.0,
-                        value=float(valor_default),
-                        step=50.0,
-                        key=f"cat_input_{cat}"
-                    )
-            
-            col_btn1, col_btn2 = st.columns(2)
-            with col_btn1:
-                if st.button("💾 Salvar"):
-                    st.session_state.valores_desejados = valores_input.copy()
-                    st.session_state.editando_categorias = False
-                    
-                    # Salva no Google Sheets
-                    try:
-                        now = datetime.now()
-                        df_salvar = pd.DataFrame([
-                            {'Data': now.strftime('%d/%m/%Y'), 'Categoria': cat, 'Valor': val}
-                            for cat, val in valores_input.items()
-                        ])
-                        google_sheets.write_valores_desejados(path, df_salvar)
-                        st.success("Valores salvos no Google Sheets!")
-                    except Exception as e:
-                        st.error(f"Erro ao salvar no Google Sheets: {e}")
-                    
-                    st.rerun()
-            with col_btn2:
-                if st.button("❌ Cancelar"):
-                    st.session_state.editando_categorias = False
-                    st.rerun()
     
     # Verifica se há valores desejados salvos
     tem_desejados = bool(st.session_state.valores_desejados)
