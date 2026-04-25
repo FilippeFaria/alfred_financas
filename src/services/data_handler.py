@@ -12,6 +12,32 @@ from src.services.google_sheets import read_sheet, write_sheet
 from src.config import CONTAS, CONTAS_INVEST
 
 
+def _normalizar_datas(df: pd.DataFrame, colunas: list = None) -> pd.DataFrame:
+    """
+    Normaliza todas as colunas de data para formato '%d/%m/%Y %H:%M'.
+    
+    Args:
+        df: DataFrame com datas em múltiplos formatos
+        colunas: Lista de colunas a normalizar. Se None, normaliza 'Data', 'Data origem', 'Data Criacao'
+    
+    Returns:
+        DataFrame com datas normalizadas como strings no formato correto
+    """
+    if colunas is None:
+        colunas = ['Data', 'Data origem', 'Data Criacao']
+    
+    df = df.copy()
+    
+    for col in colunas:
+        if col in df.columns:
+            # Converter para datetime detectando múltiplos formatos
+            df[col] = pd.to_datetime(df[col], format='mixed', dayfirst=True, errors='coerce')
+            # Converter para string no formato padrão
+            df[col] = df[col].dt.strftime('%d/%m/%Y %H:%M')
+    
+    return df
+
+
 def carregar_dados(path: str = '.', trigger: Optional[float] = None) -> pd.DataFrame:
     """
     Carrega e preprocessa os dados do fluxo de caixa.
@@ -21,7 +47,7 @@ def carregar_dados(path: str = '.', trigger: Optional[float] = None) -> pd.DataF
         trigger: Timestamp para invalidar cache
     
     Returns:
-        DataFrame processado
+        DataFrame processado com datas normalizadas em '%d/%m/%Y %H:%M'
     """
     df = read_sheet(path, trigger)
     
@@ -29,7 +55,9 @@ def carregar_dados(path: str = '.', trigger: Optional[float] = None) -> pd.DataF
     df['Valor'] = df['Valor'].astype('float64')
     df['desconsiderar'] = df['desconsiderar'].replace('TRUE', True).replace('FALSE', False)
     df['Categoria'] = df['Categoria'].str.replace('TV.Internet.Telefone', 'Assinaturas')
-    df['Data'] = pd.to_datetime(df['Data'], format="%d/%m/%Y %H:%M")
+    
+    # Normalizar todas as colunas de data
+    df = _normalizar_datas(df)
     
     return df
 
@@ -161,8 +189,12 @@ def salvar_transacao(
     if adicionar_transferencia and valor < 0:
         return df
     else:
-        df['Data'] = pd.to_datetime(df['Data'], format="%Y-%m-%d %H:%M:%S")
-        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y %H:%M')
+        # Normalizar todas as datas para formato padrão
+        df = _normalizar_datas(df)
+        
+        # Verificar se há valores inválidos após conversão
+        if df['Data'].isna().any() or df['Data'].str.contains('NaT', na=False).any():
+            st.warning("⚠️ Aviso: Algumas datas não puderam ser convertidas e podem estar em formato incorreto.")
         
         write_sheet(sheet, df)
         st.cache_data.clear()

@@ -39,6 +39,7 @@ def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
                  (df['anomes'] >= anomes_inicio) & 
                  (df['anomes'] <= anome)].copy()
 
+    # Converter apenas para extrair dia (dados já normalizados em '%d/%m/%Y %H:%M')
     df_temp['Data'] = pd.to_datetime(df_temp['Data'], format='%d/%m/%Y %H:%M')
     df_temp['dia_mes'] = df_temp['Data'].dt.day
 
@@ -312,6 +313,10 @@ def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFr
             textposition='auto',
             secondary_y=False,
             customdata=df[["Valor", "Nome", 'Conta', 'Data']]
+        )
+        fig.update_traces(
+            selector=dict(type='bar'),
+            hovertemplate='Mês: %{x}<br>Valor: R$ %{customdata[0]:,.2f}<br>Nome: %{customdata[1]}<br>Conta: %{customdata[2]}<br>Data: %{customdata[3]}<extra></extra>'
         )
         
         fig.add_trace(

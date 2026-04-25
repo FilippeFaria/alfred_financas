@@ -34,6 +34,7 @@ COLOR_MAP = {
 
 def tratar_df(df: pd.DataFrame) -> pd.DataFrame:
     """Preprocessa o DataFrame adicionando coluna anomes."""
+    # Dados já normalizados em '%d/%m/%Y %H:%M' por carregar_dados()
     df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
     df['anomes'] = [
         f"{e.year}{e.month:02d}" for e in df['Data']
@@ -52,6 +53,7 @@ def calcular_saldo(df: pd.DataFrame) -> pd.Series:
         Series com saldo por conta
     """
     df = df.copy()
+    # Dados já normalizados em '%d/%m/%Y %H:%M' por carregar_dados()
     df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
     today = date.today()
     saldo_s = df[df['Data'].dt.date <= today].groupby('Conta')['Valor'].sum()
@@ -62,6 +64,7 @@ def calcular_saldo(df: pd.DataFrame) -> pd.Series:
 def adicionar_anomes(df: pd.DataFrame) -> pd.DataFrame:
     """Adiciona coluna anomes ao DataFrame."""
     df = df.copy()
+    # Dados já normalizados em '%d/%m/%Y %H:%M' por carregar_dados()
     df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
     df['anomes'] = df['Data'].apply(
         lambda x: f'{x.year}0{x.month}' if x.month < 10 else f'{x.year}{x.month}'

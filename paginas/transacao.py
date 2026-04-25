@@ -45,7 +45,9 @@ def adicionar_receita(df, path: str = '.'):
             st.write(f"- Categoria: {existente['Categoria']}")
             st.write(f"- Valor: R$ {existente['Valor']:.2f}")
             st.write(f"- Conta: {existente['Conta']}")
-            st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+            # Data já normalizada em formato '%d/%m/%Y %H:%M', extrair apenas data
+            data_formatada = existente['Data'][:10] if isinstance(existente['Data'], str) else existente['Data'].strftime('%d/%m/%Y')
+            st.write(f"- Data: {data_formatada}")
             if existente['Obs']:
                 st.write(f"- Observação: {existente['Obs']}")
             
@@ -121,7 +123,9 @@ def adicionar_despesa(df, last_date, last_account, path: str = '.'):
             st.write(f"- Categoria: {existente['Categoria']}")
             st.write(f"- Valor: R$ {existente['Valor']:.2f}")
             st.write(f"- Conta: {existente['Conta']}")
-            st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+            # Data já normalizada em formato '%d/%m/%Y %H:%M', extrair apenas data
+            data_formatada = existente['Data'][:10] if isinstance(existente['Data'], str) else existente['Data'].strftime('%d/%m/%Y')
+            st.write(f"- Data: {data_formatada}")
             if existente['Obs']:
                 st.write(f"- Observação: {existente['Obs']}")
             
@@ -205,7 +209,9 @@ def adicionar_transferencia(df, opcao: str, path: str = '.'):
                 st.write(f"- Categoria: {existente['Categoria']}")
                 st.write(f"- Valor: R$ {existente['Valor']:.2f}")
                 st.write(f"- Conta: {existente['Conta']}")
-                st.write(f"- Data: {existente['Data'].strftime('%d/%m/%Y')}")
+                # Data já normalizada em formato '%d/%m/%Y %H:%M', extrair apenas data
+                data_formatada = existente['Data'][:10] if isinstance(existente['Data'], str) else existente['Data'].strftime('%d/%m/%Y')
+                st.write(f"- Data: {data_formatada}")
                 if existente['Obs']:
                     st.write(f"- Observação: {existente['Obs']}")
                 st.write("---")
