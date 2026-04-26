@@ -136,14 +136,16 @@ def render(df, path: str = '.'):
 
     col1, col2 = st.columns(2)
     with col2:
-        categorias_tempo(df_temp)
         df_tendencia = evolucao_categoria(df_temp, int(anome), now)
+        categorias_tempo(df_temp)
+        monthly_spending_by_category_pie(df_temp, anome)
+        
     with col1:
-        receitas_despesas(df_temp, CONTAS_INVEST, anome=int(anome))
         tendencia_mes(df_tendencia, int(anome))
+        receitas_despesas(df_temp, CONTAS_INVEST, anome=int(anome))
+        
     
 
     
-    with col2:
-        monthly_spending_by_category_pie(df_temp, anome)
-        tendencia_saldo(df_temp, 'Itaú CC', anome)
+    # with col2:
+    #     tendencia_saldo(df_temp, 'Itaú CC', anome)
