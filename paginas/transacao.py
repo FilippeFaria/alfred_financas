@@ -84,6 +84,7 @@ def finalizar_confirmacao_salvamento():
     """Fecha a tela de confirmacao e volta para o formulario limpo."""
     if "confirmacao_salvamento_transacao" in st.session_state:
         del st.session_state.confirmacao_salvamento_transacao
+    st.session_state["tipo_transacao"] = "Despesa"
 
 
 def adicionar_receita(df, path="."):
