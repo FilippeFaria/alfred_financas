@@ -221,7 +221,6 @@ def categorias(df: pd.DataFrame, anomes: int, path: str = '.') -> None:
     
     fig.update_layout(
         barmode='overlay',
-        title=f"Categorias das despesas - {anomes}" + (" (Real vs Desejado)" if tem_desejados else ""),
         xaxis_title="Categoria",
         yaxis_title="Valor (R$)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
