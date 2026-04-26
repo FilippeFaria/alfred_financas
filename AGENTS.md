@@ -110,6 +110,31 @@ streamlit run app.py
 
 ---
 
+## Mudanças Recentes (v2)
+
+### ✅ Fix: Normalização Centralizada de Data (24/04/2026)
+**Problema**: ValueError ao adicionar transações devido a inconsistência de formato de data
+- Coluna 'Data' tinha múltiplos formatos (DD/MM/YYYY HH:MM vs YYYY-MM-DD HH:MM:SS)
+- Conversões falhavam quando misturados
+
+**Solução Implementada**:
+- Nova função `_normalizar_datas()` em [src/services/data_handler.py](src/services/data_handler.py) (linhas 14-38)
+- Normaliza qualquer formato → `'%d/%m/%Y %H:%M'` (string)
+- Chamada automaticamente em `carregar_dados()` (linha 41) e `salvar_transacao()` (linha 167)
+
+**Arquivos Modificados**:
+1. [src/services/data_handler.py](src/services/data_handler.py) — Nova função de normalização
+2. [src/analytics/charts.py](src/analytics/charts.py) — Removido `format='mixed'`
+3. [src/analytics/calculations.py](src/analytics/calculations.py) — Removido `format='mixed'` em 3 funções
+4. [paginas/1_transacao.py](paginas/1_transacao.py) — Ajustado para lidar com Data como string
+
+**Fluxo Garantido Agora**:
+1. Carregamento: Google Sheets → normaliza tudo → string `'%d/%m/%Y %H:%M'`
+2. Novos registros: Qualquer formato → normaliza → string `'%d/%m/%Y %H:%M'`
+3. Analytics: Lê string → converte para datetime quando precisa extrair dia/mês/ano
+
+---
+
 ## Armadilhas & Issues Conhecidas
 
 ### ⚠️ Autenticação Frágil
@@ -165,5 +190,5 @@ streamlit run app.py
 
 ---
 
-**Última atualização**: 22/04/2026  
+**Última atualização**: 26/04/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot
