@@ -133,6 +133,30 @@ streamlit run app.py
 2. Novos registros: Qualquer formato → normaliza → string `'%d/%m/%Y %H:%M'`
 3. Analytics: Lê string → converte para datetime quando precisa extrair dia/mês/ano
 
+### ✅ Feature: Tipo "Pagamento de Cartão" na aba de transações (26/04/2026)
+**Objetivo**: Simplificar o lançamento de pagamentos de cartão com um formulário reduzido.
+
+**Fluxo Implementado**:
+- Novo tipo de transação: `Pagamento de Cartão`
+- Formulário com campos numéricos visíveis logo na tela para cada cartão
+- Campo compartilhado de `Data` para definir a data de lançamento em todos os pagamentos preenchidos
+- Cartões disponíveis: `Cartão Filippe`, `Cartão Nath`, `Cartão Bianca`, `Cartão Pai`, `Cartão Mãe`
+- Um único botão `Salvar` processa todos os campos preenchidos com valor maior que zero
+
+**Regras de Negócio**:
+1. Para `Cartão Nath`, `Cartão Filippe` e `Cartão Bianca`:
+   - Lança uma transferência com origem fixa em `Itaú CC`
+   - Cria o débito em `Itaú CC` e o crédito na conta do cartão correspondente
+2. Para `Cartão Pai` e `Cartão Mãe`:
+   - Lança uma `Despesa` em `Itaú CC`
+   - `Categoria`: `Outros`
+   - `desconsiderar`: `True`
+   - `Obs`, `TAG` e `parcelas`: vazios
+
+**Arquivos Modificados**:
+1. [src/config.py](src/config.py) — Novas listas centralizadas para cartões e grupos de pagamento
+2. [paginas/transacao.py](paginas/transacao.py) — Novo formulário e fluxo de salvamento para `Pagamento de Cartão`
+
 ---
 
 ## Armadilhas & Issues Conhecidas

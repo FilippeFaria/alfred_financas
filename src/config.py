@@ -21,6 +21,28 @@ CONTAS = [
     'Inter',
 ]
 
+# Cartoes disponiveis na tela de pagamento de cartao
+CARTOES_PAGAMENTO = [
+    'Cartão Filippe',
+    'Cartão Nath',
+    'Cartão Bianca',
+    'Cartão Pai',
+    'Cartão Mãe',
+]
+
+# Cartoes cujo pagamento gera transferencia a partir da Itau CC
+CARTOES_PAGAMENTO_TRANSFERENCIA = [
+    'Cartão Nath',
+    'Cartão Filippe',
+    'Cartão Bianca',
+]
+
+# Cartoes cujo pagamento deve ser lancado como despesa
+CARTOES_PAGAMENTO_DESPESA = [
+    'Cartão Pai',
+    'Cartão Mãe',
+]
+
 # Contas de investimento
 CONTAS_INVEST = [
     'Ion',
