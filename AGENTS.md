@@ -21,9 +21,13 @@ src/
   ├── services/
   │   ├── google_sheets.py   # Autenticação e sync com Google Sheets
   │   └── data_handler.py    # Manipulação de DataFrames (transformações, filtros)
-  └── analytics/
-      ├── calculations.py    # Cálculos (saldo, despesas por categoria)
-      └── charts.py          # Gráficos Plotly
+  ├── analytics/
+  │   ├── calculations.py    # Cálculos (saldo, despesas por categoria)
+  │   └── charts.py          # Gráficos Plotly
+  └── telegram_bot/          # Integração com Telegram Bot
+      ├── __init__.py        # Módulo do bot
+      ├── bot.py             # Inicialização e polling do bot
+      └── handlers.py        # Handlers para comandos e mensagens
 
 paginas/
   ├── 1_transacao.py         # Aba: Registro de transações
@@ -33,6 +37,7 @@ paginas/
   └── 5_extrato.py           # Aba: Extrato de movimentações
 
 app.py                        # Orquestrador: carrega dados, renderiza abas
+run_telegram_bot.py           # Launcher local do bot para ambientes com .venv inconsistente
 ```
 
 ### Fluxo de Dados
@@ -107,6 +112,7 @@ streamlit run app.py
 | **google-auth-oauthlib** | OAuth2 para Google |
 | **langchain + langchain-openai** | IA (preparado, não fully integrado) |
 | **dataclasses-json** | Serialização de modelos |
+| **python-telegram-bot** | Integração com Telegram Bot API |
 
 ---
 
@@ -157,6 +163,48 @@ streamlit run app.py
 1. [src/config.py](src/config.py) — Novas listas centralizadas para cartões e grupos de pagamento
 2. [paginas/transacao.py](paginas/transacao.py) — Novo formulário e fluxo de salvamento para `Pagamento de Cartão`
 
+### ✅ Feature: Integração com Telegram Bot (28/04/2026)
+**Objetivo**: Adicionar bot do Telegram para acesso remoto aos dados financeiros e futura integração com Alfred (IA).
+
+**Fluxo Implementado**:
+- Novo módulo `src/telegram_bot/` com estrutura básica para polling local via BotFather.
+- Comandos iniciais: `/start` (boas-vindas), `/saldo` (saldo por conta e total), `/despesas` (mês atual, mês anterior e média 3M), e eco de mensagens.
+- Token configurado em `src/config.py` (mover para `st.secrets` em produção).
+- Preparado para integração com dados: handlers podem acessar DataFrame e cálculos via imports de `src.services` e `src.analytics`.
+
+**Arquivos Criados/Modificados**:
+1. [src/telegram_bot/__init__.py](src/telegram_bot/__init__.py) — Módulo do bot
+2. [src/telegram_bot/bot.py](src/telegram_bot/bot.py) — Inicialização com polling e registro de handlers
+3. [src/telegram_bot/handlers.py](src/telegram_bot/handlers.py) — Funções para comandos e mensagens
+4. [src/config.py](src/config.py) — Adicionada configuração `TELEGRAM_BOT_TOKEN`
+5. [requirements.txt](requirements.txt) — Adicionada dependência `python-telegram-bot`
+
+**Próximos Passos**:
+- Endurecer a configuração do token para usar variável de ambiente ou `st.secrets` em produção.
+- Adicionar mais comandos e formatação melhor nas respostas do bot.
+- Conectar com Alfred para respostas inteligentes via LangChain/OpenAI.
+
+### ✅ Fix: Inicialização do Bot e comando `/despesas` (30/04/2026)
+**Problemas**:
+- `src/telegram_bot/bot.py` usava `asyncio.run(main())` com `application.run_polling()`, causando conflito de event loop na inicialização.
+- O comando `/despesas` comparava a coluna `Data` como string com `Timestamp`, gerando `TypeError`.
+- Em alguns ambientes locais, a `.venv` pode estar apontando para um `python.exe` indisponível do Windows Store.
+
+**Soluções Implementadas**:
+- `src/telegram_bot/bot.py` passou a usar `main()` síncrona com `application.run_polling()` diretamente.
+- `src/analytics/calculations.py` agora converte `Data` para datetime dentro de `calcular_despesa_total()`.
+- Novo launcher [run_telegram_bot.py](run_telegram_bot.py) para subir o bot localmente reaproveitando `site-packages` da `.venv` quando necessário.
+
+**Arquivos Modificados**:
+1. [src/telegram_bot/bot.py](src/telegram_bot/bot.py) — Ajuste do entrypoint e polling
+2. [src/analytics/calculations.py](src/analytics/calculations.py) — Conversão defensiva de `Data` em `/despesas`
+3. [run_telegram_bot.py](run_telegram_bot.py) — Novo launcher local do bot
+
+**Fluxo Recomendado Agora**:
+1. Atualizar `TELEGRAM_BOT_TOKEN`
+2. Executar `python run_telegram_bot.py` ou `python -m src.telegram_bot.bot` quando o ambiente Python estiver saudável
+3. Testar `/start`, `/saldo` e `/despesas`
+
 ---
 
 ## Armadilhas & Issues Conhecidas
@@ -183,6 +231,11 @@ streamlit run app.py
 - **Problema**: Falhas de conexão com Google Sheets podem travar a app
 - **Recomendação**: Adicionar fallback para CSV local e retry logic
 
+### ⚠️ Ambiente Python Local Pode Estar Inconsistente
+- **Problema**: A `.venv` pode ter sido criada apontando para um `python.exe` do Windows Store indisponível
+- **Sintoma**: `python` da `.venv` falha antes mesmo de iniciar o bot
+- **Solução prática**: Usar [run_telegram_bot.py](run_telegram_bot.py) com um Python funcional e manter o token em variável de ambiente ou `src/config.py`
+
 ---
 
 ## Dicas para Agentes IA
@@ -204,6 +257,11 @@ streamlit run app.py
 2. Use `try/except` com fallback para CSV
 3. Teste em dev com `credentials.json` antes de prod
 
+### Ao Trabalhar com Telegram Bot
+1. Valide primeiro o token com `getMe` se houver dúvida de autenticação
+2. Se a `.venv` local estiver quebrada, prefira [run_telegram_bot.py](run_telegram_bot.py)
+3. Considere que os dados chegam com `Data` normalizada como string e os cálculos devem converter para datetime quando necessário
+
 ---
 
 ## Documentação Relacionada
@@ -214,5 +272,5 @@ streamlit run app.py
 
 ---
 
-**Última atualização**: 26/04/2026  
+**Última atualização**: 30/04/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot

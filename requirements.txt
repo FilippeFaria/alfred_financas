@@ -114,3 +114,4 @@ notebook
 tavily-python
 wikipedia
 trustcall
+python-telegram-bot

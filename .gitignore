@@ -1,4 +1,9 @@
 credentials.json
+*.log
+telegram_bot.out.log
+telegram_bot.err.log
+.env.local
+.env.*
 
 # Python
 __pycache__/

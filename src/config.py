@@ -3,6 +3,7 @@ Configurações globais do projeto Alfred Finanças.
 Contas, caminhos, e constantes centralizadas.
 """
 
+import os
 from pathlib import Path
 
 # Caminhos
@@ -100,3 +101,7 @@ GRANDES_TRANSACOES = [
 # Nome da planilha no Google Sheets
 SPREADSHEET_NAME = "fluxo_de_caixa"
 SPREADSHEET_VALORES_NAME = "valores_desejados"
+
+# Configurações do Telegram Bot
+# Obter token via BotFather no Telegram
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

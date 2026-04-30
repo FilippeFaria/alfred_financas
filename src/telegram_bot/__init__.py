@@ -1,0 +1,1 @@
+# Módulo para integração com Telegram Bot

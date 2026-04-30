@@ -84,6 +84,10 @@ def calcular_despesa_total(df: pd.DataFrame, anome: int) -> dict:
     Returns:
         Dicionário com métricas
     """
+    df = df.copy()
+    # Dados chegam normalizados como string e precisam virar datetime para filtros mensais.
+    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
+
     anome_str = str(anome)
     year = int(anome_str[:4])
     month = int(anome_str[4:])
