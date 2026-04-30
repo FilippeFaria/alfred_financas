@@ -14,30 +14,35 @@
 ## Arquitetura & Estrutura de Código
 
 ### Estrutura de Pastas
-```
+```text
 src/
-  ├── config.py              # Configurações centralizadas (contas, categorias, caminhos)
+  ├── config.py              # Configurações centralizadas (contas, categorias, caminhos, Telegram)
   ├── models/transaction.py  # Classes de dados (Transaction)
   ├── services/
   │   ├── google_sheets.py   # Autenticação e sync com Google Sheets
   │   └── data_handler.py    # Manipulação de DataFrames (transformações, filtros)
   ├── analytics/
-  │   ├── calculations.py    # Cálculos (saldo, despesas por categoria)
+  │   ├── calculations.py    # Cálculos (saldo, despesas, comparativos por dia do mês)
   │   └── charts.py          # Gráficos Plotly
   └── telegram_bot/          # Integração com Telegram Bot
       ├── __init__.py        # Módulo do bot
-      ├── bot.py             # Inicialização e polling do bot
+      ├── alert_service.py   # Agendamento, execução e deduplicação dos alertas
+      ├── alerts.py          # Regras de negócio e modelos de alerta
+      ├── bot.py             # Inicialização, polling e registro dos jobs
+      ├── data_provider.py   # Carregamento de dados com fallback para CSV local
+      ├── daily_report.py    # Montagem do informe diário do bot
+      ├── daily_report_service.py # Agendamento, envio e deduplicação do informe diário
       └── handlers.py        # Handlers para comandos e mensagens
 
 paginas/
-  ├── 1_transacao.py         # Aba: Registro de transações
-  ├── 2_analise.py           # Aba: Análise de despesas
-  ├── 3_alfred.py            # Aba: Análise automática (IA) — PLACEHOLDER
-  ├── 4_patrimonio.py        # Aba: Patrimônio/ativos
-  └── 5_extrato.py           # Aba: Extrato de movimentações
+  ├── transacao.py          # Aba: Registro de transações
+  ├── analise.py            # Aba: Análise de despesas
+  ├── alfred.py             # Aba: Análise automática (IA) — PLACEHOLDER
+  ├── patrimonio.py         # Aba: Patrimônio/ativos
+  └── extrato.py            # Aba: Extrato de movimentações
 
-app.py                        # Orquestrador: carrega dados, renderiza abas
-run_telegram_bot.py           # Launcher local do bot para ambientes com .venv inconsistente
+app.py                       # Orquestrador: carrega dados, renderiza abas
+run_telegram_bot.py          # Launcher local do bot para ambientes com .venv inconsistente
 ```
 
 ### Fluxo de Dados
@@ -45,6 +50,9 @@ run_telegram_bot.py           # Launcher local do bot para ambientes com .venv i
 2. **Session state** armazena DataFrame em cache com timestamp
 3. Cada aba em **paginas/** chama `render(df, PATH)` para renderizar conteúdo
 4. **analytics/** calcula métricas e gera visualizações
+5. **telegram_bot/data_provider.py** centraliza a carga de dados financeiros para o bot
+6. **telegram_bot/alert_service.py** agenda execuções automáticas de alertas
+7. **telegram_bot/daily_report_service.py** agenda o informe diário
 
 ---
 
@@ -62,7 +70,7 @@ run_telegram_bot.py           # Launcher local do bot para ambientes com .venv i
 - **Estrutura de página**: Cada aba exporta função `render(df, PATH)` — **sem** `if __name__ == "__main__"`
 
 ### Estrutura de Dados
-- **Principal**: pandas DataFrame com colunas: `data`, `tipo`, `categoria`, `descricao`, `valor`
+- **Principal**: pandas DataFrame com colunas como `Data`, `Tipo`, `Categoria`, `Conta`, `Nome`, `Valor`
 - **Persistência**: CSV em `historico_fluxo/` + Google Sheets
 
 ---
@@ -73,12 +81,13 @@ run_telegram_bot.py           # Launcher local do bot para ambientes com .venv i
 Todas as configurações estão em [src/config.py](src/config.py):
 - **Contas** (ex: "Nubank", "Itaú")
 - **Categorias de despesa** (ex: "Alimentação", "Transporte")
-- **Paths**: Diretório de dados, arquivo CSV
+- **Paths**: diretório de dados, CSV e arquivos de estado locais do bot
+- **Telegram**: token, chats autorizados, horários, timezone e limiares
 
 ### Google Sheets
 - **Autenticação**: `credentials.json` (dev) ou `st.secrets` (produção)
 - **Importar credenciais**: `gspread.authorize(google_auth_oauthlib)`
-- **Sync bidirecional**: CSV local + Google Sheets (sincroniza em carregamento)
+- **Sync bidirecional**: CSV local + Google Sheets
 
 ---
 
@@ -91,13 +100,28 @@ pip install -r requirements.txt
 # Desenvolver
 streamlit run app.py
 
+# Subir o bot
+python run_telegram_bot.py
+
 # Acessar
-# → http://localhost:8501
+# -> http://localhost:8501
 ```
 
 ### Variáveis de Ambiente
-- Nenhuma requirida para dev local (usa `credentials.json`)
+- Nenhuma requerida para dev local da interface web (usa `credentials.json`)
 - Em produção, fornecer `st.secrets["google_sheets_creds"]` (JSON em base64)
+- Para o bot, definir `TELEGRAM_BOT_TOKEN`
+- Para alertas automáticos, definir `TELEGRAM_ALERT_CHAT_IDS` com IDs separados por vírgula
+- Opcionalmente ajustar `TELEGRAM_ALERT_SCHEDULES` (padrão: `09:00,13:00,19:00`)
+- Opcionalmente ajustar `TELEGRAM_ALERT_TIMEZONE` (padrão: `America/Sao_Paulo`)
+- Para o informe diário, opcionalmente definir `TELEGRAM_DAILY_REPORT_CHAT_IDS`
+- Para o informe diário, opcionalmente ajustar `TELEGRAM_DAILY_REPORT_SCHEDULE` (padrão: `08:00`)
+- Para testes do informe diário, opcionalmente definir `TELEGRAM_DAILY_REPORT_TEST_MODE=true`
+- Opcionalmente ajustar:
+  - `ALERTA_SALDO_MINIMO_PADRAO`
+  - `ALERTA_PERCENTUAL_GASTO_MENSAL`
+  - `ALERTA_MULTIPLICADOR_DESPESA_CATEGORIA`
+  - `ALERTA_PERCENTUAL_CATEGORIA_DESEJADA`
 
 ---
 
@@ -113,97 +137,102 @@ streamlit run app.py
 | **langchain + langchain-openai** | IA (preparado, não fully integrado) |
 | **dataclasses-json** | Serialização de modelos |
 | **python-telegram-bot** | Integração com Telegram Bot API |
+| **APScheduler** | Suporte ao agendamento do `JobQueue` do Telegram Bot |
 
 ---
 
 ## Mudanças Recentes (v2)
 
 ### ✅ Fix: Normalização Centralizada de Data (24/04/2026)
-**Problema**: ValueError ao adicionar transações devido a inconsistência de formato de data
-- Coluna 'Data' tinha múltiplos formatos (DD/MM/YYYY HH:MM vs YYYY-MM-DD HH:MM:SS)
+**Problema**: `ValueError` ao adicionar transações devido a inconsistência de formato de data.
+- Coluna `Data` tinha múltiplos formatos (`DD/MM/YYYY HH:MM` vs `YYYY-MM-DD HH:MM:SS`)
 - Conversões falhavam quando misturados
 
 **Solução Implementada**:
-- Nova função `_normalizar_datas()` em [src/services/data_handler.py](src/services/data_handler.py) (linhas 14-38)
-- Normaliza qualquer formato → `'%d/%m/%Y %H:%M'` (string)
-- Chamada automaticamente em `carregar_dados()` (linha 41) e `salvar_transacao()` (linha 167)
-
-**Arquivos Modificados**:
-1. [src/services/data_handler.py](src/services/data_handler.py) — Nova função de normalização
-2. [src/analytics/charts.py](src/analytics/charts.py) — Removido `format='mixed'`
-3. [src/analytics/calculations.py](src/analytics/calculations.py) — Removido `format='mixed'` em 3 funções
-4. [paginas/1_transacao.py](paginas/1_transacao.py) — Ajustado para lidar com Data como string
-
-**Fluxo Garantido Agora**:
-1. Carregamento: Google Sheets → normaliza tudo → string `'%d/%m/%Y %H:%M'`
-2. Novos registros: Qualquer formato → normaliza → string `'%d/%m/%Y %H:%M'`
-3. Analytics: Lê string → converte para datetime quando precisa extrair dia/mês/ano
+- Nova função `_normalizar_datas()` em [src/services/data_handler.py](src/services/data_handler.py)
+- Normaliza qualquer formato -> `'%d/%m/%Y %H:%M'` (string)
+- Chamada automaticamente em `carregar_dados()` e `salvar_transacao()`
 
 ### ✅ Feature: Tipo "Pagamento de Cartão" na aba de transações (26/04/2026)
 **Objetivo**: Simplificar o lançamento de pagamentos de cartão com um formulário reduzido.
 
 **Fluxo Implementado**:
 - Novo tipo de transação: `Pagamento de Cartão`
-- Formulário com campos numéricos visíveis logo na tela para cada cartão
-- Campo compartilhado de `Data` para definir a data de lançamento em todos os pagamentos preenchidos
-- Cartões disponíveis: `Cartão Filippe`, `Cartão Nath`, `Cartão Bianca`, `Cartão Pai`, `Cartão Mãe`
-- Um único botão `Salvar` processa todos os campos preenchidos com valor maior que zero
-
-**Regras de Negócio**:
-1. Para `Cartão Nath`, `Cartão Filippe` e `Cartão Bianca`:
-   - Lança uma transferência com origem fixa em `Itaú CC`
-   - Cria o débito em `Itaú CC` e o crédito na conta do cartão correspondente
-2. Para `Cartão Pai` e `Cartão Mãe`:
-   - Lança uma `Despesa` em `Itaú CC`
-   - `Categoria`: `Outros`
-   - `desconsiderar`: `True`
-   - `Obs`, `TAG` e `parcelas`: vazios
-
-**Arquivos Modificados**:
-1. [src/config.py](src/config.py) — Novas listas centralizadas para cartões e grupos de pagamento
-2. [paginas/transacao.py](paginas/transacao.py) — Novo formulário e fluxo de salvamento para `Pagamento de Cartão`
+- Campos numéricos visíveis para cada cartão
+- Campo compartilhado de `Data` para todos os pagamentos preenchidos
+- Um único botão `Salvar` processa todos os campos com valor maior que zero
 
 ### ✅ Feature: Integração com Telegram Bot (28/04/2026)
-**Objetivo**: Adicionar bot do Telegram para acesso remoto aos dados financeiros e futura integração com Alfred (IA).
+**Objetivo**: Adicionar bot do Telegram para acesso remoto aos dados financeiros.
 
 **Fluxo Implementado**:
-- Novo módulo `src/telegram_bot/` com estrutura básica para polling local via BotFather.
-- Comandos iniciais: `/start` (boas-vindas), `/saldo` (saldo por conta e total), `/despesas` (mês atual, mês anterior e média 3M), e eco de mensagens.
-- Token configurado em `src/config.py` (mover para `st.secrets` em produção).
-- Preparado para integração com dados: handlers podem acessar DataFrame e cálculos via imports de `src.services` e `src.analytics`.
-
-**Arquivos Criados/Modificados**:
-1. [src/telegram_bot/__init__.py](src/telegram_bot/__init__.py) — Módulo do bot
-2. [src/telegram_bot/bot.py](src/telegram_bot/bot.py) — Inicialização com polling e registro de handlers
-3. [src/telegram_bot/handlers.py](src/telegram_bot/handlers.py) — Funções para comandos e mensagens
-4. [src/config.py](src/config.py) — Adicionada configuração `TELEGRAM_BOT_TOKEN`
-5. [requirements.txt](requirements.txt) — Adicionada dependência `python-telegram-bot`
-
-**Próximos Passos**:
-- Endurecer a configuração do token para usar variável de ambiente ou `st.secrets` em produção.
-- Adicionar mais comandos e formatação melhor nas respostas do bot.
-- Conectar com Alfred para respostas inteligentes via LangChain/OpenAI.
+- Módulo `src/telegram_bot/` com polling local
+- Comandos iniciais: `/start`, `/saldo`, `/despesas`, `/categorias_despesas`
+- Token via variável de ambiente `TELEGRAM_BOT_TOKEN`
 
 ### ✅ Fix: Inicialização do Bot e comando `/despesas` (30/04/2026)
 **Problemas**:
-- `src/telegram_bot/bot.py` usava `asyncio.run(main())` com `application.run_polling()`, causando conflito de event loop na inicialização.
-- O comando `/despesas` comparava a coluna `Data` como string com `Timestamp`, gerando `TypeError`.
-- Em alguns ambientes locais, a `.venv` pode estar apontando para um `python.exe` indisponível do Windows Store.
+- Conflito de event loop na inicialização
+- `TypeError` ao comparar a coluna `Data` com `Timestamp`
+- `.venv` local podendo apontar para um Python inconsistente
 
 **Soluções Implementadas**:
-- `src/telegram_bot/bot.py` passou a usar `main()` síncrona com `application.run_polling()` diretamente.
-- `src/analytics/calculations.py` agora converte `Data` para datetime dentro de `calcular_despesa_total()`.
-- Novo launcher [run_telegram_bot.py](run_telegram_bot.py) para subir o bot localmente reaproveitando `site-packages` da `.venv` quando necessário.
+- `main()` síncrona com `application.run_polling()`
+- Conversão defensiva de `Data` em `calcular_despesa_total()`
+- Launcher [run_telegram_bot.py](run_telegram_bot.py)
 
-**Arquivos Modificados**:
-1. [src/telegram_bot/bot.py](src/telegram_bot/bot.py) — Ajuste do entrypoint e polling
-2. [src/analytics/calculations.py](src/analytics/calculations.py) — Conversão defensiva de `Data` em `/despesas`
-3. [run_telegram_bot.py](run_telegram_bot.py) — Novo launcher local do bot
+### ✅ Feature: Sistema de Alertas Automáticos do Alfred Bot (30/04/2026)
+**Objetivo**: Consultar a base em horários agendados e enviar alertas financeiros automáticos.
+
+**Arquitetura Implementada**:
+- `src/telegram_bot/data_provider.py` centraliza o carregamento dos dados
+- `src/telegram_bot/alerts.py` concentra os modelos e regras
+- `src/telegram_bot/alert_service.py` registra os jobs, executa o ciclo de alertas e controla deduplicação
+- `src/telegram_bot/handlers.py` expõe o comando manual `/alertas`
+
+**Regras Iniciais Implementadas**:
+1. `Saldo baixo por conta`
+2. `Despesa mensal acima da média` dos últimos 3 meses
+3. `Categoria em alta` contra o mês anterior
+4. Categorias acima ou próximas do orçamento desejado
+
+**Configuração Centralizada**:
+- `TELEGRAM_ALERT_CHAT_IDS`
+- `TELEGRAM_ALERT_SCHEDULES`
+- `TELEGRAM_ALERT_TIMEZONE`
+- `ALERT_STATE_FILE`
+
+### ✅ Feature: Informe Diário do Alfred Bot (30/04/2026)
+**Objetivo**: Enviar um resumo diário com saldo, gasto acumulado no mês, uso do orçamento e maiores variações por categoria.
+
+**Arquitetura Implementada**:
+- `src/analytics/calculations.py` expõe funções reutilizáveis de comparação até o mesmo dia do mês
+- `src/telegram_bot/daily_report.py` monta a mensagem final do informe
+- `src/telegram_bot/daily_report_service.py` agenda o envio, gera a mensagem e controla deduplicação por dia
+- `src/telegram_bot/handlers.py` expõe o comando manual `/informe_diario`
+- `src/telegram_bot/bot.py` registra o job automático do informe no `JobQueue`
+
+**Regras Implementadas**:
+1. `Saldo`: usa o saldo total calculado pelo fluxo de caixa
+2. `Gasto no mês`: compara o acumulado do mês atual versus o mesmo dia do mês anterior
+3. `Orçamento usado`: usa os valores desejados por categoria e **desconsidera grandes despesas** (`GRANDES_TRANSACOES`)
+4. `Categorias em atenção`: destaca categorias acima do orçamento ou próximas do limite
+5. `Maiores aumentos`: mostra as categorias com maior aumento absoluto versus o mesmo dia do mês anterior
+
+**Configuração Centralizada**:
+- `TELEGRAM_DAILY_REPORT_CHAT_IDS`
+- `TELEGRAM_DAILY_REPORT_SCHEDULE`
+- `TELEGRAM_DAILY_REPORT_TEST_MODE`
+- `TELEGRAM_DAILY_REPORT_TOP_CATEGORIAS`
+- `DAILY_REPORT_STATE_FILE`
 
 **Fluxo Recomendado Agora**:
-1. Atualizar `TELEGRAM_BOT_TOKEN`
-2. Executar `python run_telegram_bot.py` ou `python -m src.telegram_bot.bot` quando o ambiente Python estiver saudável
-3. Testar `/start`, `/saldo` e `/despesas`
+1. Definir `TELEGRAM_BOT_TOKEN`
+2. Definir `TELEGRAM_DAILY_REPORT_CHAT_IDS` ou reutilizar `TELEGRAM_ALERT_CHAT_IDS`
+3. Ajustar `TELEGRAM_DAILY_REPORT_SCHEDULE` se necessário
+4. Executar `python run_telegram_bot.py`
+5. Validar manualmente com `/informe_diario`
+6. Confirmar se o arquivo `historico_fluxo/telegram_daily_report_state.json` está sendo atualizado após o envio
 
 ---
 
@@ -212,19 +241,17 @@ streamlit run app.py
 ### ⚠️ Autenticação Frágil
 - **Problema**: Alternância entre `credentials.json` (dev) e `st.secrets` (prod)
 - **Solução**: Validar ambiente antes de chamar `gspread.authorize()`
-- **Arquivo**: [src/services/google_sheets.py](src/services/google_sheets.py)
 
 ### ⚠️ Cache Pode Ficar Stale
 - **Problema**: Múltiplas abas atualizando simultaneamente podem desincronizar
 - **Solução**: Usar `st.cache_data(ttl=...)` com TTL curto ou invalidar explicitamente via session_state
 
 ### ⚠️ Página "Alfred" está Vazia
-- **Status**: Placeholder apenas (imports de LangChain presentes, mas `render()` não implementada)
-- **Arquivo**: [paginas/3_alfred.py](paginas/3_alfred.py)
+- **Status**: Placeholder apenas
 - **Próximo passo**: Implementar análise automática com GPT
 
 ### ⚠️ Contas & Categorias Hardcoded
-- **Problema**: Valores estão em [src/config.py](src/config.py) — difícil adicionar novos sem editar código
+- **Problema**: Valores estão em [src/config.py](src/config.py)
 - **Futuro**: Migrar para Google Sheets ou banco de dados
 
 ### ⚠️ Sem Tratamento de Erro Robusto
@@ -232,9 +259,16 @@ streamlit run app.py
 - **Recomendação**: Adicionar fallback para CSV local e retry logic
 
 ### ⚠️ Ambiente Python Local Pode Estar Inconsistente
-- **Problema**: A `.venv` pode ter sido criada apontando para um `python.exe` do Windows Store indisponível
-- **Sintoma**: `python` da `.venv` falha antes mesmo de iniciar o bot
-- **Solução prática**: Usar [run_telegram_bot.py](run_telegram_bot.py) com um Python funcional e manter o token em variável de ambiente ou `src/config.py`
+- **Problema**: A `.venv` pode estar apontando para um `python.exe` indisponível
+- **Solução prática**: Usar [run_telegram_bot.py](run_telegram_bot.py)
+
+### ⚠️ Alertas e Informes Dependem de Processo Vivo
+- **Problema**: Os jobs só executam se o processo do bot estiver rodando continuamente
+- **Recomendação**: Em produção, manter o bot sob supervisor/serviço e monitorar logs do `JobQueue`
+
+### ⚠️ Deduplicação Local é Baseada em Arquivo
+- **Problema**: O controle de reenvio usa arquivos locais em `historico_fluxo/`
+- **Recomendação**: Em multi-instância, mover esse estado para storage compartilhado
 
 ---
 
@@ -261,6 +295,12 @@ streamlit run app.py
 1. Valide primeiro o token com `getMe` se houver dúvida de autenticação
 2. Se a `.venv` local estiver quebrada, prefira [run_telegram_bot.py](run_telegram_bot.py)
 3. Considere que os dados chegam com `Data` normalizada como string e os cálculos devem converter para datetime quando necessário
+4. O comando `/categorias_despesas` tenta enviar uma imagem do Plotly; se o ambiente não tiver suporte a exportação PNG, envia um `.html` como fallback
+5. Novas regras automáticas devem entrar em [src/telegram_bot/alerts.py](src/telegram_bot/alerts.py)
+6. O formato do informe diário deve ficar em [src/telegram_bot/daily_report.py](src/telegram_bot/daily_report.py)
+7. Altere horários, chats e limiares apenas via [src/config.py](src/config.py)
+8. Se mudar a estratégia de deduplicação, revise também os arquivos de estado em `historico_fluxo/`
+9. O cálculo de `Orçamento usado` no informe diário deve continuar desconsiderando `GRANDES_TRANSACOES`; se a regra de grandes despesas mudar, revise também [src/telegram_bot/daily_report.py](src/telegram_bot/daily_report.py)
 
 ---
 
@@ -268,7 +308,7 @@ streamlit run app.py
 
 - [Readme.md](Readme.md) — Visão geral da estrutura
 - Notebook de análise: [analise_fluxo_caixa.ipynb](analise_fluxo_caixa.ipynb)
-- Google Sheets: Sincronizado via [src/services/google_sheets.py](src/services/google_sheets.py)
+- Google Sheets: sincronizado via [src/services/google_sheets.py](src/services/google_sheets.py)
 
 ---
 

@@ -114,4 +114,5 @@ notebook
 tavily-python
 wikipedia
 trustcall
-python-telegram-bot
+python-telegram-bot[job-queue]
+APScheduler

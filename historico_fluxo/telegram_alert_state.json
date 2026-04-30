@@ -1,0 +1,151 @@
+{
+  "alertas_enviados": {
+    "categoria_orcamento_estourado:202604:Assinaturas": "2026-04-30",
+    "categoria_orcamento_estourado:202604:Casa": "2026-04-30",
+    "categoria_orcamento_estourado:202604:Compras": "2026-04-30",
+    "categoria_orcamento_estourado:202604:Presentes": "2026-04-30",
+    "categoria_orcamento_estourado:202604:Serviços": "2026-04-30",
+    "categoria_orcamento_estourado:202604:Viagem": "2026-04-30",
+    "saldo_baixo:99Pay": "2026-04-30",
+    "saldo_baixo:C6": "2026-04-30",
+    "saldo_baixo:C6 corrente": "2026-04-30",
+    "saldo_baixo:C6Invest": "2026-04-30",
+    "saldo_baixo:Cartão Bianca": "2026-04-30",
+    "saldo_baixo:Cartão Filippe": "2026-04-30",
+    "saldo_baixo:Cartão Nath": "2026-04-30",
+    "saldo_baixo:Itaú": "2026-04-30",
+    "saldo_baixo:VA": "2026-04-30",
+    "despesa_mensal_acima_media": "2026-04-30",
+    "categoria_em_alta:Serviços": "2026-04-30",
+    "categoria_em_alta:Viagem": "2026-04-30"
+  },
+  "ultima_execucao": "2026-04-30T17:42:00.017444-03:00",
+  "ultimo_lote": [
+    {
+      "chave": "categoria_orcamento_estourado:202604:Assinaturas",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Assinaturas em 21%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_orcamento_estourado:202604:Casa",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Casa em 1%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_orcamento_estourado:202604:Compras",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Compras em 21%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_orcamento_estourado:202604:Presentes",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Presentes em 582%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_orcamento_estourado:202604:Serviços",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Serviços em 33%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_orcamento_estourado:202604:Viagem",
+      "titulo": "Orcamento por categoria estourado",
+      "mensagem": "Voce ja ultrapassou o orcamento de Viagem em 1018%. Quer ajustar o limite ou revisar os gastos?",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:99Pay",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta 99Pay esta com saldo em R$ -73,58, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:C6",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta C6 esta com saldo em R$ 18,15, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:C6 corrente",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta C6 corrente esta com saldo em R$ -4.939,45, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:C6Invest",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta C6Invest esta com saldo em R$ -20,96, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:Cartão Bianca",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta Cartão Bianca esta com saldo em R$ -970,45, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:Cartão Filippe",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta Cartão Filippe esta com saldo em R$ -880,20, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:Cartão Nath",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta Cartão Nath esta com saldo em R$ -1.849,78, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:Itaú",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta Itaú esta com saldo em R$ -2.841,20, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "saldo_baixo:VA",
+      "titulo": "Saldo baixo",
+      "mensagem": "A conta VA esta com saldo em R$ 499,33, abaixo do limite configurado de R$ 500,00.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "despesa_mensal_acima_media",
+      "titulo": "Despesas acima do ritmo",
+      "mensagem": "As despesas de 04/2026 estao em R$ 23.967,31, 188.7% acima da media dos ultimos 3 meses (R$ 8.300,69).",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_em_alta:Serviços",
+      "titulo": "Categoria em alta",
+      "mensagem": "A categoria Serviços subiu para R$ 688,75 em 202604, um aumento de 52.4% sobre o mes anterior.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    },
+    {
+      "chave": "categoria_em_alta:Viagem",
+      "titulo": "Categoria em alta",
+      "mensagem": "A categoria Viagem subiu para R$ 11.178,08 em 202604, um aumento de 3093.7% sobre o mes anterior.",
+      "severidade": "warning",
+      "mensagem_formatada": false
+    }
+  ]
+}

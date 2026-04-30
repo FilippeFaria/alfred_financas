@@ -7,6 +7,9 @@ import pandas as pd
 import numpy as np
 from datetime import date, datetime
 from typing import Optional
+from src.config import (
+    GRANDES_TRANSACOES,
+)
 
 
 # Color map para categorias
@@ -196,3 +199,132 @@ def calcular_custo_fixo(df: pd.DataFrame, custo_fixo: pd.DataFrame, anome: int) 
     data = pd.concat([data, custo_fixo_tempo])
     
     return data
+
+
+def _preparar_datas_analiticas(df: pd.DataFrame) -> pd.DataFrame:
+    """Converte a coluna Data para datetime em um dataframe de trabalho."""
+    df = df.copy()
+    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
+    return df
+
+
+def obter_data_corte_mes(df: pd.DataFrame, referencia: datetime | date) -> int:
+    """
+    Replica a logica de comparacao por dia do mes usada no Streamlit.
+
+    A data de corte e definida pelo maior dia com movimentacao no mes atual,
+    priorizando registros sem parcela para evitar distorcoes de lancamentos futuros.
+    """
+    df = _preparar_datas_analiticas(df)
+    referencia_ts = pd.Timestamp(referencia)
+    inicio_mes_atual = pd.Timestamp(year=referencia_ts.year, month=referencia_ts.month, day=1)
+    inicio_proximo_mes = inicio_mes_atual + pd.DateOffset(months=1)
+
+    df_mes_atual = df[(df['Data'] >= inicio_mes_atual) & (df['Data'] < inicio_proximo_mes)].copy()
+    if df_mes_atual.empty:
+        return int(referencia_ts.day)
+
+    if 'Parcela' in df_mes_atual.columns:
+        df_sem_parcela = df_mes_atual[df_mes_atual['Parcela'].isna()]
+        if not df_sem_parcela.empty:
+            df_mes_atual = df_sem_parcela
+
+    data_corte = df_mes_atual['Data'].dt.day.max()
+    if pd.isna(data_corte):
+        return int(referencia_ts.day)
+
+    return int(data_corte)
+
+
+def filtrar_despesas_ate_dia_mes(
+    df: pd.DataFrame,
+    referencia: datetime | date,
+) -> dict[str, pd.DataFrame | int | pd.Timestamp]:
+    """
+    Retorna despesas do mes atual e do mes anterior ate o mesmo dia do mes.
+    """
+    df = _preparar_datas_analiticas(df)
+
+    referencia_ts = pd.Timestamp(referencia)
+    data_corte = obter_data_corte_mes(df, referencia_ts)
+    df = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa') & (df["id"].isin(GRANDES_TRANSACOES)==False)].copy()
+    df.copy() if "id" in df.columns else df.copy()
+    inicio_mes_atual = pd.Timestamp(year=referencia_ts.year, month=referencia_ts.month, day=1)
+    inicio_proximo_mes = inicio_mes_atual + pd.DateOffset(months=1)
+    inicio_mes_anterior = inicio_mes_atual - pd.DateOffset(months=1)
+
+    df_mes_atual = df[
+        (df['Data'] >= inicio_mes_atual) &
+        (df['Data'] < inicio_proximo_mes) &
+        (df['Data'].dt.day <= data_corte)
+    ].copy()
+
+    df_mes_anterior = df[
+        (df['Data'] >= inicio_mes_anterior) &
+        (df['Data'] < inicio_mes_atual) &
+        (df['Data'].dt.day <= data_corte)
+    ].copy()
+
+    return {
+        'data_corte': data_corte,
+        'inicio_mes_atual': inicio_mes_atual,
+        'inicio_mes_anterior': inicio_mes_anterior,
+        'df_mes_atual': df_mes_atual,
+        'df_mes_anterior': df_mes_anterior,
+    }
+
+
+def calcular_comparativo_despesas_ate_dia_mes(
+    df: pd.DataFrame,
+    referencia: datetime | date,
+) -> dict[str, float | int | pd.Timestamp | None]:
+    """
+    Calcula o gasto acumulado no mes atual versus o mesmo dia do mes anterior.
+    """
+    dados = filtrar_despesas_ate_dia_mes(df, referencia)
+    gasto_atual = abs(round(float(dados['df_mes_atual']['Valor'].sum()), 2))
+    gasto_anterior = abs(round(float(dados['df_mes_anterior']['Valor'].sum()), 2))
+    delta_percentual = None
+    if gasto_anterior != 0:
+        delta_percentual = (gasto_atual - gasto_anterior) / gasto_anterior
+
+    return {
+        'data_corte': dados['data_corte'],
+        'inicio_mes_atual': dados['inicio_mes_atual'],
+        'inicio_mes_anterior': dados['inicio_mes_anterior'],
+        'gasto_atual': gasto_atual,
+        'gasto_anterior': gasto_anterior,
+        'delta_percentual': delta_percentual,
+    }
+
+
+def calcular_comparativo_categorias_ate_dia_mes(
+    df: pd.DataFrame,
+    referencia: datetime | date,
+) -> pd.DataFrame:
+    """
+    Compara o acumulado por categoria no mes atual versus o mesmo dia do mes anterior.
+    """
+    dados = filtrar_despesas_ate_dia_mes(df, referencia)
+    atual = (
+        dados['df_mes_atual']
+        .groupby('Categoria')['Valor']
+        .sum()
+        .abs()
+        .reset_index()
+        .rename(columns={'Valor': 'valor_atual'})
+    )
+    anterior = (
+        dados['df_mes_anterior']
+        .groupby('Categoria')['Valor']
+        .sum()
+        .abs()
+        .reset_index()
+        .rename(columns={'Valor': 'valor_anterior'})
+    )
+
+    comparativo = atual.merge(anterior, on='Categoria', how='outer').fillna(0)
+    comparativo['delta_valor'] = comparativo['valor_atual'] - comparativo['valor_anterior']
+    comparativo['percentual_orcamento'] = np.nan
+
+    return comparativo.sort_values('delta_valor', ascending=False).reset_index(drop=True)

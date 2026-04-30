@@ -1,7 +1,9 @@
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
-from .handlers import start, help_command, echo, saldo, despesas
+from .alert_service import registrar_rotina_alertas
+from .daily_report_service import registrar_rotina_informe_diario
+from .handlers import alertas, categorias_despesas, chat_id, despesas, echo, help_command, informe_diario, saldo, start
 
 # Configurar logging
 logging.basicConfig(
@@ -33,8 +35,23 @@ def main():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("saldo", saldo))
     application.add_handler(CommandHandler("despesas", despesas))
+    application.add_handler(CommandHandler("categorias_despesas", categorias_despesas))
+    application.add_handler(CommandHandler("informe_diario", informe_diario))
+    application.add_handler(CommandHandler("chat_id", chat_id))
+    application.add_handler(CommandHandler("alertas", alertas))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), echo))
     application.add_error_handler(error_handler)
+
+    if application.job_queue is None:
+        logging.warning(
+            'JobQueue nao disponivel nesta instalacao do python-telegram-bot. '
+            'Os alertas por horario nao vao funcionar ate instalar a extra "job-queue".'
+        )
+    else:
+        logging.info('JobQueue disponivel. Alertas agendados serao registrados normalmente.')
+
+    registrar_rotina_alertas(application)
+    registrar_rotina_informe_diario(application)
 
     # Iniciar polling
     application.run_polling()

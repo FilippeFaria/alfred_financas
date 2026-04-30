@@ -10,7 +10,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
-from sklearn.linear_model import LinearRegression
+try:
+    from sklearn.linear_model import LinearRegression
+except ImportError:  # pragma: no cover - fallback para ambientes locais inconsistentes
+    LinearRegression = None
 
 from src.analytics.calculations import COLOR_MAP, forecast
 from src.services.google_sheets import read_valores_desejados, write_valores_desejados
@@ -35,8 +38,23 @@ def _carregar_valores_desejados(path: str) -> None:
         st.warning(f"Não foi possível carregar valores do Google Sheets: {e}")
 
 
+def _obter_valores_desejados(path: str) -> dict:
+    """Obtém valores desejados por categoria fora do contexto de UI."""
+    try:
+        df_valores = read_valores_desejados(path)
+        if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
+            return dict(zip(df_valores['Categoria'], df_valores['Valor']))
+    except Exception:
+        return {}
+    return {}
+
+
 def _dados_categorias_despesa(df: pd.DataFrame, anomes: int) -> tuple[pd.DataFrame, dict, list]:
     """Prepara dados do mês e lista completa de categorias de despesas."""
+    df = df.copy()
+    df['anomes'] = df['anomes'].astype(str)
+    anomes = str(anomes)
+
     df_full = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')]
     df_mes = df[(df['desconsiderar'] == False) & (df['anomes'] == anomes) & (df['Tipo'] == 'Despesa')].copy()
     df_mes['Valor'] = abs(df_mes['Valor'])
@@ -112,6 +130,72 @@ def render_categorias_despesas(df: pd.DataFrame, anome: int, path: str = '.') ->
     _render_editor_valores_desejados(df, anome, path)
 
 
+def montar_grafico_categorias_despesas(df: pd.DataFrame, anomes: int, path: str = '.') -> tuple[go.Figure, dict]:
+    """Monta a figura de categorias de despesas e retorna métricas auxiliares."""
+    data, valores_reais, _ = _dados_categorias_despesa(df, anomes)
+    valores_desejados = _obter_valores_desejados(path)
+    tem_desejados = bool(valores_desejados)
+
+    if tem_desejados:
+        df_desejado = pd.DataFrame([
+            {'Categoria': cat, 'Valor': val}
+            for cat, val in valores_desejados.items()
+        ])
+    else:
+        df_desejado = data.copy()
+
+    fig = go.Figure()
+    primeiro_real = True
+    primeiro_desejado = True
+
+    for cat in data['Categoria']:
+        valor = data[data['Categoria'] == cat]['Valor'].values[0]
+        cor = COLOR_MAP.get(cat, '#cccccc')
+        fig.add_trace(go.Bar(
+            x=[cat],
+            y=[valor],
+            name='Real (↑)' if primeiro_real else None,
+            marker_color=cor,
+            opacity=1.0,
+            text=f"R$ {valor:,.0f}",
+            textposition='auto',
+            showlegend=primeiro_real
+        ))
+        primeiro_real = False
+
+    for cat in df_desejado['Categoria']:
+        valor = df_desejado[df_desejado['Categoria'] == cat]['Valor'].values[0]
+        cor = COLOR_MAP.get(cat, '#cccccc')
+        fig.add_trace(go.Bar(
+            x=[cat],
+            y=[-valor],
+            name='Desejado (↓)' if primeiro_desejado else None,
+            marker_color=cor,
+            opacity=0.4,
+            text=f"R$ {valor:,.0f}",
+            textposition='auto',
+            showlegend=primeiro_desejado
+        ))
+        primeiro_desejado = False
+
+    fig.update_layout(
+        barmode='overlay',
+        xaxis_title="Categoria",
+        yaxis_title="Valor (R$)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+
+    total_real = float(sum(valores_reais.values()))
+    total_desejado = float(sum(valores_desejados.values())) if tem_desejados else total_real
+
+    return fig, {
+        'total_real': total_real,
+        'total_desejado': total_desejado,
+        'diferenca': total_desejado - total_real,
+        'tem_desejados': tem_desejados,
+    }
+
+
 def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
     """Exibe gráfico de evolução das despesas no mês."""
     st.markdown('### Evolução despesas no mês')
@@ -153,6 +237,10 @@ def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
 
 def receitas_despesas(df: pd.DataFrame, contas_invest: list, anome: int) -> None:
     """Exibe gráfico de evolução de receitas e despesas no tempo."""
+    if LinearRegression is None:
+        st.error("scikit-learn não está disponível no ambiente atual para calcular tendências.")
+        return
+
     anome = int(anome)
     st.markdown('### Evolução das receitas e despesas no tempo')
 
@@ -247,75 +335,19 @@ def monthly_spending_by_category_pie(df: pd.DataFrame, anome: int) -> None:
 def categorias(df: pd.DataFrame, anomes: int, path: str = '.') -> None:
     """Exibe gráfico de categorias com valores reais vs desejados."""
     _carregar_valores_desejados(path)
-
-    data, valores_reais, _ = _dados_categorias_despesa(df, anomes)
-    tem_desejados = bool(st.session_state.valores_desejados)
-
-    if tem_desejados:
-        df_desejado = pd.DataFrame([
-            {'Categoria': cat, 'Valor': val}
-            for cat, val in st.session_state.valores_desejados.items()
-        ])
-    else:
-        df_desejado = data.copy()
-
-    fig = go.Figure()
-
-    primeiro_real = True
-    primeiro_desejado = True
-
-    for cat in data['Categoria']:
-        valor = data[data['Categoria'] == cat]['Valor'].values[0]
-        cor = COLOR_MAP.get(cat, '#cccccc')
-        fig.add_trace(go.Bar(
-            x=[cat],
-            y=[valor],
-            name='Real (↑)' if primeiro_real else None,
-            marker_color=cor,
-            opacity=1.0,
-            text=f"R$ {valor:,.0f}",
-            textposition='auto',
-            showlegend=primeiro_real
-        ))
-        primeiro_real = False
-
-    for cat in df_desejado['Categoria']:
-        valor = df_desejado[df_desejado['Categoria'] == cat]['Valor'].values[0]
-        cor = COLOR_MAP.get(cat, '#cccccc')
-        fig.add_trace(go.Bar(
-            x=[cat],
-            y=[-valor],
-            name='Desejado (↓)' if primeiro_desejado else None,
-            marker_color=cor,
-            opacity=0.4,
-            text=f"R$ {valor:,.0f}",
-            textposition='auto',
-            showlegend=primeiro_desejado
-        ))
-        primeiro_desejado = False
-
-    fig.update_layout(
-        barmode='overlay',
-        xaxis_title="Categoria",
-        yaxis_title="Valor (R$)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-
+    fig, metricas = montar_grafico_categorias_despesas(df, anomes, path)
     st.plotly_chart(fig)
-
-    total_real = sum(valores_reais.values())
-    total_desejado = sum(st.session_state.valores_desejados.values()) if tem_desejados else total_real
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Real", f"R$ {total_real:,.2f}")
+        st.metric("Total Real", f"R$ {metricas['total_real']:,.2f}")
     with col2:
-        st.metric("Total Desejado", f"R$ {total_desejado:,.2f}")
+        st.metric("Total Desejado", f"R$ {metricas['total_desejado']:,.2f}")
     with col3:
-        diff = total_desejado - total_real
+        diff = metricas['diferenca']
         st.metric("Diferença", f"R$ {diff:,.2f}", delta=f"{diff:,.2f}", delta_color="inverse" if diff > 0 else "normal")
 
-    if tem_desejados:
+    if metricas['tem_desejados']:
         if st.button("🗑️ Limpar valores desejados"):
             st.session_state.valores_desejados = {}
             st.rerun()
