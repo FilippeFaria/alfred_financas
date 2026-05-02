@@ -80,9 +80,9 @@ _carregar_env_local(BASE_PATH / ".env")
 # Contas bancarias
 CONTAS = [
     "Itaú CC",
-    "Cartao Filippe",
-    "Cartao Bianca",
-    "Cartao Nath",
+    "Cartão Filippe",
+    "Cartão Bianca",
+    "Cartão Nath",
     "VR",
     "VA",
     "Nubank",
@@ -91,24 +91,24 @@ CONTAS = [
 
 # Cartoes disponiveis na tela de pagamento de cartao
 CARTOES_PAGAMENTO = [
-    "Cartao Filippe",
-    "Cartao Nath",
-    "Cartao Bianca",
-    "Cartao Pai",
-    "Cartao Mae",
+    "Cartão Filippe",
+    "Cartão Nath",
+    "Cartão Bianca",
+    "Cartão Pai",
+    "Cartão Mae",
 ]
 
 # Cartoes cujo pagamento gera transferencia a partir da Itau CC
 CARTOES_PAGAMENTO_TRANSFERENCIA = [
-    "Cartao Nath",
-    "Cartao Filippe",
-    "Cartao Bianca",
+    "Cartão Nath",
+    "Cartão Filippe",
+    "Cartão Bianca",
 ]
 
 # Cartoes cujo pagamento deve ser lancado como despesa
 CARTOES_PAGAMENTO_DESPESA = [
-    "Cartao Pai",
-    "Cartao Mae",
+    "Cartão Pai",
+    "Cartão Mae",
 ]
 
 # Contas de investimento
@@ -143,8 +143,8 @@ CATEGORIAS_DESPESA = [
 
 # Categorias de receita
 CATEGORIAS_RECEITA = [
-    "Salario",
-    "Cobranca",
+    "Salário",
+    "Cobrança",
     "Outros",
 ]
 
@@ -155,7 +155,7 @@ CATEGORIAS_INVESTIMENTO = [
     "Fundos",
     "LCI",
     "LCA",
-    "Acoes",
+    "Ações",
 ]
 
 # Transacoes para desconsiderar na analise
