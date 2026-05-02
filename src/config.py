@@ -79,7 +79,7 @@ _carregar_env_local(BASE_PATH / ".env")
 
 # Contas bancarias
 CONTAS = [
-    "Itau CC",
+    "Itaú CC",
     "Cartao Filippe",
     "Cartao Bianca",
     "Cartao Nath",
@@ -212,7 +212,7 @@ if _telegram_daily_report_chat_ids_raw:
 else:
     TELEGRAM_DAILY_REPORT_CHAT_IDS = TELEGRAM_ALERT_CHAT_IDS
 
-TELEGRAM_DAILY_REPORT_SCHEDULE = os.getenv("TELEGRAM_DAILY_REPORT_SCHEDULE", "08:00").strip() or "08:00"
+TELEGRAM_DAILY_REPORT_SCHEDULE = os.getenv("TELEGRAM_DAILY_REPORT_SCHEDULE", "08:04").strip() or "08:00"
 TELEGRAM_DAILY_REPORT_TOP_CATEGORIAS = int(
     os.getenv("TELEGRAM_DAILY_REPORT_TOP_CATEGORIAS", "3")
 )
