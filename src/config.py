@@ -137,7 +137,7 @@ CATEGORIAS_DESPESA = [
     "Saude",
     "Presentes",
     "Outros",
-    "Onix",
+#    "Onix",
     "Investimento",
 ]
 
