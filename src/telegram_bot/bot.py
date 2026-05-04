@@ -1,4 +1,5 @@
 import logging
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from .alert_service import registrar_rotina_alertas
@@ -21,7 +22,12 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     # Obter token do config (futuramente de st.secrets ou env)
-    from ..config import TELEGRAM_BOT_TOKEN
+    from ..config import (
+        TELEGRAM_BOT_MODE,
+        TELEGRAM_BOT_TOKEN,
+        TELEGRAM_WEBHOOK_PATH,
+        TELEGRAM_WEBHOOK_URL,
+    )
 
     if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == 'SEU_TOKEN_AQUI':
         raise RuntimeError(
@@ -53,8 +59,33 @@ def main():
     registrar_rotina_alertas(application)
     registrar_rotina_informe_diario(application)
 
-    # Iniciar polling
-    application.run_polling()
+    modo_execucao = TELEGRAM_BOT_MODE if TELEGRAM_BOT_MODE in {"polling", "webhook"} else "polling"
+    if modo_execucao == "webhook":
+        if not TELEGRAM_WEBHOOK_URL:
+            raise RuntimeError(
+                "Modo webhook ativo, mas TELEGRAM_WEBHOOK_URL nao foi configurada."
+            )
+
+        webhook_path = TELEGRAM_WEBHOOK_PATH.lstrip("/")
+        if not webhook_path:
+            raise RuntimeError(
+                "TELEGRAM_WEBHOOK_PATH invalido. Use um caminho como /telegram/webhook."
+            )
+
+        webhook_url = f"{TELEGRAM_WEBHOOK_URL.rstrip('/')}/{webhook_path}"
+        porta = int(os.getenv("PORT", "10000"))
+        logging.info("Iniciando bot em modo webhook na porta %s e path /%s", porta, webhook_path)
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=porta,
+            url_path=webhook_path,
+            webhook_url=webhook_url,
+            drop_pending_updates=True,
+        )
+        return
+
+    logging.info("Iniciando bot em modo polling.")
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     main()

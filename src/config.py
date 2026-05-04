@@ -172,6 +172,9 @@ SPREADSHEET_VALORES_NAME = "valores_desejados"
 # Configuracoes do Telegram Bot
 # Obter token via BotFather no Telegram
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_MODE = os.getenv("TELEGRAM_BOT_MODE", "polling").strip().lower() or "polling"
+TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "").strip()
+TELEGRAM_WEBHOOK_PATH = os.getenv("TELEGRAM_WEBHOOK_PATH", "/telegram/webhook").strip() or "/telegram/webhook"
 
 # Chats autorizados a receber alertas automaticos do bot.
 # Formato esperado: "123456,987654"
