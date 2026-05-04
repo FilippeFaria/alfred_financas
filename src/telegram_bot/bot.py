@@ -23,8 +23,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 def main():
     # Obter token do config (futuramente de st.secrets ou env)
     from ..config import (
+        TELEGRAM_ALERT_CHAT_IDS,
         TELEGRAM_BOT_MODE,
         TELEGRAM_BOT_TOKEN,
+        TELEGRAM_DAILY_REPORT_CHAT_IDS,
         TELEGRAM_WEBHOOK_PATH,
         TELEGRAM_WEBHOOK_URL,
     )
@@ -35,6 +37,12 @@ def main():
         )
 
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    logging.info(
+        "Bot inicializado. mode=%s alert_chats=%s report_chats=%s",
+        TELEGRAM_BOT_MODE,
+        len(TELEGRAM_ALERT_CHAT_IDS),
+        len(TELEGRAM_DAILY_REPORT_CHAT_IDS),
+    )
 
     # Adicionar handlers
     application.add_handler(CommandHandler("start", start))
@@ -74,7 +82,12 @@ def main():
 
         webhook_url = f"{TELEGRAM_WEBHOOK_URL.rstrip('/')}/{webhook_path}"
         porta = int(os.getenv("PORT", "10000"))
-        logging.info("Iniciando bot em modo webhook na porta %s e path /%s", porta, webhook_path)
+        logging.info(
+            "Iniciando bot em modo webhook. porta=%s path=/%s webhook_url=%s",
+            porta,
+            webhook_path,
+            webhook_url,
+        )
         application.run_webhook(
             listen="0.0.0.0",
             port=porta,

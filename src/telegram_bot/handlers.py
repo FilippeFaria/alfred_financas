@@ -1,5 +1,6 @@
 from datetime import date
 from io import BytesIO
+import logging
 from pathlib import Path
 
 from telegram import Update
@@ -13,6 +14,7 @@ from src.telegram_bot.daily_report_service import gerar_mensagem_informe_diario
 from src.telegram_bot.data_provider import carregar_dados_financeiros
 
 ROOT_PATH = Path(__file__).resolve().parents[2]
+LOGGER = logging.getLogger(__name__)
 
 
 def format_real(value: float) -> str:
@@ -34,7 +36,7 @@ def montar_saudacao(update: Update) -> str:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id if update.effective_chat else "indisponivel"
-    print(f"[Alfred Bot] Chat ID capturado no /start: {chat_id}")
+    LOGGER.info("Comando /start recebido. chat_id=%s", chat_id)
     await update.message.reply_text(
         f"{montar_saudacao(update)} Eu sou o Alfred Bot.\n"
         "Use /saldo para ver seus saldos atuais e /despesas para ver seu gasto mensal.\n"
@@ -44,6 +46,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /help recebido. chat_id=%s", chat_id_atual)
     await update.message.reply_text(
         f"{montar_saudacao(update)}\n"
         "Comandos disponiveis:\n"
@@ -59,17 +63,21 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
-    print(f"[Alfred Bot] Chat ID solicitado manualmente: {chat_id_atual}")
+    LOGGER.info("Comando /chat_id recebido. chat_id=%s", chat_id_atual)
     nome_conversa = obter_nome_conversa(update)
     complemento = f"\nNome configurado: {nome_conversa}" if nome_conversa else ""
     await update.message.reply_text(f"Chat ID desta conversa: {chat_id_atual}{complemento}")
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Mensagem texto recebida fora de comando. chat_id=%s", chat_id_atual)
     await update.message.reply_text(f"{montar_saudacao(update)} Voce disse: {update.message.text}")
 
 
 async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /saldo recebido. chat_id=%s", chat_id_atual)
     try:
         df = carregar_dados_financeiros()
         saldo_s = calcular_saldo(df)
@@ -78,6 +86,7 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         texto = f"*Saldo total:* {format_real(total)}\n\n" + "\n".join(lines)
         await update.message.reply_text(texto)
     except Exception as exc:
+        LOGGER.exception("Falha ao executar /saldo. chat_id=%s", chat_id_atual)
         await update.message.reply_text(
             "Erro ao carregar dados financeiros. Verifique credentials.json, o CSV local ou as configuracoes do bot.\n"
             f"Erro: {exc}"
@@ -85,6 +94,8 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def despesas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /despesas recebido. chat_id=%s", chat_id_atual)
     try:
         df = carregar_dados_financeiros()
         df = df[(df["desconsiderar"] == False) & (df["Tipo"] == "Despesa")]
@@ -103,6 +114,7 @@ async def despesas(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(texto)
     except Exception as exc:
+        LOGGER.exception("Falha ao executar /despesas. chat_id=%s", chat_id_atual)
         await update.message.reply_text(
             "Erro ao calcular despesas. Verifique se os dados estao disponiveis e tente novamente.\n"
             f"Erro: {exc}"
@@ -110,6 +122,8 @@ async def despesas(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def categorias_despesas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /categorias_despesas recebido. chat_id=%s", chat_id_atual)
     try:
         df = carregar_dados_financeiros()
         df = adicionar_anomes(df)
@@ -126,13 +140,19 @@ async def categorias_despesas(update: Update, context: ContextTypes.DEFAULT_TYPE
         try:
             imagem = fig.to_image(format="png", width=1400, height=900, scale=2)
             await update.message.reply_photo(photo=BytesIO(imagem), caption=caption)
+            LOGGER.info("Grafico PNG enviado no /categorias_despesas. chat_id=%s", chat_id_atual)
             return
         except Exception:
+            LOGGER.warning(
+                "Falha ao gerar PNG no /categorias_despesas; enviando HTML fallback. chat_id=%s",
+                chat_id_atual,
+            )
             html = fig.to_html(full_html=True, include_plotlyjs="cdn").encode("utf-8")
             arquivo = BytesIO(html)
             arquivo.name = f"categorias_despesas_{anome}.html"
             await update.message.reply_document(document=arquivo, caption=caption)
     except Exception as exc:
+        LOGGER.exception("Falha ao executar /categorias_despesas. chat_id=%s", chat_id_atual)
         await update.message.reply_text(
             "Erro ao gerar o grafico de categorias de despesas.\n"
             f"Erro: {exc}"
@@ -140,6 +160,8 @@ async def categorias_despesas(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def alertas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /alertas recebido. chat_id=%s", chat_id_atual)
     try:
         alertas_enviados = await executar_ciclo_alertas(context.application)
         if alertas_enviados:
@@ -151,6 +173,7 @@ async def alertas(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Checagem concluida. Nenhum alerta novo foi identificado."
             )
     except Exception as exc:
+        LOGGER.exception("Falha ao executar /alertas. chat_id=%s", chat_id_atual)
         await update.message.reply_text(
             "Erro ao executar a checagem de alertas.\n"
             f"Erro: {exc}"
@@ -158,10 +181,13 @@ async def alertas(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def informe_diario(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Comando /informe_diario recebido. chat_id=%s", chat_id_atual)
     try:
         mensagem = gerar_mensagem_informe_diario()
         await update.message.reply_text(mensagem)
     except Exception as exc:
+        LOGGER.exception("Falha ao executar /informe_diario. chat_id=%s", chat_id_atual)
         await update.message.reply_text(
             "Erro ao gerar o informe diario.\n"
             f"Erro: {exc}"
