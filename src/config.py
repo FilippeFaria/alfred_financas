@@ -189,11 +189,17 @@ TELEGRAM_CHAT_NOMES = _carregar_nomes_chats_telegram(
     os.getenv("TELEGRAM_CHAT_NOMES", "")
 )
 
+# Contas por conversa para alertas personalizados (hardcoded).
+TELEGRAM_CONTAS_POR_CHAT_ID = {
+    8624257556: ["Itaú CC", "Cartão Nath", "Cartão Filippe", "VA", "VR"],  # Filippe
+    7058967303: ["Inter", "Cartão Bianca"],  # Bibi
+}
+
 # Horarios de execucao dos alertas automaticos.
 # Formato esperado: "09:00,13:00,19:00"
 TELEGRAM_ALERT_SCHEDULES = [
     horario.strip()
-    for horario in os.getenv("TELEGRAM_ALERT_SCHEDULES", "09:00,13:00,19:00").split(",")
+    for horario in os.getenv("TELEGRAM_ALERT_SCHEDULES", "09:00,13:00,19:00,10:50").split(",")
     if horario.strip()
 ]
 

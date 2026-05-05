@@ -30,6 +30,9 @@ class Alerta:
 class ContextoAlertas:
     df: pd.DataFrame
     referencia: datetime
+    chat_id: int | None = None
+    nome_usuario: str | None = None
+    contas_usuario: list[str] | None = None
 
 
 RegraAlerta = Callable[[ContextoAlertas], list[Alerta]]
@@ -42,6 +45,7 @@ def format_real(value: float) -> str:
 
 def construir_alertas(contexto: ContextoAlertas) -> list[Alerta]:
     regras: list[RegraAlerta] = [
+        regra_lembrete_sem_cadastro,
         regra_categoria_acima_do_orcamento,
         regra_gasto_categoria_proximo_do_limite,
         regra_categoria_com_disparo_relevante,
@@ -51,6 +55,43 @@ def construir_alertas(contexto: ContextoAlertas) -> list[Alerta]:
     for regra in regras:
         alertas.extend(regra(contexto))
     return alertas
+
+
+def regra_lembrete_sem_cadastro(contexto: ContextoAlertas) -> list[Alerta]:
+    if not contexto.contas_usuario:
+        return []
+
+    df = contexto.df.copy()
+    if "Conta" not in df.columns or "Data Criacao" not in df.columns:
+        return []
+
+    df = df[df["Conta"].isin(contexto.contas_usuario)].copy()
+    if df.empty:
+        return []
+
+    datas_criacao = pd.to_datetime(df["Data Criacao"], format="mixed", dayfirst=True, errors="coerce")
+    ultima_data_criacao = datas_criacao.max()
+    if pd.isna(ultima_data_criacao):
+        return []
+
+    diferenca = contexto.referencia - ultima_data_criacao.to_pydatetime().replace(tzinfo=contexto.referencia.tzinfo)
+    dias_sem_cadastro = int(diferenca.total_seconds() // 86400)
+
+    if dias_sem_cadastro <= 2:
+        return []
+
+    nome_usuario = contexto.nome_usuario or "Usuário"
+    return [
+        Alerta(
+            chave=f"lembrete_sem_cadastro:{contexto.chat_id or 'desconhecido'}",
+            titulo="Lembrete de cadastro",
+            mensagem=(
+                f"{nome_usuario} você realmente ficou sem gastar por {dias_sem_cadastro} dia(s) "
+                "ou só esqueceu de preencher? Preenche lá por favor"
+            ),
+            severidade="info",
+        )
+    ]
 
 
 def regra_saldo_baixo_por_conta(contexto: ContextoAlertas) -> list[Alerta]:

@@ -12,6 +12,8 @@ from telegram.ext import Application, CallbackContext
 from src.config import (
     ALERT_STATE_FILE,
     TELEGRAM_ALERT_CHAT_IDS,
+    TELEGRAM_CHAT_NOMES,
+    TELEGRAM_CONTAS_POR_CHAT_ID,
     TELEGRAM_ALERT_SCHEDULES,
     TELEGRAM_ALERT_TEST_MESSAGE,
     TELEGRAM_ALERT_TEST_MODE,
@@ -69,20 +71,32 @@ async def executar_ciclo_alertas(application: Application) -> list[Alerta]:
         return []
 
     df = carregar_dados_financeiros()
-    alertas = construir_alertas(ContextoAlertas(df=df, referencia=referencia))
-    alertas_novos = filtrar_alertas_nao_enviados(alertas, referencia)
+    total_alertas_enviados: list[Alerta] = []
 
-    if not alertas_novos:
+    for chat_id in TELEGRAM_ALERT_CHAT_IDS:
+        contexto = ContextoAlertas(
+            df=df,
+            referencia=referencia,
+            chat_id=chat_id,
+            nome_usuario=TELEGRAM_CHAT_NOMES.get(chat_id),
+            contas_usuario=TELEGRAM_CONTAS_POR_CHAT_ID.get(chat_id, []),
+        )
+        alertas = construir_alertas(contexto)
+        alertas_novos = filtrar_alertas_nao_enviados(alertas, referencia, chat_id)
+        if not alertas_novos:
+            continue
+
+        mensagem = montar_mensagem_alertas(alertas_novos, referencia)
+        await application.bot.send_message(chat_id=chat_id, text=mensagem)
+        persistir_alertas_enviados(alertas_novos, referencia, chat_id)
+        total_alertas_enviados.extend(alertas_novos)
+
+    if not total_alertas_enviados:
         LOGGER.info("Nenhum alerta novo para envio em %s.", referencia.isoformat())
         return []
 
-    mensagem = montar_mensagem_alertas(alertas_novos, referencia)
-    for chat_id in TELEGRAM_ALERT_CHAT_IDS:
-        await application.bot.send_message(chat_id=chat_id, text=mensagem)
-
-    persistir_alertas_enviados(alertas_novos, referencia)
     LOGGER.info("Alertas enviados para %s chats.", len(TELEGRAM_ALERT_CHAT_IDS))
-    return alertas_novos
+    return total_alertas_enviados
 
 
 def montar_mensagem_alertas(alertas: list[Alerta], referencia: datetime) -> str:
@@ -108,13 +122,13 @@ def carregar_estado_alertas() -> dict:
         return {"alertas_enviados": {}}
 
 
-def filtrar_alertas_nao_enviados(alertas: list[Alerta], referencia: datetime) -> list[Alerta]:
+def filtrar_alertas_nao_enviados(alertas: list[Alerta], referencia: datetime, chat_id: int) -> list[Alerta]:
     estado = carregar_estado_alertas().get("alertas_enviados", {})
     periodo = referencia.strftime("%Y-%m-%d")
-    return [alerta for alerta in alertas if estado.get(alerta.chave) != periodo]
+    return [alerta for alerta in alertas if estado.get(f"{chat_id}:{alerta.chave}") != periodo]
 
 
-def persistir_alertas_enviados(alertas: list[Alerta], referencia: datetime) -> None:
+def persistir_alertas_enviados(alertas: list[Alerta], referencia: datetime, chat_id: int) -> None:
     arquivo = Path(ALERT_STATE_FILE)
     arquivo.parent.mkdir(parents=True, exist_ok=True)
 
@@ -123,7 +137,7 @@ def persistir_alertas_enviados(alertas: list[Alerta], referencia: datetime) -> N
     periodo = referencia.strftime("%Y-%m-%d")
 
     for alerta in alertas:
-        enviados[alerta.chave] = periodo
+        enviados[f"{chat_id}:{alerta.chave}"] = periodo
 
     estado["ultima_execucao"] = referencia.isoformat()
     estado["ultimo_lote"] = [asdict(alerta) for alerta in alertas]
