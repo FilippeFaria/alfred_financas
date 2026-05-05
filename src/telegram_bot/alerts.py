@@ -62,10 +62,11 @@ def regra_lembrete_sem_cadastro(contexto: ContextoAlertas) -> list[Alerta]:
         return []
 
     df = contexto.df.copy()
-    if "Conta" not in df.columns or "Data Criacao" not in df.columns:
+    if "Conta" not in df.columns or "Data Criacao" not in df.columns or "Tipo" not in df.columns:
         return []
 
     df = df[df["Conta"].isin(contexto.contas_usuario)].copy()
+    df = df[df["Tipo"].isin(["Despesa", "Receita"])].copy()
     if df.empty:
         return []
 
