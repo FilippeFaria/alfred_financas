@@ -334,7 +334,6 @@ def adicionar_transferencia(df, opcao, path="."):
     if "dados_transferencia_form" not in st.session_state:
         st.session_state.dados_transferencia_form = None
 
-    sheet = get_sheet(path)
     transacao_id = df["id"].max() + 1
 
     if opcao == "Transferência":
@@ -359,6 +358,12 @@ def adicionar_transferencia(df, opcao, path="."):
         tag = ""
 
     def salvar_transferencia_callback():
+        try:
+            sheet = get_sheet(path)
+        except Exception as exc:
+            st.error(f"Erro ao conectar no Google Sheets: {exc}")
+            return
+
         duplicatas_debito = verificar_duplicata(df, -valor, conta_origem, datetime.combine(data, datetime.min.time()))
         duplicatas_credito = verificar_duplicata(df, valor, conta_destino, datetime.combine(data, datetime.min.time()))
         duplicatas = pd.concat([duplicatas_debito, duplicatas_credito])
@@ -435,6 +440,12 @@ def adicionar_transferencia(df, opcao, path="."):
             st.write("---")
 
         def confirmar_transferencia_callback():
+            try:
+                sheet = get_sheet(path)
+            except Exception as exc:
+                st.error(f"Erro ao conectar no Google Sheets: {exc}")
+                return
+
             dados = st.session_state.dados_transferencia_form
             df_atualizado = salvar_transacao(
                 sheet,
@@ -487,7 +498,6 @@ def adicionar_pagamento_cartao(df, path="."):
     if "dados_pagamento_cartao_form" not in st.session_state:
         st.session_state.dados_pagamento_cartao_form = None
 
-    sheet = get_sheet(path)
     conta_origem = "Itaú CC"
     mapa_chaves_cartao = {
         "Cartão Filippe": "valor_pagamento_cartao_filippe",
@@ -588,6 +598,12 @@ def adicionar_pagamento_cartao(df, path="."):
         return pd.DataFrame()
 
     def salvar_lancamentos(lancamentos):
+        try:
+            sheet = get_sheet(path)
+        except Exception as exc:
+            st.error(f"Erro ao conectar no Google Sheets: {exc}")
+            return
+
         df_atualizado = df
         for lancamento in lancamentos:
             df_atualizado = salvar_transacao(
