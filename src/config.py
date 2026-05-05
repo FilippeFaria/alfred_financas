@@ -108,7 +108,7 @@ CARTOES_PAGAMENTO_TRANSFERENCIA = [
 # Cartoes cujo pagamento deve ser lancado como despesa
 CARTOES_PAGAMENTO_DESPESA = [
     "Cartão Pai",
-    "Cartão Mae",
+    "Cartão Mãe",
 ]
 
 # Contas de investimento

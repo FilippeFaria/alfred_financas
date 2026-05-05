@@ -59,7 +59,7 @@ def limpar_estado_transacao():
         "valor_pagamento_cartao_nath",
         "valor_pagamento_cartao_bianca",
         "valor_pagamento_cartao_pai",
-        "valor_pagamento_cartao_mae",
+        "valor_pagamento_cartao_Mãe",
         "data_pagamento_cartao",
         "tipo_inv",
         "obs_inv",
@@ -494,7 +494,7 @@ def adicionar_pagamento_cartao(df, path="."):
         "Cartão Nath": "valor_pagamento_cartao_nath",
         "Cartão Bianca": "valor_pagamento_cartao_bianca",
         "Cartão Pai": "valor_pagamento_cartao_pai",
-        "Cartão Mãe": "valor_pagamento_cartao_mae",
+        "Cartão Mãe": "valor_pagamento_cartao_Mãe",
     }
     data_pagamento_input = st.date_input(
         "Data",
