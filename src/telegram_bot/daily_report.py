@@ -7,6 +7,7 @@ import pandas as pd
 from src.analytics.calculations import (
     calcular_comparativo_categorias_ate_dia_mes,
     calcular_comparativo_despesas_ate_dia_mes,
+    calcular_despesa_total,
     calcular_saldo,
 )
 from src.config import (
@@ -151,24 +152,20 @@ def montar_informe_diario(
     referencia: datetime,
 ) -> str:
     saldo_total = float(calcular_saldo(df).sum())
-    comparativo_despesas = calcular_comparativo_despesas_ate_dia_mes(df, referencia)
+    df_despesas = df[(df["desconsiderar"] == False) & (df["Tipo"] == "Despesa")]
+    anome = int(referencia.strftime("%Y%m"))
+    metricas_despesa = calcular_despesa_total(df_despesas, anome)
     comparativo_categorias = calcular_comparativo_categorias_ate_dia_mes(df, referencia)
     comparativo_orcamento = calcular_comparativo_despesas_ate_dia_mes(df, referencia)
 
-    inicio_mes_anterior = comparativo_despesas["inicio_mes_anterior"]
-    dia_referencia_anterior = min(
-        int(comparativo_despesas["data_corte"]),
-        int(inicio_mes_anterior.days_in_month),
-    )
-    data_referencia_anterior = inicio_mes_anterior + pd.DateOffset(days=dia_referencia_anterior - 1)
-    label_referencia = formatar_label_dia_mes(data_referencia_anterior)
+    label_referencia = str(metricas_despesa["label_prev"])
 
     linhas = [
         formatar_cabecalho_data(referencia),
         "",
         (
-            f"📉 Gasto no mes: {format_real_curto(float(comparativo_despesas['gasto_atual']))} "
-            f"{formatar_variacao_percentual(comparativo_despesas['delta_percentual'], label_referencia)}"
+            f"📉 Gasto no mes: {format_real_curto(float(metricas_despesa['gasto_atual']))} "
+            f"{formatar_variacao_percentual(metricas_despesa['delta_atual'], label_referencia)}"
         ),
     ]
 
@@ -193,3 +190,4 @@ def montar_informe_diario(
         linhas.extend(linhas_aumentos)
 
     return "\n".join(linhas).strip()
+
