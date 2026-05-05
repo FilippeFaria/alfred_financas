@@ -27,16 +27,28 @@ def _load_creds_from_streamlit_secrets() -> Optional[dict]:
     except Exception:
         return None
 
+    # Em ambientes fora do Streamlit Cloud (ex.: Render bot), acessar st.secrets pode falhar.
+    # Nesses casos retornamos None para permitir fallback via variável de ambiente.
     try:
         if "google_service_account" in st.secrets:
             return dict(st.secrets["google_service_account"])
+    except Exception:
+        return None
 
-        raw_json = st.secrets.get("GOOGLE_SHEETS_CREDS_JSON", "").strip()
-        if raw_json:
-            return json.loads(raw_json)
-    except Exception as exc:
+    try:
+        raw_value = st.secrets.get("GOOGLE_SHEETS_CREDS_JSON", "")
+    except Exception:
+        return None
+
+    raw_json = str(raw_value).strip()
+    if not raw_json:
+        return None
+
+    try:
+        return json.loads(raw_json)
+    except json.JSONDecodeError as exc:
         raise RuntimeError(
-            "Erro ao ler credenciais no Streamlit Secrets. Verifique [google_service_account] ou GOOGLE_SHEETS_CREDS_JSON."
+            "GOOGLE_SHEETS_CREDS_JSON em Streamlit Secrets esta em formato invalido."
         ) from exc
 
     return None
