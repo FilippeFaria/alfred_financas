@@ -82,14 +82,14 @@ async def executar_ciclo_alertas(application: Application) -> list[Alerta]:
             contas_usuario=TELEGRAM_CONTAS_POR_CHAT_ID.get(chat_id, []),
         )
         alertas = construir_alertas(contexto)
-        alertas_novos = filtrar_alertas_nao_enviados(alertas, referencia, chat_id)
-        if not alertas_novos:
+        alerta_para_envio = selecionar_alerta_para_envio(alertas, referencia, chat_id)
+        if not alerta_para_envio:
             continue
 
-        mensagem = montar_mensagem_alertas(alertas_novos, referencia)
+        mensagem = montar_mensagem_alertas([alerta_para_envio], referencia)
         await application.bot.send_message(chat_id=chat_id, text=mensagem)
-        persistir_alertas_enviados(alertas_novos, referencia, chat_id)
-        total_alertas_enviados.extend(alertas_novos)
+        persistir_alertas_enviados([alerta_para_envio], referencia, chat_id)
+        total_alertas_enviados.append(alerta_para_envio)
 
     if not total_alertas_enviados:
         LOGGER.info("Nenhum alerta novo para envio em %s.", referencia.isoformat())
@@ -113,13 +113,13 @@ def montar_mensagem_alertas(alertas: list[Alerta], referencia: datetime) -> str:
 def carregar_estado_alertas() -> dict:
     arquivo = Path(ALERT_STATE_FILE)
     if not arquivo.exists():
-        return {"alertas_enviados": {}}
+        return {"alertas_enviados": {}, "historico_por_dia": {}}
 
     try:
         return json.loads(arquivo.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         LOGGER.warning("Arquivo de estado dos alertas invalido. Reiniciando controle local.")
-        return {"alertas_enviados": {}}
+        return {"alertas_enviados": {}, "historico_por_dia": {}}
 
 
 def filtrar_alertas_nao_enviados(alertas: list[Alerta], referencia: datetime, chat_id: int) -> list[Alerta]:
@@ -128,16 +128,44 @@ def filtrar_alertas_nao_enviados(alertas: list[Alerta], referencia: datetime, ch
     return [alerta for alerta in alertas if estado.get(f"{chat_id}:{alerta.chave}") != periodo]
 
 
+def selecionar_alerta_para_envio(
+    alertas: list[Alerta],
+    referencia: datetime,
+    chat_id: int,
+) -> Alerta | None:
+    """
+    Seleciona somente um alerta por execucao, respeitando a prioridade da lista
+    recebida (ja ordenada em construir_alertas) e evitando repeticao no mesmo dia.
+    """
+    alertas_novos = filtrar_alertas_nao_enviados(alertas, referencia, chat_id)
+    if not alertas_novos:
+        return None
+    return alertas_novos[0]
+
+
 def persistir_alertas_enviados(alertas: list[Alerta], referencia: datetime, chat_id: int) -> None:
     arquivo = Path(ALERT_STATE_FILE)
     arquivo.parent.mkdir(parents=True, exist_ok=True)
 
     estado = carregar_estado_alertas()
     enviados = estado.setdefault("alertas_enviados", {})
+    historico_por_dia = estado.setdefault("historico_por_dia", {})
     periodo = referencia.strftime("%Y-%m-%d")
+    historico_periodo = historico_por_dia.setdefault(periodo, {})
+    historico_chat = historico_periodo.setdefault(str(chat_id), [])
 
     for alerta in alertas:
         enviados[f"{chat_id}:{alerta.chave}"] = periodo
+        historico_chat.append(
+            {
+                "timestamp": referencia.isoformat(),
+                "chat_id": chat_id,
+                "chave": alerta.chave,
+                "titulo": alerta.titulo,
+                "mensagem": alerta.mensagem,
+                "severidade": alerta.severidade,
+            }
+        )
 
     estado["ultima_execucao"] = referencia.isoformat()
     estado["ultimo_lote"] = [asdict(alerta) for alerta in alertas]
