@@ -199,7 +199,7 @@ TELEGRAM_CONTAS_POR_CHAT_ID = {
 # Formato esperado: "09:00,13:00,19:00"
 TELEGRAM_ALERT_SCHEDULES = [
     horario.strip()
-    for horario in os.getenv("TELEGRAM_ALERT_SCHEDULES", "09:00,13:00,19:00,10:50").split(",")
+    for horario in os.getenv("TELEGRAM_ALERT_SCHEDULES", "09:00,13:00,19:00,10:50,11:02").split(",")
     if horario.strip()
 ]
 
