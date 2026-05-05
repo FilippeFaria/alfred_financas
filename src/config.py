@@ -95,7 +95,7 @@ CARTOES_PAGAMENTO = [
     "Cartão Nath",
     "Cartão Bianca",
     "Cartão Pai",
-    "Cartão Mae",
+    "Cartão Mãe",
 ]
 
 # Cartoes cujo pagamento gera transferencia a partir da Itau CC
