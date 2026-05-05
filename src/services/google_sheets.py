@@ -20,6 +20,28 @@ from src.config import SPREADSHEET_NAME, SPREADSHEET_VALORES_NAME
 LOGGER = logging.getLogger(__name__)
 
 
+def _load_creds_from_streamlit_secrets() -> Optional[dict]:
+    """Tenta carregar credenciais do Streamlit Secrets."""
+    try:
+        import streamlit as st
+    except Exception:
+        return None
+
+    try:
+        if "google_service_account" in st.secrets:
+            return dict(st.secrets["google_service_account"])
+
+        raw_json = st.secrets.get("GOOGLE_SHEETS_CREDS_JSON", "").strip()
+        if raw_json:
+            return json.loads(raw_json)
+    except Exception as exc:
+        raise RuntimeError(
+            "Erro ao ler credenciais no Streamlit Secrets. Verifique [google_service_account] ou GOOGLE_SHEETS_CREDS_JSON."
+        ) from exc
+
+    return None
+
+
 @lru_cache(maxsize=4)
 def authorize_google_sheets(path: str = ".") -> gspread.Client:
     """Autentica e retorna cliente do Google Sheets."""
@@ -31,19 +53,24 @@ def authorize_google_sheets(path: str = ".") -> gspread.Client:
             creds_dict = json.load(f)
         LOGGER.info("Google Sheets auth: usando credentials.json local.")
     else:
-        creds_json_env = os.getenv("GOOGLE_SHEETS_CREDS_JSON", "").strip()
-        LOGGER.info(
-            "Google Sheets auth: credentials.json ausente; GOOGLE_SHEETS_CREDS_JSON configurado=%s tamanho=%s",
-            bool(creds_json_env),
-            len(creds_json_env),
-        )
-        if not creds_json_env:
-            raise RuntimeError(
-                "Credenciais do Google Sheets nao encontradas. Defina GOOGLE_SHEETS_CREDS_JSON no ambiente."
+        creds_dict = _load_creds_from_streamlit_secrets()
+        if creds_dict is not None:
+            LOGGER.info("Google Sheets auth: usando Streamlit Secrets.")
+        else:
+            creds_json_env = os.getenv("GOOGLE_SHEETS_CREDS_JSON", "").strip()
+            LOGGER.info(
+                "Google Sheets auth: credentials.json e Streamlit Secrets ausentes; GOOGLE_SHEETS_CREDS_JSON configurado=%s tamanho=%s",
+                bool(creds_json_env),
+                len(creds_json_env),
             )
+            if not creds_json_env:
+                raise RuntimeError(
+                    "Credenciais do Google Sheets nao encontradas. Configure Streamlit Secrets ([google_service_account]) ou GOOGLE_SHEETS_CREDS_JSON."
+                )
 
-        creds_dict = json.loads(creds_json_env)
-        LOGGER.info("Google Sheets auth: usando GOOGLE_SHEETS_CREDS_JSON.")
+            creds_dict = json.loads(creds_json_env)
+            LOGGER.info("Google Sheets auth: usando GOOGLE_SHEETS_CREDS_JSON.")
+
 
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
