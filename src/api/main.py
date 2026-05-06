@@ -27,6 +27,11 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"status": "online"}
+
+
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
@@ -69,4 +74,3 @@ def get_categorias() -> CategoriasResponse:
 @app.post("/insights", response_model=InsightsResponse)
 def post_insights(payload: InsightsRequest) -> InsightsResponse:
     return gerar_insights_basicos(payload.pergunta)
-
