@@ -89,9 +89,15 @@ def listar_transacoes(limite: int | None = None) -> list[dict]:
             items = TransactionRepository(db).list_all(user_id=user.id, limit=limite)
             return [_map_tx_to_api_dict(item) for item in items]
     except Exception as exc:
-        _log_error("postgres_read_error", error_type=type(exc).__name__)
+        LOGGER.exception("Falha na leitura PostgreSQL em listar_transacoes")
+        _log_error("postgres_read_error", error_type=type(exc).__name__, error=str(exc))
         if not FALLBACK_ENABLED:
-            raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao ler dados no PostgreSQL.", status_code=503) from exc
+            raise ApiServiceError(
+                code="FALHA_POSTGRES",
+                message="Falha ao ler dados no PostgreSQL.",
+                status_code=503,
+                details={"error_type": type(exc).__name__, "error": str(exc)},
+            ) from exc
 
     df = carregar_transacoes_df_sheets()
     if df.empty:
