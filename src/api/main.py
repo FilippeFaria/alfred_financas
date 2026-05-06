@@ -1,7 +1,8 @@
 """Aplicacao FastAPI para o backend do Alfred Financas."""
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query
 
+from src.api.errors import register_exception_handlers
 from src.api.schemas import (
     CategoriaResponse,
     CriarTransacaoRequest,
@@ -31,6 +32,7 @@ app = FastAPI(
     description="Backend FastAPI para operacoes financeiras do projeto Alfred Financas.",
     version="0.1.0",
 )
+register_exception_handlers(app)
 
 
 @app.get("/", response_model=StatusResponse)
@@ -58,21 +60,18 @@ def get_transacoes(
 
 @app.post("/transacoes", response_model=TransacaoResponse)
 def post_transacoes(payload: CriarTransacaoRequest) -> TransacaoResponse:
-    try:
-        return criar_transacao(
-            nome=payload.nome,
-            tipo=payload.tipo,
-            valor=payload.valor,
-            categoria=payload.categoria,
-            conta=payload.conta,
-            data=payload.data,
-            obs=payload.obs,
-            tag=payload.tag,
-            desconsiderar=payload.desconsiderar,
-            parcelas=payload.parcelas,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return criar_transacao(
+        nome=payload.nome,
+        tipo=payload.tipo,
+        valor=payload.valor,
+        categoria=payload.categoria,
+        conta=payload.conta,
+        data=payload.data,
+        obs=payload.obs,
+        tag=payload.tag,
+        desconsiderar=payload.desconsiderar,
+        parcelas=payload.parcelas,
+    )
 
 
 @app.delete("/transacoes/{transacao_id}", response_model=ExcluirTransacaoResponse)

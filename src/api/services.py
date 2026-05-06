@@ -1,10 +1,13 @@
 """Servicos da camada de API (sem dependencia de Streamlit)."""
 
 from datetime import date, datetime
+import json
+import logging
 from pathlib import Path
 
 import pandas as pd
 
+from src.api.errors import ApiServiceError
 from src.analytics.calculations import adicionar_anomes, calcular_despesa_total, calcular_saldo
 from src.config import CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO, CATEGORIAS_RECEITA
 from src.services.google_sheets import get_sheet, read_sheet, write_sheet
@@ -12,6 +15,11 @@ from src.services.google_sheets import get_sheet, read_sheet, write_sheet
 
 ROOT_PATH = Path(__file__).resolve().parents[2]
 DATE_FORMAT = "%d/%m/%Y %H:%M"
+LOGGER = logging.getLogger("alfred.api.services")
+
+
+def _log_error(event: str, **fields) -> None:
+    LOGGER.error(json.dumps({"event": event, **fields}, ensure_ascii=False, default=str))
 
 
 def _normalizar_datas(df: pd.DataFrame, colunas: list[str] | None = None) -> pd.DataFrame:
@@ -27,7 +35,30 @@ def _normalizar_datas(df: pd.DataFrame, colunas: list[str] | None = None) -> pd.
 
 
 def carregar_transacoes_df() -> pd.DataFrame:
-    df = read_sheet(str(ROOT_PATH))
+    try:
+        df = read_sheet(str(ROOT_PATH))
+    except TimeoutError as exc:
+        _log_error("google_sheets_timeout", operation="read_sheet")
+        raise ApiServiceError(
+            code="TIMEOUT",
+            message="Tempo limite excedido ao acessar Google Sheets.",
+            status_code=504,
+        ) from exc
+    except PermissionError as exc:
+        _log_error("google_sheets_auth_error", operation="read_sheet")
+        raise ApiServiceError(
+            code="NAO_AUTORIZADO",
+            message="Falha de autenticacao ao acessar a base de dados.",
+            status_code=401,
+        ) from exc
+    except Exception as exc:
+        _log_error("google_sheets_read_error", operation="read_sheet", error_type=type(exc).__name__)
+        raise ApiServiceError(
+            code="FALHA_GOOGLE_SHEETS",
+            message="Falha ao ler dados financeiros.",
+            status_code=503,
+        ) from exc
+
     if df.empty:
         return df
 
@@ -117,9 +148,17 @@ def criar_transacao(
 ) -> dict:
     _validar_categoria_por_tipo(tipo, categoria)
     if tipo == "Despesa" and valor > 0:
-        raise ValueError("Despesa deve possuir valor negativo.")
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="Despesa deve possuir valor negativo.",
+            status_code=400,
+        )
     if tipo in {"Receita", "Investimento"} and valor < 0:
-        raise ValueError(f"{tipo} deve possuir valor positivo.")
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message=f"{tipo} deve possuir valor positivo.",
+            status_code=400,
+        )
 
     df = carregar_transacoes_df()
     transacao_id = _proximo_id(df)
@@ -169,8 +208,30 @@ def criar_transacao(
     df_final = pd.concat([df, df_novos], ignore_index=True) if not df.empty else df_novos
     df_final = _normalizar_datas(df_final)
 
-    sheet = get_sheet(str(ROOT_PATH))
-    write_sheet(sheet, df_final)
+    try:
+        sheet = get_sheet(str(ROOT_PATH))
+        write_sheet(sheet, df_final)
+    except TimeoutError as exc:
+        _log_error("google_sheets_timeout", operation="write_sheet")
+        raise ApiServiceError(
+            code="TIMEOUT",
+            message="Tempo limite excedido ao salvar transacao.",
+            status_code=504,
+        ) from exc
+    except PermissionError as exc:
+        _log_error("google_sheets_auth_error", operation="write_sheet")
+        raise ApiServiceError(
+            code="NAO_AUTORIZADO",
+            message="Falha de autenticacao ao salvar transacao.",
+            status_code=401,
+        ) from exc
+    except Exception as exc:
+        _log_error("google_sheets_write_error", operation="write_sheet", error_type=type(exc).__name__)
+        raise ApiServiceError(
+            code="FALHA_GOOGLE_SHEETS",
+            message="Falha ao persistir transacao.",
+            status_code=503,
+        ) from exc
 
     return mapear_linha_para_transacao(df_novos.iloc[0].to_dict())
 
@@ -254,8 +315,30 @@ def excluir_transacao_por_id(transacao_id: int) -> dict:
         }
 
     df_filtrado = df[mascara_manter].copy()
-    sheet = get_sheet(str(ROOT_PATH))
-    write_sheet(sheet, df_filtrado)
+    try:
+        sheet = get_sheet(str(ROOT_PATH))
+        write_sheet(sheet, df_filtrado)
+    except TimeoutError as exc:
+        _log_error("google_sheets_timeout", operation="delete_write_sheet")
+        raise ApiServiceError(
+            code="TIMEOUT",
+            message="Tempo limite excedido ao excluir transacao.",
+            status_code=504,
+        ) from exc
+    except PermissionError as exc:
+        _log_error("google_sheets_auth_error", operation="delete_write_sheet")
+        raise ApiServiceError(
+            code="NAO_AUTORIZADO",
+            message="Falha de autenticacao ao excluir transacao.",
+            status_code=401,
+        ) from exc
+    except Exception as exc:
+        _log_error("google_sheets_delete_error", operation="delete_write_sheet", error_type=type(exc).__name__)
+        raise ApiServiceError(
+            code="FALHA_GOOGLE_SHEETS",
+            message="Falha ao excluir transacao.",
+            status_code=503,
+        ) from exc
 
     return {
         "id": transacao_id,
@@ -281,9 +364,17 @@ def _validar_categoria_por_tipo(tipo: str, categoria: str) -> None:
         "Transferencia": ["Transferência", "Transferencia"],
     }
     if tipo not in mapa:
-        raise ValueError(f"Tipo de transacao invalido: {tipo}")
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message=f"Tipo de transacao invalido: {tipo}",
+            status_code=400,
+        )
     if categoria not in mapa[tipo]:
-        raise ValueError(f"Categoria '{categoria}' invalida para tipo '{tipo}'.")
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message=f"Categoria '{categoria}' invalida para tipo '{tipo}'.",
+            status_code=400,
+        )
 
 
 def _aplicar_filtros_analise(

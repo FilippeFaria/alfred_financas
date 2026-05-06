@@ -82,6 +82,16 @@ class StatusResponse(BaseModel):
     status: str
 
 
+class ErrorBodyResponse(BaseModel):
+    code: str
+    message: str
+    details: dict = Field(default_factory=dict)
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorBodyResponse
+
+
 class AnaliseResumoRequest(BaseModel):
     desconsiderar: bool = True
     va: bool = False
