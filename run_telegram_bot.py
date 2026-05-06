@@ -18,14 +18,30 @@ def preparar_path() -> None:
 
 
 class _HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self) -> None:  # noqa: N802 - assinatura exigida pelo BaseHTTPRequestHandler
-        if self.path in {"/", "/health"}:
-            body = b'{"status":"online"}'
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
+    @staticmethod
+    def _is_health_path(path: str) -> bool:
+        return path in {"/", "/health"}
+
+    def _send_health_response(self, include_body: bool) -> None:
+        body = b'{"status":"online"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if include_body:
             self.wfile.write(body)
+
+    def do_GET(self) -> None:  # noqa: N802 - assinatura exigida pelo BaseHTTPRequestHandler
+        if self._is_health_path(self.path):
+            self._send_health_response(include_body=True)
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
+    def do_HEAD(self) -> None:  # noqa: N802 - assinatura exigida pelo BaseHTTPRequestHandler
+        if self._is_health_path(self.path):
+            self._send_health_response(include_body=False)
             return
 
         self.send_response(404)
