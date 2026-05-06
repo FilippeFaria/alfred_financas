@@ -152,6 +152,26 @@ python run_telegram_bot.py
 
 ## Mudanças Recentes (v2)
 
+### ✅ Feature: ETAPA 3.1 — Persistência PostgreSQL + API híbrida (06/05/2026)
+**Objetivo**: iniciar migração incremental de persistência para PostgreSQL (Supabase), mantendo continuidade operacional.
+
+**Implementado**:
+- `src/database/connection.py`: engine SQLAlchemy, `SessionLocal`, `Base`, `init_db()`, leitura de `DATABASE_URL` via `.env`.
+- `src/database/models.py`: modelos ORM iniciais (`User`, `Account`, `Category`, `Transaction`) com UUID e timestamps.
+- `src/database/repositories.py`: camada de repositories para desacoplar API da persistência.
+- `scripts/migrate_sheets_to_postgres.py`: migração Google Sheets -> PostgreSQL com logs, deduplicação e validação.
+- `src/api/services.py`: PostgreSQL como fonte principal, fallback opcional para Google Sheets.
+
+**Decisões de modelagem**:
+- `Transaction.id` (UUID) é chave primária física.
+- `Transaction.legacy_id` representa o `id_transacao` legado (não único, pode repetir).
+- Transferências e parcelamentos devem preservar múltiplas linhas com mesmo `legacy_id`.
+
+**Flags operacionais**:
+- `ALFRED_SHEETS_FALLBACK_ENABLED` (fallback leitura para Sheets)
+- `ALFRED_DUAL_WRITE_ENABLED` (escrita dupla opcional)
+- `ALFRED_DEFAULT_USER_EMAIL` e `MIGRATION_USER_EMAIL` devem ser consistentes para evitar leitura “zerada”.
+
 ### ✅ Feature: ETAPA 2.3 — Regras críticas centralizadas no backend (06/05/2026)
 **Objetivo**: retirar regras financeiras críticas do Streamlit e centralizar na API.
 
@@ -416,6 +436,32 @@ python run_api.py
 ### ⚠️ Deduplicação Local é Baseada em Arquivo
 - **Problema**: O controle de reenvio usa arquivos locais em `historico_fluxo/`
 - **Recomendação**: Em multi-instância, mover esse estado para storage compartilhado
+
+### ⚠️ Deploy Render exige serviços separados
+- **Problema**: `run_telegram_bot.py` não sobe a FastAPI, então Streamlit apontando para API falha.
+- **Recomendação**:
+  1. Serviço API: `python run_api.py`
+  2. Serviço Streamlit: `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
+  3. Serviço Telegram: `python run_telegram_bot.py` (opcional sob demanda em free tier)
+
+### ⚠️ `ALFRED_API_BASE_URL` deve vir de env do serviço Streamlit
+- **Problema**: definir somente em `secrets.toml` não afeta `os.getenv`.
+- **Recomendação**: configurar em **Environment Variables** do Render no serviço Streamlit.
+
+### ⚠️ Supabase + Render pode falhar via IPv6
+- **Problema**: `OperationalError: Network is unreachable` ao resolver host IPv6.
+- **Recomendação**: usar `DATABASE_URL` do **Session Pooler (IPv4)** no formato URI.
+
+### ⚠️ Lentidão por carga total de `/transacoes`
+- **Problema**: carregar todo histórico em cada refresh causa timeout/lentidão.
+- **Recomendação**:
+  - usar `ALFRED_TRANSACOES_LIMIT_DEFAULT` (ex.: `500` ou `1000`)
+  - manter `ALFRED_API_TIMEOUT_SECONDS` maior em produção (ex.: `30`)
+  - evitar recargas duplicadas após operações compostas (ex.: transferência)
+
+### ⚠️ Não versionar bancos locais
+- **Problema**: arquivos `.db` em Git geram risco de dados sensíveis e conflitos binários.
+- **Recomendação**: manter `*.db` no `.gitignore`.
 
 ---
 

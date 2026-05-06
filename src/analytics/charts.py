@@ -529,7 +529,39 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
     else:
         data = df[(df['anomes'] == anomes)]
 
-    st.dataframe(data, hide_index=True)
+    if data.empty:
+        st.info("Nenhum registro encontrado para os filtros selecionados.")
+        return data
+
+    data = data.reset_index(drop=True)
+    total_linhas = len(data)
+
+    col_pag1, col_pag2 = st.columns([1, 1])
+    with col_pag1:
+        tamanho_pagina = st.selectbox(
+            "Itens por página",
+            options=[50, 100, 200, 500],
+            index=1,
+            key="extrato_tamanho_pagina",
+        )
+
+    total_paginas = max(1, (total_linhas + tamanho_pagina - 1) // tamanho_pagina)
+    with col_pag2:
+        pagina_atual = st.number_input(
+            "Página",
+            min_value=1,
+            max_value=total_paginas,
+            value=1,
+            step=1,
+            key="extrato_pagina_atual",
+        )
+
+    inicio = (int(pagina_atual) - 1) * tamanho_pagina
+    fim = inicio + tamanho_pagina
+    data_paginada = data.iloc[inicio:fim]
+
+    st.caption(f"Exibindo {inicio + 1}-{min(fim, total_linhas)} de {total_linhas} registros")
+    st.dataframe(data_paginada, hide_index=True)
     return data
 
 
