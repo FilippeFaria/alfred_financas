@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from typing import Any
 
 import pandas as pd
@@ -305,4 +306,8 @@ def transacoes_para_dataframe(payload: dict[str, Any]) -> pd.DataFrame:
 
 
 def carregar_dataframe_transacoes(limite: int | None = None) -> pd.DataFrame:
+    if limite is None:
+        limite_default = os.getenv("ALFRED_TRANSACOES_LIMIT_DEFAULT", "").strip()
+        if limite_default.isdigit():
+            limite = int(limite_default)
     return transacoes_para_dataframe(listar_transacoes(limite=limite))

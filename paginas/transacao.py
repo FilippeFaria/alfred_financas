@@ -37,11 +37,12 @@ def recarregar_df_api() -> None:
     st.session_state.last_update = datetime.now().timestamp()
 
 
-def salvar_transacao_api(**payload) -> bool:
+def salvar_transacao_api(*, recarregar_df: bool = True, **payload) -> bool:
     """Realiza o POST da transacao e trata erros de API no Streamlit."""
     try:
         api_criar_transacao(**payload)
-        recarregar_df_api()
+        if recarregar_df:
+            recarregar_df_api()
         return True
     except ApiClientError as exc:
         st.error(f"Erro ao salvar transação via API: {exc}")
@@ -382,6 +383,7 @@ def adicionar_transferencia(df, opcao, path="."):
             obs=obs,
             tag=tag,
             desconsiderar=False,
+            recarregar_df=False,
         )
         if not salvou_debito:
             return
@@ -396,6 +398,7 @@ def adicionar_transferencia(df, opcao, path="."):
             obs=obs,
             tag=tag,
             desconsiderar=False,
+            recarregar_df=True,
         )
         if salvou_credito:
             preparar_confirmacao_salvamento()
@@ -436,6 +439,7 @@ def adicionar_transferencia(df, opcao, path="."):
                 obs=dados["obs"],
                 tag=dados["tag"],
                 desconsiderar=False,
+                recarregar_df=False,
             )
             if not salvou_debito:
                 return
@@ -450,6 +454,7 @@ def adicionar_transferencia(df, opcao, path="."):
                 obs=dados["obs"],
                 tag=dados["tag"],
                 desconsiderar=False,
+                recarregar_df=True,
             )
             if salvou_credito:
                 preparar_confirmacao_salvamento()
