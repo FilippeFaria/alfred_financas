@@ -7,7 +7,6 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from src.analytics.calculations import calcular_saldo
 from src.config import (
     CARTOES_PAGAMENTO,
     CARTOES_PAGAMENTO_DESPESA,
@@ -18,14 +17,35 @@ from src.config import (
     CONTAS,
     CONTAS_INVEST,
 )
-from src.services.data_handler import salvar_transacao
-from src.services.google_sheets import get_sheet
+from src.api import (
+    ApiClientError,
+    carregar_dataframe_transacoes,
+    criar_transacao as api_criar_transacao,
+    obter_saldo,
+)
 
 
 def verificar_duplicata(df, valor, conta, data):
     """Verifica se existe transacao com mesmo valor, conta e data."""
     data_str = data.strftime("%d/%m/%Y %H:%M")
     return df[(df["Valor"] == valor) & (df["Conta"] == conta) & (df["Data"] == data_str)]
+
+
+def recarregar_df_api() -> None:
+    """Atualiza o dataframe da sessao consumindo a API."""
+    st.session_state.df = carregar_dataframe_transacoes()
+    st.session_state.last_update = datetime.now().timestamp()
+
+
+def salvar_transacao_api(**payload) -> bool:
+    """Realiza o POST da transacao e trata erros de API no Streamlit."""
+    try:
+        api_criar_transacao(**payload)
+        recarregar_df_api()
+        return True
+    except ApiClientError as exc:
+        st.error(f"Erro ao salvar transação via API: {exc}")
+        return False
 
 
 def limpar_estado_transacao():
@@ -106,7 +126,6 @@ def adicionar_receita(df, path="."):
     if "dados_receita_form" not in st.session_state:
         st.session_state.dados_receita_form = None
 
-    transacao_id = df["id"].max() + 1
     nome = st.text_input("Nome", key="nome_receita")
     obs = st.text_input("Comentário", key="obs_receita")
     tipo = "Receita"
@@ -122,7 +141,6 @@ def adicionar_receita(df, path="."):
         if not duplicatas.empty:
             st.session_state.duplicata_receita_encontrada = True
             st.session_state.dados_receita_form = {
-                "id": transacao_id,
                 "nome": nome,
                 "tipo": tipo,
                 "valor": valor,
@@ -135,23 +153,18 @@ def adicionar_receita(df, path="."):
             }
             return
 
-        sheet = get_sheet(path)
-        df_atualizado = salvar_transacao(
-            sheet,
-            df,
-            transacao_id,
-            nome,
-            tipo,
-            valor,
-            categoria,
-            conta,
-            datetime.combine(data, datetime.min.time()),
-            obs,
-            tag,
+        if salvar_transacao_api(
+            nome=nome,
+            tipo=tipo,
+            valor=valor,
+            categoria=categoria,
+            conta=conta,
+            data=datetime.combine(data, datetime.min.time()),
+            obs=obs,
+            tag=", ".join(tag) if isinstance(tag, list) else tag,
             desconsiderar=desconsiderar,
-        )
-        st.session_state.df = df_atualizado
-        preparar_confirmacao_salvamento()
+        ):
+            preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_receita_encontrada and st.session_state.dados_receita_form:
         st.warning("⚠️ Transação similar encontrada!")
@@ -175,23 +188,18 @@ def adicionar_receita(df, path="."):
 
         def confirmar_receita_callback():
             dados = st.session_state.dados_receita_form
-            sheet = get_sheet(path)
-            df_atualizado = salvar_transacao(
-                sheet,
-                df,
-                dados["id"],
-                dados["nome"],
-                dados["tipo"],
-                dados["valor"],
-                dados["categoria"],
-                dados["conta"],
-                datetime.combine(dados["data"], datetime.min.time()),
-                dados["obs"],
-                dados["tag"],
+            if salvar_transacao_api(
+                nome=dados["nome"],
+                tipo=dados["tipo"],
+                valor=dados["valor"],
+                categoria=dados["categoria"],
+                conta=dados["conta"],
+                data=datetime.combine(dados["data"], datetime.min.time()),
+                obs=dados["obs"],
+                tag=", ".join(dados["tag"]) if isinstance(dados["tag"], list) else dados["tag"],
                 desconsiderar=dados["desconsiderar"],
-            )
-            st.session_state.df = df_atualizado
-            preparar_confirmacao_salvamento()
+            ):
+                preparar_confirmacao_salvamento()
 
         def ignorar_receita_callback():
             st.session_state.duplicata_receita_encontrada = False
@@ -206,14 +214,13 @@ def adicionar_receita(df, path="."):
         st.button("Salvar", on_click=salvar_receita_callback, key="btn_salvar_receita")
 
 
-def adicionar_despesa(df, last_date, last_account, path="."):
+def adicionar_despesa(df, last_account, path="."):
     """Formulario para adicionar uma despesa."""
     if "duplicata_despesa_encontrada" not in st.session_state:
         st.session_state.duplicata_despesa_encontrada = False
     if "dados_despesa_form" not in st.session_state:
         st.session_state.dados_despesa_form = None
 
-    transacao_id = df["id"].max() + 1
     nome = st.text_input("Nome", key="nome_despesa")
     obs = st.text_input("Comentário", key="obs_despesa")
     tag = st.multiselect("TAG", df["TAG"].dropna().drop_duplicates().tolist(), key="tag_despesa")
@@ -241,7 +248,6 @@ def adicionar_despesa(df, last_date, last_account, path="."):
         if not duplicatas.empty:
             st.session_state.duplicata_despesa_encontrada = True
             st.session_state.dados_despesa_form = {
-                "id": transacao_id,
                 "nome": nome,
                 "tipo": tipo,
                 "valor": valor,
@@ -255,24 +261,19 @@ def adicionar_despesa(df, last_date, last_account, path="."):
             }
             return
 
-        sheet = get_sheet(path)
-        df_atualizado = salvar_transacao(
-            sheet,
-            df,
-            transacao_id,
-            nome,
-            tipo,
-            valor,
-            categoria,
-            conta,
-            datetime.combine(data, datetime.min.time()),
-            obs,
-            tag,
+        if salvar_transacao_api(
+            nome=nome,
+            tipo=tipo,
+            valor=valor,
+            categoria=categoria,
+            conta=conta,
+            data=datetime.combine(data, datetime.min.time()),
+            obs=obs,
+            tag=", ".join(tag) if isinstance(tag, list) else tag,
             parcelas=parcelas,
             desconsiderar=desconsiderar,
-        )
-        st.session_state.df = df_atualizado
-        preparar_confirmacao_salvamento()
+        ):
+            preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_despesa_encontrada and st.session_state.dados_despesa_form:
         st.warning("⚠️ Transação similar encontrada!")
@@ -296,24 +297,19 @@ def adicionar_despesa(df, last_date, last_account, path="."):
 
         def confirmar_despesa_callback():
             dados = st.session_state.dados_despesa_form
-            sheet = get_sheet(path)
-            df_atualizado = salvar_transacao(
-                sheet,
-                df,
-                dados["id"],
-                dados["nome"],
-                dados["tipo"],
-                dados["valor"],
-                dados["categoria"],
-                dados["conta"],
-                datetime.combine(dados["data"], datetime.min.time()),
-                dados["obs"],
-                dados["tag"],
+            if salvar_transacao_api(
+                nome=dados["nome"],
+                tipo=dados["tipo"],
+                valor=dados["valor"],
+                categoria=dados["categoria"],
+                conta=dados["conta"],
+                data=datetime.combine(dados["data"], datetime.min.time()),
+                obs=dados["obs"],
+                tag=", ".join(dados["tag"]) if isinstance(dados["tag"], list) else dados["tag"],
                 parcelas=dados["parcelas"],
                 desconsiderar=dados["desconsiderar"],
-            )
-            st.session_state.df = df_atualizado
-            preparar_confirmacao_salvamento()
+            ):
+                preparar_confirmacao_salvamento()
 
         def ignorar_despesa_callback():
             st.session_state.duplicata_despesa_encontrada = False
@@ -334,8 +330,6 @@ def adicionar_transferencia(df, opcao, path="."):
         st.session_state.duplicata_transferencia_encontrada = False
     if "dados_transferencia_form" not in st.session_state:
         st.session_state.dados_transferencia_form = None
-
-    transacao_id = df["id"].max() + 1
 
     if opcao == "Transferência":
         nome = opcao
@@ -359,12 +353,6 @@ def adicionar_transferencia(df, opcao, path="."):
         tag = ""
 
     def salvar_transferencia_callback():
-        try:
-            sheet = get_sheet(path)
-        except Exception as exc:
-            st.error(f"Erro ao conectar no Google Sheets: {exc}")
-            return
-
         duplicatas_debito = verificar_duplicata(df, -valor, conta_origem, datetime.combine(data, datetime.min.time()))
         duplicatas_credito = verificar_duplicata(df, valor, conta_destino, datetime.combine(data, datetime.min.time()))
         duplicatas = pd.concat([duplicatas_debito, duplicatas_credito])
@@ -372,7 +360,6 @@ def adicionar_transferencia(df, opcao, path="."):
         if not duplicatas.empty:
             st.session_state.duplicata_transferencia_encontrada = True
             st.session_state.dados_transferencia_form = {
-                "id": transacao_id,
                 "nome": nome,
                 "tipo": tipo,
                 "valor": valor,
@@ -385,36 +372,33 @@ def adicionar_transferencia(df, opcao, path="."):
             }
             return
 
-        df_atualizado = salvar_transacao(
-            sheet,
-            df,
-            transacao_id,
-            nome,
-            tipo,
-            -valor,
-            categoria,
-            conta_origem,
-            datetime.combine(data, datetime.min.time()),
-            tag,
-            obs,
-            adicionar_transferencia=True,
+        salvou_debito = salvar_transacao_api(
+            nome=nome,
+            tipo=tipo,
+            valor=-valor,
+            categoria=categoria,
+            conta=conta_origem,
+            data=datetime.combine(data, datetime.min.time()),
+            obs=obs,
+            tag=tag,
+            desconsiderar=False,
         )
-        df_atualizado = salvar_transacao(
-            sheet,
-            df_atualizado,
-            transacao_id,
-            nome,
-            tipo,
-            valor,
-            categoria,
-            conta_destino,
-            datetime.combine(data, datetime.min.time()),
-            tag,
-            obs,
-            adicionar_transferencia=True,
+        if not salvou_debito:
+            return
+
+        salvou_credito = salvar_transacao_api(
+            nome=nome,
+            tipo=tipo,
+            valor=valor,
+            categoria=categoria,
+            conta=conta_destino,
+            data=datetime.combine(data, datetime.min.time()),
+            obs=obs,
+            tag=tag,
+            desconsiderar=False,
         )
-        st.session_state.df = df_atualizado
-        preparar_confirmacao_salvamento()
+        if salvou_credito:
+            preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_transferencia_encontrada and st.session_state.dados_transferencia_form:
         st.warning("⚠️ Transação similar encontrada!")
@@ -441,43 +425,34 @@ def adicionar_transferencia(df, opcao, path="."):
             st.write("---")
 
         def confirmar_transferencia_callback():
-            try:
-                sheet = get_sheet(path)
-            except Exception as exc:
-                st.error(f"Erro ao conectar no Google Sheets: {exc}")
+            dados = st.session_state.dados_transferencia_form
+            salvou_debito = salvar_transacao_api(
+                nome=dados["nome"],
+                tipo=dados["tipo"],
+                valor=-dados["valor"],
+                categoria=dados["categoria"],
+                conta=dados["conta_origem"],
+                data=datetime.combine(dados["data"], datetime.min.time()),
+                obs=dados["obs"],
+                tag=dados["tag"],
+                desconsiderar=False,
+            )
+            if not salvou_debito:
                 return
 
-            dados = st.session_state.dados_transferencia_form
-            df_atualizado = salvar_transacao(
-                sheet,
-                df,
-                dados["id"],
-                dados["nome"],
-                dados["tipo"],
-                -dados["valor"],
-                dados["categoria"],
-                dados["conta_origem"],
-                datetime.combine(dados["data"], datetime.min.time()),
-                dados["tag"],
-                dados["obs"],
-                adicionar_transferencia=True,
+            salvou_credito = salvar_transacao_api(
+                nome=dados["nome"],
+                tipo=dados["tipo"],
+                valor=dados["valor"],
+                categoria=dados["categoria"],
+                conta=dados["conta_destino"],
+                data=datetime.combine(dados["data"], datetime.min.time()),
+                obs=dados["obs"],
+                tag=dados["tag"],
+                desconsiderar=False,
             )
-            df_atualizado = salvar_transacao(
-                sheet,
-                df_atualizado,
-                dados["id"],
-                dados["nome"],
-                dados["tipo"],
-                dados["valor"],
-                dados["categoria"],
-                dados["conta_destino"],
-                datetime.combine(dados["data"], datetime.min.time()),
-                dados["tag"],
-                dados["obs"],
-                adicionar_transferencia=True,
-            )
-            st.session_state.df = df_atualizado
-            preparar_confirmacao_salvamento()
+            if salvou_credito:
+                preparar_confirmacao_salvamento()
 
         def ignorar_transferencia_callback():
             st.session_state.duplicata_transferencia_encontrada = False
@@ -600,31 +575,22 @@ def adicionar_pagamento_cartao(df, path="."):
 
     def salvar_lancamentos(lancamentos):
         try:
-            sheet = get_sheet(path)
-        except Exception as exc:
-            st.error(f"Erro ao conectar no Google Sheets: {exc}")
-            return
-
-        df_atualizado = df
-        for lancamento in lancamentos:
-            df_atualizado = salvar_transacao(
-                sheet,
-                df_atualizado,
-                lancamento["id"],
-                lancamento["nome"],
-                lancamento["tipo"],
-                lancamento["valor"],
-                lancamento["categoria"],
-                lancamento["conta"],
-                lancamento["data"],
-                lancamento["obs"],
-                lancamento["tag"],
-                desconsiderar=lancamento["desconsiderar"],
-                adicionar_transferencia=lancamento["adicionar_transferencia"],
-            )
-
-        st.session_state.df = df_atualizado
-        preparar_confirmacao_salvamento()
+            for lancamento in lancamentos:
+                api_criar_transacao(
+                    nome=lancamento["nome"],
+                    tipo=lancamento["tipo"],
+                    valor=lancamento["valor"],
+                    categoria=lancamento["categoria"],
+                    conta=lancamento["conta"],
+                    data=lancamento["data"],
+                    obs=lancamento["obs"],
+                    tag=lancamento["tag"],
+                    desconsiderar=lancamento["desconsiderar"],
+                )
+            recarregar_df_api()
+            preparar_confirmacao_salvamento()
+        except ApiClientError as exc:
+            st.error(f"Erro ao salvar pagamento de cartão via API: {exc}")
 
     def salvar_pagamento_cartao_callback():
         valores_informados = {cartao: float(valor) for cartao, valor in valores_pagamento.items()}
@@ -635,8 +601,11 @@ def adicionar_pagamento_cartao(df, path="."):
             return
 
         data_pagamento = datetime.combine(data_pagamento_input, datetime.min.time())
+        id_maximo = pd.to_numeric(df["id"], errors="coerce").max() if "id" in df.columns else 0
+        if pd.isna(id_maximo):
+            id_maximo = 0
         ids_por_cartao = {
-            cartao: int(df["id"].max() + 1 + indice)
+            cartao: int(id_maximo + 1 + indice)
             for indice, cartao in enumerate(cartoes_com_valor)
         }
         lancamentos = obter_lancamentos(valores_informados, ids_por_cartao, data_pagamento)
@@ -714,8 +683,7 @@ def render(df, path="."):
 
     st.title("Gerenciador Financeiro 💰")
 
-    last_date = df["Data"].iloc[-1]
-    last_account = df["Conta"].iloc[-1]
+    last_account = df["Conta"].iloc[-1] if not df.empty else CONTAS[0]
 
     opcao = st.selectbox(
         "Tipo de transação",
@@ -727,13 +695,17 @@ def render(df, path="."):
     if opcao == "Receita":
         adicionar_receita(df, path)
     elif opcao == "Despesa":
-        adicionar_despesa(df, last_date, last_account, path)
+        adicionar_despesa(df, last_account, path)
     elif opcao == "Pagamento de Cartão":
         adicionar_pagamento_cartao(df, path)
     else:
         adicionar_transferencia(df, opcao, path)
 
-    saldo_s = calcular_saldo(df)
+    try:
+        saldo_payload = obter_saldo()
+        saldo_s = {item["conta"]: float(item["saldo"]) for item in saldo_payload}
+    except ApiClientError:
+        saldo_s = {}
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:

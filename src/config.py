@@ -169,6 +169,11 @@ GRANDES_TRANSACOES = [
 SPREADSHEET_NAME = "fluxo_de_caixa"
 SPREADSHEET_VALORES_NAME = "valores_desejados"
 
+# Configuracoes de acesso ao backend FastAPI
+API_BASE_URL = os.getenv("ALFRED_API_BASE_URL", "http://localhost:8000").strip().rstrip("/")
+API_TIMEOUT_SECONDS = float(os.getenv("ALFRED_API_TIMEOUT_SECONDS", "10"))
+API_AUTH_TOKEN = os.getenv("ALFRED_API_TOKEN", "").strip()
+
 # Configuracoes do Telegram Bot
 # Obter token via BotFather no Telegram
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

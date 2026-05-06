@@ -5,9 +5,9 @@ Gráficos e métricas de despesas, receitas e tendências.
 import streamlit as st
 from datetime import datetime
 
+from src.api import ApiClientError, obter_resumo_analise, transacoes_para_dataframe
+from src.analytics.calculations import adicionar_anomes
 from src.config import CONTAS_INVEST
-from src.services.data_handler import aplicar_filtros
-from src.analytics.calculations import adicionar_anomes, exibir_despesa_total
 from src.analytics.charts import (
     receitas_despesas,
     tendencia_mes,
@@ -15,7 +15,6 @@ from src.analytics.charts import (
     evolucao_categoria,
     render_categorias_despesas,
     monthly_spending_by_category_pie,
-    tendencia_saldo,
 )
 
 
@@ -32,32 +31,79 @@ def render(df, path: str = '.'):
         bianca = st.checkbox('Recorte Bianca', value=False)
         filippe = st.checkbox('Recorte Filippe', value=False)
 
-    df_temp = aplicar_filtros(df, desconsiderar, va, vr, bianca, filippe)
-
     now = datetime.now()
-    if now.month >= 10:
-        anome = f'{now.year}{now.month}'
-    else:
-        anome = f'{now.year}0{now.month}'
+    anome = int(f"{now.year}{now.month:02d}")
 
     day_to_date = st.checkbox('Comparar aos dias do mês')
-    if day_to_date:
+    try:
+        resumo = obter_resumo_analise(
+            desconsiderar=desconsiderar,
+            va=va,
+            vr=vr,
+            bianca=bianca,
+            filippe=filippe,
+            day_to_date=day_to_date,
+            anome_referencia=anome,
+        )
+    except ApiClientError as exc:
+        st.error(f"Erro ao carregar resumo analitico via API: {exc}")
+        return
+
+    df_temp = transacoes_para_dataframe({"items": resumo.get("items", [])})
+    if not df_temp.empty and "anomes" not in df_temp.columns:
         df_temp = adicionar_anomes(df_temp)
-        data_max = df_temp[(df_temp['anomes'] == anome) & (df_temp['Parcela'].isna())].Data.dt.day.max()
-        df_temp = df_temp[df_temp.Data.dt.day <= data_max]
+    metricas = resumo.get("metricas", {})
 
-    df_temp = adicionar_anomes(df_temp)
-
-    df_despesa = df_temp[(df_temp['desconsiderar'] == False) & (df_temp['Tipo'] == 'Despesa')]
-    exibir_despesa_total(df_despesa, int(anome))
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        st.metric(
+            f"Gasto mês anterior ({metricas.get('label_prev', '')})",
+            value=metricas.get("gasto_anterior", 0.0),
+            delta=(
+                f"{round(metricas.get('delta_anterior', 0.0) * 100, 2)}%"
+                if metricas.get("delta_anterior") is not None
+                else None
+            ),
+            delta_color="inverse",
+        )
+    with col_m2:
+        st.metric(
+            f"Gasto mês atual ({metricas.get('label_curr', '')})",
+            value=metricas.get("gasto_atual", 0.0),
+            delta=(
+                f"{round(metricas.get('delta_atual', 0.0) * 100, 2)}%"
+                if metricas.get("delta_atual") is not None
+                else None
+            ),
+            delta_color="inverse",
+        )
+    with col_m3:
+        st.metric(
+            f"Média últimos 3 meses ({metricas.get('label_3m', '')})",
+            value=metricas.get("gasto_3m_media", 0.0),
+            delta=(
+                f"{round(metricas.get('delta_3m', 0.0) * 100, 2)}%"
+                if metricas.get("delta_3m") is not None
+                else None
+            ),
+            delta_color="inverse",
+        )
 
     st.markdown("---")
     st.markdown("# Análises")
 
-    anomes_disponiveis = sorted(df_temp['anomes'].unique(), key=lambda x: int(x))
-    data_escolhida = st.select_slider('Escolha o anomes', options=anomes_disponiveis, value=anome)
+    anomes_disponiveis = resumo.get("anomes_disponiveis", [])
+    if not anomes_disponiveis:
+        st.info("Sem dados para análise no momento.")
+        return
+
+    data_escolhida = st.select_slider(
+        'Escolha o anomes',
+        options=anomes_disponiveis,
+        value=int(resumo.get("anome_referencia", anome)),
+    )
     if data_escolhida:
-        anome = data_escolhida
+        anome = int(data_escolhida)
 
     render_categorias_despesas(df_temp, anome, path)
 
@@ -70,6 +116,3 @@ def render(df, path: str = '.'):
     with col1:
         tendencia_mes(df_tendencia, int(anome))
         receitas_despesas(df_temp, CONTAS_INVEST, anome=int(anome))
-
-    # with col2:
-    #     tendencia_saldo(df_temp, 'Itaú CC', anome)

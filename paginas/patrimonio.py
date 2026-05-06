@@ -4,8 +4,8 @@ Exibe investimentos e patrimônio total.
 """
 import streamlit as st
 
+from src.api import ApiClientError, obter_saldo
 from src.config import CONTAS_INVEST
-from src.analytics.calculations import calcular_saldo
 from src.analytics.charts import aplicacoes_resgates
 
 
@@ -13,12 +13,17 @@ def render(df):
     """Renderiza a página de patrimônio."""
     st.markdown("## 📊 Patrimônio")
     
-    saldo_s = calcular_saldo(df)
+    try:
+        saldo_payload = obter_saldo()
+        saldo_s = {item["conta"]: float(item["saldo"]) for item in saldo_payload}
+    except ApiClientError:
+        saldo_s = {}
     
     col1, col2, col3 = st.columns(3)
     with col2:
-        st.metric('Patrimônio Total', saldo_s.reindex(CONTAS_INVEST).fillna(0).sum())
-        st.write(saldo_s.reindex(CONTAS_INVEST).fillna(0))
+        patrimonio_total = sum(saldo_s.get(conta, 0.0) for conta in CONTAS_INVEST)
+        st.metric('Patrimônio Total', patrimonio_total)
+        st.write({conta: saldo_s.get(conta, 0.0) for conta in CONTAS_INVEST})
 
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:

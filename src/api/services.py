@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.analytics.calculations import calcular_saldo
+from src.analytics.calculations import adicionar_anomes, calcular_despesa_total, calcular_saldo
 from src.config import CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO, CATEGORIAS_RECEITA
 from src.services.google_sheets import get_sheet, read_sheet, write_sheet
 
@@ -115,6 +115,12 @@ def criar_transacao(
     desconsiderar: bool = False,
     parcelas: int | None = None,
 ) -> dict:
+    _validar_categoria_por_tipo(tipo, categoria)
+    if tipo == "Despesa" and valor > 0:
+        raise ValueError("Despesa deve possuir valor negativo.")
+    if tipo in {"Receita", "Investimento"} and valor < 0:
+        raise ValueError(f"{tipo} deve possuir valor positivo.")
+
     df = carregar_transacoes_df()
     transacao_id = _proximo_id(df)
     data_criacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -221,11 +227,165 @@ def listar_transacoes(limite: int | None = None) -> list[dict]:
     return [mapear_linha_para_transacao(row) for row in df.to_dict(orient="records")]
 
 
+def excluir_transacao_por_id(transacao_id: int) -> dict:
+    df = carregar_transacoes_df()
+    if df.empty:
+        return {
+            "id": transacao_id,
+            "removidos": 0,
+            "mensagem": "Nenhuma transacao encontrada para exclusao.",
+        }
+
+    if "id" not in df.columns:
+        return {
+            "id": transacao_id,
+            "removidos": 0,
+            "mensagem": "Coluna id nao encontrada na base.",
+        }
+
+    ids = pd.to_numeric(df["id"], errors="coerce")
+    mascara_manter = ids != transacao_id
+    removidos = int((~mascara_manter).sum())
+    if removidos == 0:
+        return {
+            "id": transacao_id,
+            "removidos": 0,
+            "mensagem": f"Nenhuma transacao encontrada com id {transacao_id}.",
+        }
+
+    df_filtrado = df[mascara_manter].copy()
+    sheet = get_sheet(str(ROOT_PATH))
+    write_sheet(sheet, df_filtrado)
+
+    return {
+        "id": transacao_id,
+        "removidos": removidos,
+        "mensagem": f"{removidos} registro(s) removido(s) para o id {transacao_id}.",
+    }
+
+
 def listar_categorias() -> dict[str, list[str]]:
     return {
         "despesa": CATEGORIAS_DESPESA,
         "receita": CATEGORIAS_RECEITA,
         "investimento": CATEGORIAS_INVESTIMENTO,
+    }
+
+
+def _validar_categoria_por_tipo(tipo: str, categoria: str) -> None:
+    mapa = {
+        "Despesa": CATEGORIAS_DESPESA,
+        "Receita": CATEGORIAS_RECEITA,
+        "Investimento": CATEGORIAS_INVESTIMENTO,
+        "Transferência": ["Transferência"],
+        "Transferencia": ["Transferência", "Transferencia"],
+    }
+    if tipo not in mapa:
+        raise ValueError(f"Tipo de transacao invalido: {tipo}")
+    if categoria not in mapa[tipo]:
+        raise ValueError(f"Categoria '{categoria}' invalida para tipo '{tipo}'.")
+
+
+def _aplicar_filtros_analise(
+    df: pd.DataFrame,
+    *,
+    desconsiderar: bool,
+    va: bool,
+    vr: bool,
+    bianca: bool,
+    filippe: bool,
+) -> pd.DataFrame:
+    from src.config import GRANDES_TRANSACOES
+
+    df_temp = df.copy()
+    if desconsiderar and "id" in df_temp.columns:
+        df_temp = df_temp[~df_temp["id"].isin(GRANDES_TRANSACOES)]
+
+    if va:
+        df_temp = df_temp[df_temp["Conta"] != "VA"]
+    if vr:
+        df_temp = df_temp[df_temp["Conta"] != "VR"]
+
+    if bianca:
+        contas_filtradas = ["Cartão Bianca", "Inter", "Itaú CC", "Cartão Nath", "VA", "VR"]
+        df_temp = df_temp[df_temp["Conta"].isin(contas_filtradas)].copy()
+        df_temp.loc[df_temp["Conta"].isin(["Itaú CC", "Cartão Nath", "VA", "VR"]), "Valor"] *= 0.3
+    elif filippe:
+        contas_filtradas = ["Cartão Filippe", "Nubank", "Itaú CC", "Cartão Nath", "VA", "VR"]
+        df_temp = df_temp[df_temp["Conta"].isin(contas_filtradas)].copy()
+        df_temp.loc[df_temp["Conta"].isin(["Itaú CC", "Cartão Nath", "VA", "VR"]), "Valor"] *= 0.7
+
+    return df_temp
+
+
+def obter_resumo_analise(
+    *,
+    desconsiderar: bool = True,
+    va: bool = False,
+    vr: bool = False,
+    bianca: bool = False,
+    filippe: bool = False,
+    day_to_date: bool = False,
+    anome_referencia: int | None = None,
+) -> dict:
+    df = carregar_transacoes_df()
+    if df.empty:
+        return {
+            "anome_referencia": int(datetime.now().strftime("%Y%m")),
+            "anomes_disponiveis": [],
+            "metricas": {
+                "gasto_atual": 0.0,
+                "gasto_anterior": 0.0,
+                "gasto_3m_media": 0.0,
+                "delta_anterior": None,
+                "delta_atual": None,
+                "delta_3m": None,
+                "label_prev": "",
+                "label_curr": "",
+                "label_3m": "",
+            },
+            "items": [],
+        }
+
+    df_temp = _aplicar_filtros_analise(
+        df,
+        desconsiderar=desconsiderar,
+        va=va,
+        vr=vr,
+        bianca=bianca,
+        filippe=filippe,
+    )
+    df_temp = adicionar_anomes(df_temp)
+
+    anomes_disponiveis = sorted(
+        [int(v) for v in df_temp["anomes"].dropna().astype(str).unique() if str(v).isdigit()]
+    )
+    anome_base = anome_referencia or (anomes_disponiveis[-1] if anomes_disponiveis else int(datetime.now().strftime("%Y%m")))
+
+    if day_to_date and not df_temp.empty:
+        data_max = df_temp[(df_temp["anomes"] == str(anome_base)) & (df_temp["Parcela"].isna())]["Data"].dt.day.max()
+        if pd.notna(data_max):
+            df_temp = df_temp[df_temp["Data"].dt.day <= int(data_max)]
+
+    df_despesa = df_temp[(df_temp["desconsiderar"] == False) & (df_temp["Tipo"] == "Despesa")]
+    metricas = calcular_despesa_total(df_despesa, int(anome_base))
+    items = [mapear_linha_para_transacao(row) for row in df_temp.to_dict(orient="records")]
+
+    return {
+        "anome_referencia": int(anome_base),
+        "anomes_disponiveis": anomes_disponiveis,
+        "metricas": {
+            "gasto_atual": float(metricas["gasto_atual"]),
+            "gasto_anterior": float(metricas["gasto_anterior"]),
+            "gasto_3m_media": float(metricas["gasto_3m_media"]),
+            "delta_anterior": metricas["delta_anterior"],
+            "delta_atual": metricas["delta_atual"],
+            "delta_3m": metricas["delta_3m"],
+            "label_prev": metricas["label_prev"],
+            "label_curr": metricas["label_curr"],
+            "label_3m": metricas["label_3m"],
+        },
+        "items": items,
     }
 
 
@@ -267,4 +427,3 @@ def gerar_insights_basicos(pergunta: str | None) -> dict:
             f"Contexto da solicitacao: {texto_pergunta}",
         ],
     }
-

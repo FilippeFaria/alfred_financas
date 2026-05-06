@@ -5,10 +5,8 @@ Ponto de entrada da aplicação.
 import streamlit as st
 from datetime import datetime
 
-from src.config import CONTAS, CONTAS_INVEST
-from src.services.data_handler import carregar_dados
-from src.services.google_sheets import get_sheet
-from src.analytics.calculations import adicionar_anomes, calcular_saldo
+from src.api import ApiClientError, carregar_dataframe_transacoes
+from src.analytics.calculations import adicionar_anomes
 
 # Configuração da página
 st.set_page_config(layout="wide")
@@ -27,18 +25,16 @@ def main():
     # Botão de atualização
     atualizar = st.button('Atualizar dados')
     if atualizar or st.session_state.df is None:
-        st.session_state.last_update = datetime.now().timestamp()
-        st.cache_data.clear()
-        st.session_state.df = carregar_dados(PATH, trigger=st.session_state.last_update)
+        try:
+            df_carregado = carregar_dataframe_transacoes()
+            st.session_state.df = adicionar_anomes(df_carregado)
+            st.session_state.last_update = datetime.now().timestamp()
+            st.cache_data.clear()
+        except ApiClientError as exc:
+            st.error(f"Não foi possível carregar dados pela API: {exc}")
+            st.stop()
     
     df = st.session_state.df
-    
-    # Obter última data e conta para uso nos formulários
-    last_date = df['Data'].iloc[-1]
-    last_account = df['Conta'].iloc[-1]
-    
-    # Calcular saldo
-    saldo_s = calcular_saldo(df)
     
     # Criar abas
     tab1, tab2, tab3, tab4, tab5 = st.tabs([

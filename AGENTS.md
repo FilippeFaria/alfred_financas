@@ -1,4 +1,4 @@
-# Instruções para Agentes de IA - Alfred Finanças
+﻿# Instruções para Agentes de IA - Alfred Finanças
 
 ## Visão Geral do Projeto
 
@@ -143,6 +143,37 @@ python run_telegram_bot.py
 
 ## Mudanças Recentes (v2)
 
+### ✅ Feature: Backend FastAPI Inicial (ETAPA 1) (06/05/2026)
+**Objetivo**: Iniciar a separação entre frontend (Streamlit) e backend, criando uma camada de API para consumo futuro da interface.
+
+**Arquitetura Implementada**:
+- Novo pacote `src/api/` com:
+  - `main.py`: aplicação FastAPI e definição de rotas
+  - `schemas.py`: modelos de request/response (Pydantic)
+  - `services.py`: regras de negócio e integração com dados (Google Sheets)
+- Novo launcher local `run_api.py` para subir a API com `uvicorn`
+
+**Endpoints Iniciais**:
+1. `GET /saldo`
+2. `GET /transacoes`
+3. `POST /transacoes`
+4. `GET /categorias`
+5. `POST /insights`
+6. `GET /health` (apoio operacional)
+
+**Observações Técnicas**:
+- A API reutiliza os serviços de integração com Google Sheets (`src/services/google_sheets.py`).
+- O endpoint `/insights` foi iniciado com implementação básica (resumo e sinais principais), preparado para evolução com IA.
+- `requirements.txt` foi ajustado para suportar FastAPI:
+  - `fastapi==0.115.12`
+  - `starlette==0.46.2` (compatível com a versão do FastAPI acima)
+
+**Comando de Execução da API**:
+```bash
+python run_api.py
+# Docs: http://localhost:8000/docs
+```
+
 ### ✅ Feature: Alertas Personalizados por Chat com Prioridade e Histórico Diário (05/05/2026)
 **Objetivo**: Organizar os alertas automáticos por usuário, enviando no máximo um alerta por horário com prioridade fixa.
 
@@ -266,6 +297,25 @@ python run_telegram_bot.py
 
 ---
 
+### ✅ Feature: Healthcheck HTTP no processo do bot para uptime no Render Free (06/05/2026)
+**Objetivo**: Permitir monitoramento externo (UptimeRobot) sem separar outro serviço web, mantendo o bot acordado no plano gratuito.
+
+**Arquitetura Implementada**:
+- `run_telegram_bot.py` agora sobe um servidor HTTP leve em thread daemon usando `ThreadingHTTPServer`
+- Rotas de healthcheck expostas no mesmo processo do bot:
+  - `GET /` e `GET /health` -> `200` com `{"status":"online"}`
+  - `HEAD /` e `HEAD /health` -> `200` (sem body), compatível com plano gratuito do UptimeRobot
+- Porta definida por `PORT` (Render) com fallback local para `10000`
+
+**Uso recomendado (Render + UptimeRobot)**:
+1. Manter start command do serviço: `python run_telegram_bot.py`
+2. No UptimeRobot gratuito, criar monitor `HEAD` para `https://<seu-servico>.onrender.com/health`
+3. Intervalo sugerido: 5 minutos
+
+**Observações**:
+- Esse healthcheck foi implementado no launcher do bot (`run_telegram_bot.py`), não na FastAPI (`src/api/main.py`)
+- A rota `/health` da FastAPI só existe quando a API é iniciada explicitamente com `run_api.py`
+
 ## Armadilhas & Issues Conhecidas
 
 ### ⚠️ Autenticação Frágil
@@ -342,5 +392,5 @@ python run_telegram_bot.py
 
 ---
 
-**Última atualização**: 05/05/2026  
+**Última atualização**: 06/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot
