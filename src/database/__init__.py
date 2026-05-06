@@ -1,5 +1,15 @@
 from src.database.base import Base
-from src.database.connection import SessionLocal, engine, get_db
+from src.database.connection import SessionLocal, engine, get_db, init_db
+from src.database.models import Account, Category, Transaction, User
 
-__all__ = ["Base", "engine", "SessionLocal", "get_db"]
-
+__all__ = [
+    "Base",
+    "engine",
+    "SessionLocal",
+    "get_db",
+    "init_db",
+    "User",
+    "Account",
+    "Category",
+    "Transaction",
+]

@@ -11,11 +11,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.database.base import Base
+
 load_dotenv()
 
 
 def _garantir_sslmode_require(database_url: str) -> str:
-    """Garante sslmode=require na URL de conexao."""
+    """Garante sslmode=require apenas para conexoes PostgreSQL."""
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        return database_url
+
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
     partes = urlsplit(database_url)
     params = dict(parse_qsl(partes.query, keep_blank_values=True))
     params.setdefault("sslmode", "require")
@@ -52,3 +60,7 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+
+def init_db() -> None:
+    """Cria as tabelas registradas na metadata ORM."""
+    Base.metadata.create_all(bind=engine)

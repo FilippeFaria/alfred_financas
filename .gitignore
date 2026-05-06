@@ -35,3 +35,4 @@ Thumbs.db
 
 # Dados locais do projeto (nunca versionar)
 historico_fluxo/
+*.db

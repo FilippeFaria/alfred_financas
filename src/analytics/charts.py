@@ -455,7 +455,15 @@ def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFr
 
 def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
     """Exibe extrato filtrado por mês e contas."""
+    if df.empty or "anomes" not in df.columns:
+        st.info("Sem dados para exibir no extrato.")
+        return df
+
     anomes_disponiveis = sorted(df['anomes'].unique(), key=lambda x: int(x))
+    if not anomes_disponiveis:
+        st.info("Sem períodos disponíveis para exibir no extrato.")
+        return df
+
     if anome not in anomes_disponiveis:
         anome = anomes_disponiveis[-1] if anomes_disponiveis else anome
 
