@@ -18,6 +18,13 @@
 src/
   ├── config.py              # Configurações centralizadas (contas, categorias, caminhos, Telegram)
   ├── models/transaction.py  # Classes de dados (Transaction)
+  ├── api/
+  │   ├── main.py            # Aplicação FastAPI e rotas
+  │   ├── schemas.py         # Contratos request/response (Pydantic)
+  │   ├── services.py        # Regras de negócio e integração com dados
+  │   ├── errors.py          # Tratamento de erros padronizado da API
+  │   ├── auth.py            # Middleware/dependency para autenticação futura
+  │   └── client.py          # Cliente HTTP interno usado pelo Streamlit
   ├── services/
   │   ├── google_sheets.py   # Autenticação e sync com Google Sheets
   │   └── data_handler.py    # Manipulação de DataFrames (transformações, filtros)
@@ -42,14 +49,16 @@ paginas/
   └── extrato.py            # Aba: Extrato de movimentações
 
 app.py                       # Orquestrador: carrega dados, renderiza abas
+run_api.py                   # Launcher local da API FastAPI
 run_telegram_bot.py          # Launcher local do bot para ambientes com .venv inconsistente
 ```
 
 ### Fluxo de Dados
-1. **app.py** carrega CSV ou sincroniza com Google Sheets via `google_sheets.py`
+1. **app.py** carrega dados exclusivamente via API (`src/api/client.py`)
 2. **Session state** armazena DataFrame em cache com timestamp
 3. Cada aba em **paginas/** chama `render(df, PATH)` para renderizar conteúdo
-4. **analytics/** calcula métricas e gera visualizações
+4. **src/api/main.py** expõe endpoints tipados e regras críticas via `src/api/services.py`
+5. **analytics/** permanece focado em cálculos e visualizações reutilizáveis
 5. **telegram_bot/data_provider.py** centraliza a carga de dados financeiros para o bot
 6. **telegram_bot/alert_service.py** agenda execuções automáticas de alertas
 7. **telegram_bot/daily_report_service.py** agenda o informe diário
@@ -142,6 +151,64 @@ python run_telegram_bot.py
 ---
 
 ## Mudanças Recentes (v2)
+
+### ✅ Feature: ETAPA 2.3 — Regras críticas centralizadas no backend (06/05/2026)
+**Objetivo**: retirar regras financeiras críticas do Streamlit e centralizar na API.
+
+**Implementado**:
+- Novo endpoint `POST /analise/resumo` com filtros, agregações e métricas mensais processadas no backend
+- Validações de transação centralizadas em `src/api/services.py` (tipo/categoria/sinal do valor)
+- Streamlit passou a consumir saldo e resumo analítico processado pela API
+
+**Resultado**:
+- Frontend reduzido a camada de apresentação
+- Backend devolve dados já processados para análise
+
+### ✅ Feature: ETAPA 2.4 — Camada de modelos de resposta padronizada (06/05/2026)
+**Objetivo**: padronizar contratos da API e documentação OpenAPI.
+
+**Implementado em `src/api/schemas.py`**:
+- `SaldoResponse`
+- `TransacaoResponse`
+- `CategoriaResponse`
+- `InsightResponse`
+- `StatusResponse` e modelos auxiliares de erro
+
+**Resultado**:
+- Endpoints com `response_model` explícito
+- `/docs` documenta os contratos corretamente
+
+### ✅ Feature: ETAPA 2.5 — Tratamento de erros padronizado (06/05/2026)
+**Objetivo**: impedir stacktrace bruto no cliente e padronizar falhas.
+
+**Implementado**:
+- `src/api/errors.py` com exceção de domínio `ApiServiceError`
+- Handlers globais FastAPI para:
+  - erro de validação de request
+  - erros de serviço
+  - erro inesperado
+- Resposta de erro padronizada:
+  - `{"error": {"code": "...", "message": "...", "details": {...}}}`
+- Logs estruturados (JSON) para falhas operacionais
+
+**Casos cobertos**:
+- falha Google Sheets
+- timeout
+- dados inválidos
+- autenticação (estrutura pronta para evolução)
+
+### ✅ Feature: ETAPA 2.7 — Preparação para autenticação futura (06/05/2026)
+**Objetivo**: preparar arquitetura multiusuário sem exigir login agora.
+
+**Implementado**:
+- `src/api/auth.py` com:
+  - middleware para leitura de header `Authorization`
+  - dependency `get_current_user_optional`
+  - `UserContext` injetado nos endpoints
+
+**Resultado**:
+- Estrutura pronta para JWT
+- fluxo atual preservado (sem bloqueio de endpoints)
 
 ### ✅ Feature: Backend FastAPI Inicial (ETAPA 1) (06/05/2026)
 **Objetivo**: Iniciar a separação entre frontend (Streamlit) e backend, criando uma camada de API para consumo futuro da interface.
@@ -335,8 +402,8 @@ python run_api.py
 - **Futuro**: Migrar para Google Sheets ou banco de dados
 
 ### ⚠️ Sem Tratamento de Erro Robusto
-- **Problema**: Falhas de conexão com Google Sheets podem travar a app
-- **Recomendação**: Adicionar fallback para CSV local e retry logic
+- **Status**: mitigado na API com tratamento padronizado e respostas controladas
+- **Próximo passo**: adicionar retry com backoff para operações no Google Sheets em cenários intermitentes
 
 ### ⚠️ Ambiente Python Local Pode Estar Inconsistente
 - **Problema**: A `.venv` pode estar apontando para um `python.exe` indisponível
