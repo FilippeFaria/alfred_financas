@@ -143,6 +143,36 @@ python run_telegram_bot.py
 
 ## Mudanças Recentes (v2)
 
+### ✅ Feature: Alertas Personalizados por Chat com Prioridade e Histórico Diário (05/05/2026)
+**Objetivo**: Organizar os alertas automáticos por usuário, enviando no máximo um alerta por horário com prioridade fixa.
+
+**Arquitetura Implementada**:
+- `src/config.py` define `TELEGRAM_CONTAS_POR_CHAT_ID` com mapeamento **hardcoded** de contas por `chat_id`
+- `src/telegram_bot/alerts.py` recebe contexto por chat (`chat_id`, `nome_usuario`, `contas_usuario`)
+- `src/telegram_bot/alert_service.py` executa o ciclo **por chat**, seleciona apenas um alerta elegível por execução e persiste histórico diário
+
+**Regras e Prioridade Atual**:
+1. `regra_lembrete_sem_cadastro`
+2. `regra_categoria_acima_do_orcamento`
+3. `regra_gasto_categoria_proximo_do_limite`
+4. `regra_categoria_com_disparo_relevante`
+
+**Comportamento de Envio**:
+- Em cada horário agendado, envia no máximo **1 alerta por chat**
+- A seleção respeita a prioridade: se a regra 1 não se aplicar, tenta a 2, depois 3, depois 4
+- Cada alerta pode ser enviado **apenas uma vez por dia por chat**
+
+**Detalhes da `regra_lembrete_sem_cadastro`**:
+- Filtra por contas do usuário (`TELEGRAM_CONTAS_POR_CHAT_ID`)
+- Usa a coluna `Data Criacao` para calcular o último cadastro
+- Considera apenas `Tipo` em `Despesa` ou `Receita`
+- Se passar de 2 dias sem cadastro, envia lembrete personalizado
+
+**Persistência do Estado**:
+- Arquivo: `historico_fluxo/telegram_alert_state.json`
+- Chaves de deduplicação por chat: `chat_id:chave_alerta`
+- Histórico diário em `historico_por_dia` com timestamp, chat_id, chave, título, mensagem e severidade
+
 ### ✅ Fix: Normalização Centralizada de Data (24/04/2026)
 **Problema**: `ValueError` ao adicionar transações devido a inconsistência de formato de data.
 - Coluna `Data` tinha múltiplos formatos (`DD/MM/YYYY HH:MM` vs `YYYY-MM-DD HH:MM:SS`)
@@ -312,5 +342,5 @@ python run_telegram_bot.py
 
 ---
 
-**Última atualização**: 30/04/2026  
+**Última atualização**: 05/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot
