@@ -1,7 +1,8 @@
 """Aplicacao FastAPI para o backend do Alfred Financas."""
 
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, Query
 
+from src.api.auth import UserContext, auth_context_middleware, get_current_user_optional
 from src.api.errors import register_exception_handlers
 from src.api.schemas import (
     CategoriaResponse,
@@ -33,33 +34,38 @@ app = FastAPI(
     version="0.1.0",
 )
 register_exception_handlers(app)
+app.middleware("http")(auth_context_middleware)
 
 
 @app.get("/", response_model=StatusResponse)
-async def root() -> StatusResponse:
+async def root(user_context: UserContext = Depends(get_current_user_optional)) -> StatusResponse:
     return StatusResponse(status="online")
 
 
 @app.get("/health", response_model=StatusResponse)
-def healthcheck() -> StatusResponse:
+def healthcheck(user_context: UserContext = Depends(get_current_user_optional)) -> StatusResponse:
     return StatusResponse(status="ok")
 
 
 @app.get("/saldo", response_model=list[SaldoResponse])
-def get_saldo() -> list[SaldoResponse]:
+def get_saldo(user_context: UserContext = Depends(get_current_user_optional)) -> list[SaldoResponse]:
     return obter_saldo_por_conta()
 
 
 @app.get("/transacoes", response_model=TransacoesResponse)
 def get_transacoes(
     limite: int | None = Query(default=None, ge=1, le=5000),
+    user_context: UserContext = Depends(get_current_user_optional),
 ) -> TransacoesResponse:
     items = listar_transacoes(limite=limite)
     return TransacoesResponse(total=len(items), items=items)
 
 
 @app.post("/transacoes", response_model=TransacaoResponse)
-def post_transacoes(payload: CriarTransacaoRequest) -> TransacaoResponse:
+def post_transacoes(
+    payload: CriarTransacaoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> TransacaoResponse:
     return criar_transacao(
         nome=payload.nome,
         tipo=payload.tipo,
@@ -75,22 +81,31 @@ def post_transacoes(payload: CriarTransacaoRequest) -> TransacaoResponse:
 
 
 @app.delete("/transacoes/{transacao_id}", response_model=ExcluirTransacaoResponse)
-def delete_transacao(transacao_id: int) -> ExcluirTransacaoResponse:
+def delete_transacao(
+    transacao_id: int,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> ExcluirTransacaoResponse:
     return excluir_transacao_por_id(transacao_id)
 
 
 @app.get("/categorias", response_model=CategoriaResponse)
-def get_categorias() -> CategoriaResponse:
+def get_categorias(user_context: UserContext = Depends(get_current_user_optional)) -> CategoriaResponse:
     return listar_categorias()
 
 
 @app.post("/insights", response_model=InsightResponse)
-def post_insights(payload: InsightsRequest) -> InsightResponse:
+def post_insights(
+    payload: InsightsRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> InsightResponse:
     return gerar_insights_basicos(payload.pergunta)
 
 
 @app.post("/analise/resumo", response_model=AnaliseResumoResponse)
-def post_analise_resumo(payload: AnaliseResumoRequest) -> AnaliseResumoResponse:
+def post_analise_resumo(
+    payload: AnaliseResumoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> AnaliseResumoResponse:
     return obter_resumo_analise(
         desconsiderar=payload.desconsiderar,
         va=payload.va,
