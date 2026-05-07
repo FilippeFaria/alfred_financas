@@ -36,16 +36,25 @@ class TransacaoDto {
 class TransacoesResponseDto {
   TransacoesResponseDto({
     required this.total,
+    required this.pagina,
+    required this.limite,
+    required this.totalPaginas,
     required this.items,
   });
 
   final int total;
+  final int pagina;
+  final int limite;
+  final int totalPaginas;
   final List<TransacaoDto> items;
 
   factory TransacoesResponseDto.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List? ?? <dynamic>[];
     return TransacoesResponseDto(
       total: (json['total'] as num?)?.toInt() ?? rawItems.length,
+      pagina: (json['pagina'] as num?)?.toInt() ?? 1,
+      limite: (json['limite'] as num?)?.toInt() ?? rawItems.length,
+      totalPaginas: (json['total_paginas'] as num?)?.toInt() ?? 1,
       items: rawItems
           .map((item) => TransacaoDto.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList(),

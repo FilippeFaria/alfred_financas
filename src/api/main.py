@@ -1,6 +1,7 @@
 """Aplicacao FastAPI para o backend do Alfred Financas."""
 
 from fastapi import Depends, FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth import UserContext, auth_context_middleware, get_current_user_optional
 from src.api.errors import register_exception_handlers
@@ -22,7 +23,7 @@ from src.api.services import (
     excluir_transacao_por_id,
     gerar_insights_basicos,
     listar_categorias,
-    listar_transacoes,
+    listar_transacoes_paginado,
     obter_resumo_analise,
     obter_saldo_por_conta,
 )
@@ -32,6 +33,24 @@ app = FastAPI(
     title="Alfred Financas API",
     description="Backend FastAPI para operacoes financeiras do projeto Alfred Financas.",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:5000",
+        "http://localhost:8080",
+        "http://127.0.0.1",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5000",
+        "http://127.0.0.1:8080",
+    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 register_exception_handlers(app)
 app.middleware("http")(auth_context_middleware)
@@ -54,11 +73,25 @@ def get_saldo(user_context: UserContext = Depends(get_current_user_optional)) ->
 
 @app.get("/transacoes", response_model=TransacoesResponse)
 def get_transacoes(
-    limite: int | None = Query(default=None, ge=1, le=5000),
+    pagina: int = Query(default=1, ge=1),
+    limite: int = Query(default=50, ge=1, le=500),
+    data_inicio: str | None = Query(default=None),
+    data_fim: str | None = Query(default=None),
+    categoria: str | None = Query(default=None),
+    conta: str | None = Query(default=None),
+    tipo: str | None = Query(default=None),
     user_context: UserContext = Depends(get_current_user_optional),
 ) -> TransacoesResponse:
-    items = listar_transacoes(limite=limite)
-    return TransacoesResponse(total=len(items), items=items)
+    payload = listar_transacoes_paginado(
+        pagina=pagina,
+        limite=limite,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        categoria=categoria,
+        conta=conta,
+        tipo=tipo,
+    )
+    return TransacoesResponse(**payload)
 
 
 @app.post("/transacoes", response_model=TransacaoResponse)

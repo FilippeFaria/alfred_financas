@@ -1,3 +1,5 @@
+import 'transacao_dto.dart';
+
 class AnaliseResumoRequestDto {
   AnaliseResumoRequestDto({
     this.desconsiderar = true,
@@ -55,11 +57,13 @@ class AnaliseResumoDto {
     required this.anomeReferencia,
     required this.anomesDisponiveis,
     required this.metricas,
+    required this.items,
   });
 
   final int anomeReferencia;
   final List<int> anomesDisponiveis;
   final AnaliseMetricasDto metricas;
+  final List<TransacaoDto> items;
 
   factory AnaliseResumoDto.fromJson(Map<String, dynamic> json) {
     final anos = (json['anomes_disponiveis'] as List? ?? <dynamic>[])
@@ -72,6 +76,9 @@ class AnaliseResumoDto {
       metricas: AnaliseMetricasDto.fromJson(
         Map<String, dynamic>.from(json['metricas'] as Map? ?? <String, dynamic>{}),
       ),
+      items: (json['items'] as List? ?? <dynamic>[])
+          .map((item) => TransacaoDto.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList(),
     );
   }
 }

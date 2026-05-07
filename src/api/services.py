@@ -110,6 +110,98 @@ def listar_transacoes(limite: int | None = None) -> list[dict]:
     return [mapear_linha_para_transacao(row) for row in df.to_dict(orient="records")]
 
 
+def listar_transacoes_paginado(
+    *,
+    pagina: int = 1,
+    limite: int = 50,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+    categoria: str | None = None,
+    conta: str | None = None,
+    tipo: str | None = None,
+) -> dict:
+    pagina = max(1, int(pagina))
+    limite = max(1, min(int(limite), 500))
+    offset = (pagina - 1) * limite
+    data_inicio_obj = pd.to_datetime(data_inicio, errors="coerce").date() if data_inicio else None
+    data_fim_obj = pd.to_datetime(data_fim, errors="coerce").date() if data_fim else None
+
+    try:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            tx_repo = TransactionRepository(db)
+            total = tx_repo.count_filtered(
+                user_id=user.id,
+                data_inicio=data_inicio_obj,
+                data_fim=data_fim_obj,
+                categoria=categoria,
+                conta=conta,
+                tipo=tipo,
+            )
+            items = tx_repo.list_filtered(
+                user_id=user.id,
+                offset=offset,
+                limit=limite,
+                data_inicio=data_inicio_obj,
+                data_fim=data_fim_obj,
+                categoria=categoria,
+                conta=conta,
+                tipo=tipo,
+            )
+            payload = [_map_tx_to_api_dict(item) for item in items]
+            total_paginas = max(1, (total + limite - 1) // limite) if total > 0 else 1
+            return {
+                "total": total,
+                "pagina": pagina,
+                "limite": limite,
+                "total_paginas": total_paginas,
+                "items": payload,
+            }
+    except Exception as exc:
+        LOGGER.exception("Falha na leitura PostgreSQL em listar_transacoes_paginado")
+        _log_error("postgres_read_error", error_type=type(exc).__name__, error=str(exc))
+        if not FALLBACK_ENABLED:
+            raise ApiServiceError(
+                code="FALHA_POSTGRES",
+                message="Falha ao ler dados no PostgreSQL.",
+                status_code=503,
+                details={"error_type": type(exc).__name__, "error": str(exc)},
+            ) from exc
+
+    df = carregar_transacoes_df_sheets()
+    if df.empty:
+        return {"total": 0, "pagina": pagina, "limite": limite, "total_paginas": 1, "items": []}
+
+    df = df.copy()
+    df["_data_ord"] = pd.to_datetime(df["Data"], format=DATE_FORMAT, errors="coerce")
+    df = df.sort_values("_data_ord", ascending=False, na_position="last")
+
+    if data_inicio_obj is not None:
+        df = df[df["_data_ord"] >= pd.Timestamp(data_inicio_obj)]
+    if data_fim_obj is not None:
+        df = df[df["_data_ord"] <= pd.Timestamp(data_fim_obj) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)]
+    if categoria:
+        df = df[df["Categoria"] == categoria]
+    if conta:
+        df = df[df["Conta"] == conta]
+    if tipo:
+        df = df[df["Tipo"] == tipo]
+
+    total = len(df)
+    inicio = offset
+    fim = offset + limite
+    page_df = df.iloc[inicio:fim].drop(columns=["_data_ord"], errors="ignore")
+    total_paginas = max(1, (total + limite - 1) // limite) if total > 0 else 1
+
+    return {
+        "total": total,
+        "pagina": pagina,
+        "limite": limite,
+        "total_paginas": total_paginas,
+        "items": [mapear_linha_para_transacao(row) for row in page_df.to_dict(orient="records")],
+    }
+
+
 def obter_saldo_por_conta() -> list[dict]:
     transacoes = listar_transacoes()
     if not transacoes:

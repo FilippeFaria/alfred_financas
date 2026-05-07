@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, date, time
 from decimal import Decimal
 import os
 from uuid import UUID
@@ -31,6 +31,69 @@ class TransactionRepository:
         if limit:
             query = query.limit(limit)
         return query.all()
+
+    def list_filtered(
+        self,
+        *,
+        user_id: UUID,
+        offset: int,
+        limit: int,
+        data_inicio: date | None = None,
+        data_fim: date | None = None,
+        categoria: str | None = None,
+        conta: str | None = None,
+        tipo: str | None = None,
+    ) -> list[Transaction]:
+        query = (
+            self.db.query(Transaction)
+            .join(Account, Transaction.account_id == Account.id)
+            .join(Category, Transaction.category_id == Category.id)
+            .options(joinedload(Transaction.account), joinedload(Transaction.category))
+            .filter(Transaction.user_id == user_id)
+        )
+
+        if data_inicio is not None:
+            query = query.filter(Transaction.data >= datetime.combine(data_inicio, time.min))
+        if data_fim is not None:
+            query = query.filter(Transaction.data <= datetime.combine(data_fim, time.max))
+        if categoria:
+            query = query.filter(Category.nome == categoria)
+        if conta:
+            query = query.filter(Account.nome == conta)
+        if tipo:
+            query = query.filter(Transaction.tipo == tipo)
+
+        return query.order_by(Transaction.data.desc()).offset(offset).limit(limit).all()
+
+    def count_filtered(
+        self,
+        *,
+        user_id: UUID,
+        data_inicio: date | None = None,
+        data_fim: date | None = None,
+        categoria: str | None = None,
+        conta: str | None = None,
+        tipo: str | None = None,
+    ) -> int:
+        query = (
+            self.db.query(func.count(Transaction.id))
+            .join(Account, Transaction.account_id == Account.id)
+            .join(Category, Transaction.category_id == Category.id)
+            .filter(Transaction.user_id == user_id)
+        )
+
+        if data_inicio is not None:
+            query = query.filter(Transaction.data >= datetime.combine(data_inicio, time.min))
+        if data_fim is not None:
+            query = query.filter(Transaction.data <= datetime.combine(data_fim, time.max))
+        if categoria:
+            query = query.filter(Category.nome == categoria)
+        if conta:
+            query = query.filter(Account.nome == conta)
+        if tipo:
+            query = query.filter(Transaction.tipo == tipo)
+
+        return int(query.scalar() or 0)
 
     def create(
         self,

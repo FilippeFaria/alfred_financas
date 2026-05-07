@@ -80,10 +80,41 @@ class AlfredApiClient {
   }
 
   Future<TransacoesResponseDto> getTransacoes({int? limite}) async {
+    return getTransacoesPaginado(limite: limite ?? 30);
+  }
+
+  Future<TransacoesResponseDto> getTransacoesPaginado({
+    int pagina = 1,
+    int limite = 30,
+    String? dataInicio,
+    String? dataFim,
+    String? categoria,
+    String? conta,
+    String? tipo,
+  }) async {
     try {
+      final queryParameters = <String, dynamic>{
+        'pagina': pagina,
+        'limite': limite,
+      };
+      if (dataInicio != null && dataInicio.isNotEmpty) {
+        queryParameters['data_inicio'] = dataInicio;
+      }
+      if (dataFim != null && dataFim.isNotEmpty) {
+        queryParameters['data_fim'] = dataFim;
+      }
+      if (categoria != null && categoria.isNotEmpty) {
+        queryParameters['categoria'] = categoria;
+      }
+      if (conta != null && conta.isNotEmpty) {
+        queryParameters['conta'] = conta;
+      }
+      if (tipo != null && tipo.isNotEmpty) {
+        queryParameters['tipo'] = tipo;
+      }
       final response = await _dio.get(
         '/transacoes',
-        queryParameters: limite != null ? {'limite': limite} : null,
+        queryParameters: queryParameters,
       );
       return TransacoesResponseDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {

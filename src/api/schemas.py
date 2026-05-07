@@ -46,6 +46,9 @@ class CriarTransacaoRequest(BaseModel):
 
 class TransacoesResponse(BaseModel):
     total: int
+    pagina: int
+    limite: int
+    total_paginas: int
     items: list[TransacaoResponse]
 
 
