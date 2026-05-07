@@ -3,6 +3,7 @@ Pagina de Transacoes.
 Gerencia adicao de receitas, despesas, transferencias e investimentos.
 """
 from datetime import datetime
+import unicodedata
 
 import pandas as pd
 import streamlit as st
@@ -118,6 +119,19 @@ def finalizar_confirmacao_salvamento():
     if "confirmacao_salvamento_transacao" in st.session_state:
         del st.session_state.confirmacao_salvamento_transacao
     st.session_state["tipo_transacao"] = "Despesa"
+
+
+def normalizar_chave_conta(texto):
+    """Normaliza nome de conta para comparações robustas."""
+    texto = str(texto or "").strip().lower()
+    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+    return " ".join(texto.split())
+
+
+def obter_saldo_conta(saldo_por_conta, conta):
+    """Obtém saldo por conta ignorando acentos e variações de espaços."""
+    chave = normalizar_chave_conta(conta)
+    return float(saldo_por_conta.get(chave, 0.0))
 
 
 def formatar_moeda(valor):
@@ -340,7 +354,7 @@ def adicionar_transferencia(df, opcao, path="."):
     if "dados_transferencia_form" not in st.session_state:
         st.session_state.dados_transferencia_form = None
 
-    if opcao == "TransferÃªncia":
+    if opcao == "Transferência":
         nome = opcao
         obs = st.text_input("ComentÃ¡rio", key="obs_transf")
         tipo = opcao
@@ -526,9 +540,9 @@ def adicionar_pagamento_cartao(df, path="."):
                     {
                         "id": transacao_id,
                         "nome": nome,
-                        "tipo": "TransferÃªncia",
+                        "tipo": "Transferência",
                         "valor": -valor,
-                        "categoria": "TransferÃªncia",
+                        "categoria": "Transferência",
                         "conta": conta_origem,
                         "data": data_lancamento,
                         "obs": "",
@@ -539,9 +553,9 @@ def adicionar_pagamento_cartao(df, path="."):
                     {
                         "id": transacao_id,
                         "nome": nome,
-                        "tipo": "TransferÃªncia",
+                        "tipo": "Transferência",
                         "valor": valor,
-                        "categoria": "TransferÃªncia",
+                        "categoria": "Transferência",
                         "conta": cartao,
                         "data": data_lancamento,
                         "obs": "",
@@ -603,14 +617,14 @@ def adicionar_pagamento_cartao(df, path="."):
             recarregar_df_api()
             preparar_confirmacao_salvamento()
         except ApiClientError as exc:
-            st.error(f"Erro ao salvar pagamento de cartÃ£o via API: {exc}")
+            st.error(f"Erro ao salvar Pagamento de Cartão via API: {exc}")
 
     def salvar_pagamento_cartao_callback():
         valores_informados = {cartao: float(valor) for cartao, valor in valores_pagamento.items()}
         cartoes_com_valor = [cartao for cartao, valor in valores_informados.items() if valor > 0]
 
         if not cartoes_com_valor:
-            st.warning("Informe pelo menos um valor para salvar o pagamento de cartÃ£o.")
+            st.warning("Informe pelo menos um valor para salvar o Pagamento de Cartão.")
             return
 
         data_pagamento = datetime.combine(data_pagamento_input, datetime.min.time())
@@ -694,13 +708,13 @@ def render(df, path="."):
         st.button("OK", on_click=finalizar_confirmacao_salvamento, key="btn_ok_salvamento_transacao")
         return
 
-    st.title("Gerenciador Financeiro ðŸ’°")
+    st.title("Gerenciador Financeiro")
 
     last_account = df["Conta"].iloc[-1] if not df.empty else CONTAS[0]
 
     opcao = st.selectbox(
-        "Tipo de transaÃ§Ã£o",
-        ["Receita", "Despesa", "TransferÃªncia", "Investimento", "Pagamento de CartÃ£o"],
+        "Tipo de transação",
+        ["Receita", "Despesa", "Transferência", "Investimento", "Pagamento de Cartão"],
         key="tipo_transacao",
     )
     st.markdown("# ")
@@ -709,28 +723,32 @@ def render(df, path="."):
         adicionar_receita(df, path)
     elif opcao == "Despesa":
         adicionar_despesa(df, last_account, path)
-    elif opcao == "Pagamento de CartÃ£o":
+    elif opcao == "Pagamento de Cartão":
         adicionar_pagamento_cartao(df, path)
     else:
         adicionar_transferencia(df, opcao, path)
 
     try:
         saldo_payload = obter_saldo()
-        saldo_s = {item["conta"]: float(item["saldo"]) for item in saldo_payload}
+        saldo_s = {normalizar_chave_conta(item["conta"]): float(item["saldo"]) for item in saldo_payload}
     except ApiClientError:
         saldo_s = {}
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("ItaÃº CC", formatar_moeda(saldo_s.get("ItaÃº CC", 0)))
-        st.metric("CartÃ£o Filippe", formatar_moeda(saldo_s.get("CartÃ£o Filippe", 0)))
+        st.metric("Itaú CC", formatar_moeda(obter_saldo_conta(saldo_s, "Itaú CC")))
+        st.metric("Cartão Filippe", formatar_moeda(obter_saldo_conta(saldo_s, "Cartão Filippe")))
     with col2:
-        st.metric("CartÃ£o Bianca", formatar_moeda(saldo_s.get("CartÃ£o Bianca", 0)))
-        st.metric("CartÃ£o Nath", formatar_moeda(saldo_s.get("CartÃ£o Nath", 0)))
+        st.metric("Cartão Bianca", formatar_moeda(obter_saldo_conta(saldo_s, "Cartão Bianca")))
+        st.metric("Cartão Nath", formatar_moeda(obter_saldo_conta(saldo_s, "Cartão Nath")))
     with col3:
-        st.metric("Inter", formatar_moeda(saldo_s.get("Inter", 0)))
-        st.metric("Nubank", formatar_moeda(saldo_s.get("Nubank", 0)))
+        st.metric("Inter", formatar_moeda(obter_saldo_conta(saldo_s, "Inter")))
+        st.metric("Nubank", formatar_moeda(obter_saldo_conta(saldo_s, "Nubank")))
     with col4:
-        st.metric("VA", formatar_moeda(saldo_s.get("VA", 0)))
-        st.metric("VR", formatar_moeda(saldo_s.get("VR", 0)))
+        st.metric("VA", formatar_moeda(obter_saldo_conta(saldo_s, "VA")))
+        st.metric("VR", formatar_moeda(obter_saldo_conta(saldo_s, "VR")))
+
+
+
+
 

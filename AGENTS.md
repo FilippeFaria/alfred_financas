@@ -152,6 +152,27 @@ python run_telegram_bot.py
 
 ## Mudanças Recentes (v2)
 
+### ✅ Fix: Arredondamento de métricas na página de transação (07/05/2026)
+**Problema**: saldos de contas/cartões apareciam com ruído de ponto flutuante na UI (ex.: `1607.0100000000175`).
+
+**Implementado**:
+- `paginas/transacao.py`: criação de helper `formatar_moeda(valor)` para exibição em formato monetário brasileiro.
+- Aplicação do formatter nos `st.metric` de saldos (`Itaú CC`, cartões, `Inter`, `Nubank`, `VA`, `VR`).
+
+**Resultado**:
+- Exibição consistente com 2 casas decimais (ex.: `R$ 1.607,01`) sem alterar a regra de cálculo.
+
+### ✅ Fix: Fallback silencioso na análise sem credenciais do Google Sheets (07/05/2026)
+**Problema**: a aba de análise exibia aviso operacional quando faltavam credenciais do Google Sheets para carregar valores desejados.
+
+**Implementado**:
+- `src/analytics/charts.py` (`_carregar_valores_desejados`): remoção do `st.warning(...)` para erro de credenciais.
+- Em caso de falha de leitura, manutenção de fallback local em memória (`st.session_state.valores_desejados`) e marcação de carga concluída.
+
+**Resultado**:
+- A página de análise não é poluída por alerta técnico de infraestrutura.
+- Fluxo de análise permanece funcional mesmo sem integração ativa com Sheets.
+
 ### ✅ Feature: ETAPA 3.1 — Persistência PostgreSQL + API híbrida (06/05/2026)
 **Objetivo**: iniciar migração incremental de persistência para PostgreSQL (Supabase), mantendo continuidade operacional.
 
