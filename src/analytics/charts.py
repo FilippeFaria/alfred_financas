@@ -1,6 +1,6 @@
-"""
-Gráficos e visualizações com Plotly.
-Contém funções de plotting para análise financeira.
+﻿"""
+GrÃ¡ficos e visualizaÃ§Ãµes com Plotly.
+ContÃ©m funÃ§Ãµes de plotting para anÃ¡lise financeira.
 """
 from datetime import datetime
 
@@ -20,7 +20,7 @@ from src.services.google_sheets import read_valores_desejados, write_valores_des
 
 
 def _carregar_valores_desejados(path: str) -> None:
-    """Carrega valores desejados do Google Sheets para a sessão."""
+    """Carrega valores desejados do Google Sheets para a sessÃ£o."""
     if 'valores_desejados' not in st.session_state:
         st.session_state.valores_desejados = {}
     if 'valores_desejados_carregados' not in st.session_state:
@@ -34,12 +34,15 @@ def _carregar_valores_desejados(path: str) -> None:
         if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
             st.session_state.valores_desejados = dict(zip(df_valores['Categoria'], df_valores['Valor']))
         st.session_state.valores_desejados_carregados = True
-    except Exception as e:
-        st.warning(f"Não foi possível carregar valores do Google Sheets: {e}")
+    except Exception:
+        # Em ambientes sem credenciais do Sheets, seguimos com fallback local em memÃ³ria
+        # para nÃ£o poluir a UI da pÃ¡gina de anÃ¡lise com aviso operacional.
+        st.session_state.valores_desejados = st.session_state.get('valores_desejados', {})
+        st.session_state.valores_desejados_carregados = True
 
 
 def _obter_valores_desejados(path: str) -> dict:
-    """Obtém valores desejados por categoria fora do contexto de UI."""
+    """ObtÃ©m valores desejados por categoria fora do contexto de UI."""
     try:
         df_valores = read_valores_desejados(path)
         if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
@@ -50,7 +53,7 @@ def _obter_valores_desejados(path: str) -> dict:
 
 
 def _dados_categorias_despesa(df: pd.DataFrame, anomes: int) -> tuple[pd.DataFrame, dict, list]:
-    """Prepara dados do mês e lista completa de categorias de despesas."""
+    """Prepara dados do mÃªs e lista completa de categorias de despesas."""
     df = df.copy()
     df['anomes'] = df['anomes'].astype(str)
     anomes = str(anomes)
@@ -68,12 +71,12 @@ def _dados_categorias_despesa(df: pd.DataFrame, anomes: int) -> tuple[pd.DataFra
 
 
 def _render_editor_valores_desejados(df: pd.DataFrame, anome: int, path: str) -> None:
-    """Renderiza painel de edição de valores desejados por categoria."""
+    """Renderiza painel de ediÃ§Ã£o de valores desejados por categoria."""
     if 'editando_categorias' not in st.session_state:
         st.session_state.editando_categorias = False
 
     if not st.session_state.editando_categorias:
-        if st.button("✏️ Definir valores desejados"):
+        if st.button("âœï¸ Definir valores desejados"):
             st.session_state.editando_categorias = True
             st.rerun()
         return
@@ -104,7 +107,7 @@ def _render_editor_valores_desejados(df: pd.DataFrame, anome: int, path: str) ->
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("💾 Salvar"):
+            if st.button("ðŸ’¾ Salvar"):
                 st.session_state.valores_desejados = valores_input.copy()
                 st.session_state.editando_categorias = False
 
@@ -118,7 +121,7 @@ def _render_editor_valores_desejados(df: pd.DataFrame, anome: int, path: str) ->
                 st.rerun()
 
         with col_btn2:
-            if st.button("❌ Cancelar"):
+            if st.button("âŒ Cancelar"):
                 st.session_state.editando_categorias = False
                 st.rerun()
 
@@ -131,7 +134,7 @@ def render_categorias_despesas(df: pd.DataFrame, anome: int, path: str = '.') ->
 
 
 def montar_grafico_categorias_despesas(df: pd.DataFrame, anomes: int, path: str = '.') -> tuple[go.Figure, dict]:
-    """Monta a figura de categorias de despesas e retorna métricas auxiliares."""
+    """Monta a figura de categorias de despesas e retorna mÃ©tricas auxiliares."""
     data, valores_reais, _ = _dados_categorias_despesa(df, anomes)
     valores_desejados = _obter_valores_desejados(path)
     tem_desejados = bool(valores_desejados)
@@ -154,7 +157,7 @@ def montar_grafico_categorias_despesas(df: pd.DataFrame, anomes: int, path: str 
         fig.add_trace(go.Bar(
             x=[cat],
             y=[valor],
-            name='Real (↑)' if primeiro_real else None,
+            name='Real (â†‘)' if primeiro_real else None,
             marker_color=cor,
             opacity=1.0,
             text=f"R$ {valor:,.0f}",
@@ -169,7 +172,7 @@ def montar_grafico_categorias_despesas(df: pd.DataFrame, anomes: int, path: str 
         fig.add_trace(go.Bar(
             x=[cat],
             y=[-valor],
-            name='Desejado (↓)' if primeiro_desejado else None,
+            name='Desejado (â†“)' if primeiro_desejado else None,
             marker_color=cor,
             opacity=0.4,
             text=f"R$ {valor:,.0f}",
@@ -197,8 +200,8 @@ def montar_grafico_categorias_despesas(df: pd.DataFrame, anomes: int, path: str 
 
 
 def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
-    """Exibe gráfico de evolução das despesas no mês."""
-    st.markdown('### Evolução despesas no mês')
+    """Exibe grÃ¡fico de evoluÃ§Ã£o das despesas no mÃªs."""
+    st.markdown('### EvoluÃ§Ã£o despesas no mÃªs')
     st.markdown('# ')
 
     df = df.copy()
@@ -209,7 +212,7 @@ def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
     anomes_filtrados = [x for x in todos_anomes if x <= anome]
 
     if not anomes_filtrados:
-        st.error("Nenhum valor válido encontrado para `anome`.")
+        st.error("Nenhum valor vÃ¡lido encontrado para `anome`.")
         return
 
     anome = max(anomes_filtrados)
@@ -236,20 +239,20 @@ def tendencia_mes(df: pd.DataFrame, anome: int) -> None:
 
 
 def receitas_despesas(df: pd.DataFrame, contas_invest: list, anome: int) -> None:
-    """Exibe gráfico de evolução de receitas e despesas no tempo."""
+    """Exibe grÃ¡fico de evoluÃ§Ã£o de receitas e despesas no tempo."""
     if LinearRegression is None:
-        st.error("scikit-learn não está disponível no ambiente atual para calcular tendências.")
+        st.error("scikit-learn nÃ£o estÃ¡ disponÃ­vel no ambiente atual para calcular tendÃªncias.")
         return
 
     anome = int(anome)
-    st.markdown('### Evolução das receitas e despesas no tempo')
+    st.markdown('### EvoluÃ§Ã£o das receitas e despesas no tempo')
 
     forecast_df = forecast(df, anome)
     forecast_data = abs(forecast_df.groupby('Tipo')['Valor'].sum())
 
     df = df[(df['desconsiderar'] == False) &
             (df['anomes'].astype(int) <= anome) &
-            (df['Tipo'] != 'Transferência') &
+            (df['Tipo'] != 'TransferÃªncia') &
             (df['Tipo'] != 'Investimento')]
 
     data = abs(df.groupby(['anomes', 'Tipo'])['Valor'].sum()).reset_index()
@@ -257,7 +260,7 @@ def receitas_despesas(df: pd.DataFrame, contas_invest: list, anome: int) -> None
     data['text'] = data['Valor'].apply(lambda x: f'{round(x/1000, 2)}k')
 
     total_meses = len(data['anomes'].unique())
-    meses_mostrar = st.slider('Número de meses para mostrar', min_value=1, max_value=total_meses, value=min(12, total_meses))
+    meses_mostrar = st.slider('NÃºmero de meses para mostrar', min_value=1, max_value=total_meses, value=min(12, total_meses))
 
     meses_unicos = sorted(data['anomes'].unique())[-meses_mostrar:]
     data = data[data['anomes'].isin(meses_unicos)]
@@ -280,7 +283,7 @@ def receitas_despesas(df: pd.DataFrame, contas_invest: list, anome: int) -> None
             x=group['anomes'],
             y=trend,
             mode='lines',
-            name=f'Tendência {tipo}',
+            name=f'TendÃªncia {tipo}',
             line=dict(color='red' if tipo == 'Despesa' else 'green', dash='dash'),
         ))
 
@@ -294,7 +297,7 @@ def receitas_despesas(df: pd.DataFrame, contas_invest: list, anome: int) -> None
 
 
 def monthly_spending_by_category_pie(df: pd.DataFrame, anome: int) -> None:
-    """Exibe gráfico de pizza com proporção de despesas por categoria."""
+    """Exibe grÃ¡fico de pizza com proporÃ§Ã£o de despesas por categoria."""
     depara_50_30_20 = {
         "Restaurante": "Desejos",
         "Casa": "Necessidades",
@@ -303,12 +306,12 @@ def monthly_spending_by_category_pie(df: pd.DataFrame, anome: int) -> None:
         "Transporte": "Necessidades",
         "Compras": "Desejos",
         "Lazer": "Desejos",
-        "Educação": "Necessidades",
+        "EducaÃ§Ã£o": "Necessidades",
         "Presentes": "Desejos",
-        "Saúde": "Necessidades",
-        "Serviços": "Necessidades",
+        "SaÃºde": "Necessidades",
+        "ServiÃ§os": "Necessidades",
         "Assinaturas": "Necessidades",
-        "Cosméticos": "Desejos",
+        "CosmÃ©ticos": "Desejos",
         "Outros": "Desejos",
         "Multas": "Desejos"
     }
@@ -325,7 +328,7 @@ def monthly_spending_by_category_pie(df: pd.DataFrame, anome: int) -> None:
     fig.update_layout(showlegend=True)
     st.plotly_chart(fig, use_container_width=False)
     st.markdown('''
-**Proporção ideal:**
+**ProporÃ§Ã£o ideal:**
 - Necessidades: 50%
 - Desejos: 30%
 - Investimento: 20%
@@ -333,7 +336,7 @@ def monthly_spending_by_category_pie(df: pd.DataFrame, anome: int) -> None:
 
 
 def categorias(df: pd.DataFrame, anomes: int, path: str = '.') -> None:
-    """Exibe gráfico de categorias com valores reais vs desejados."""
+    """Exibe grÃ¡fico de categorias com valores reais vs desejados."""
     _carregar_valores_desejados(path)
     fig, metricas = montar_grafico_categorias_despesas(df, anomes, path)
     st.plotly_chart(fig)
@@ -345,24 +348,24 @@ def categorias(df: pd.DataFrame, anomes: int, path: str = '.') -> None:
         st.metric("Total Desejado", f"R$ {metricas['total_desejado']:,.2f}")
     with col3:
         diff = metricas['diferenca']
-        st.metric("Diferença", f"R$ {diff:,.2f}", delta=f"{diff:,.2f}", delta_color="inverse" if diff > 0 else "normal")
+        st.metric("DiferenÃ§a", f"R$ {diff:,.2f}", delta=f"{diff:,.2f}", delta_color="inverse" if diff > 0 else "normal")
 
     if metricas['tem_desejados']:
-        if st.button("🗑️ Limpar valores desejados"):
+        if st.button("ðŸ—‘ï¸ Limpar valores desejados"):
             st.session_state.valores_desejados = {}
             st.rerun()
 
 
 def categorias_tempo(df: pd.DataFrame) -> None:
-    """Exibe gráfico de evolução de cada categoria no tempo."""
-    st.markdown('### Evolução de cada categoria no montante de despesas')
+    """Exibe grÃ¡fico de evoluÃ§Ã£o de cada categoria no tempo."""
+    st.markdown('### EvoluÃ§Ã£o de cada categoria no montante de despesas')
 
     df = df[(df['desconsiderar'] == False) & (df['Tipo'] == 'Despesa')].copy()
     df['Valor'] = abs(df['Valor'])
     data = df.groupby(['anomes', 'Categoria'])['Valor'].sum().reset_index()
 
     total_meses = len(data['anomes'].unique())
-    meses_mostrar = st.slider('Número de meses para mostrar', min_value=1, max_value=total_meses, value=min(12, total_meses))
+    meses_mostrar = st.slider('NÃºmero de meses para mostrar', min_value=1, max_value=total_meses, value=min(12, total_meses))
 
     meses_unicos = sorted(data['anomes'].unique())[-meses_mostrar:]
     data = data[data['anomes'].isin(meses_unicos)]
@@ -383,11 +386,11 @@ def categorias_tempo(df: pd.DataFrame) -> None:
 
 
 def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFrame:
-    """Exibe gráfico de evolução de uma categoria específica."""
+    """Exibe grÃ¡fico de evoluÃ§Ã£o de uma categoria especÃ­fica."""
     anome = int(anome)
 
-    st.markdown('### Evolução de uma categoria no tempo')
-    df = df[(df['Tipo'] != 'Investimento') & (df['Tipo'] != 'Transferência')]
+    st.markdown('### EvoluÃ§Ã£o de uma categoria no tempo')
+    df = df[(df['Tipo'] != 'Investimento') & (df['Tipo'] != 'TransferÃªncia')]
     lista_categoria = list(df['Categoria'].unique())
     if 'Investimento' in lista_categoria:
         lista_categoria.remove('Investimento')
@@ -422,7 +425,7 @@ def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFr
         )
         fig.update_traces(
             selector=dict(type='bar'),
-            hovertemplate='Mês: %{x}<br>Valor: R$ %{customdata[0]:,.2f}<br>Nome: %{customdata[1]}<br>Conta: %{customdata[2]}<br>Data: %{customdata[3]}<extra></extra>'
+            hovertemplate='MÃªs: %{x}<br>Valor: R$ %{customdata[0]:,.2f}<br>Nome: %{customdata[1]}<br>Conta: %{customdata[2]}<br>Data: %{customdata[3]}<extra></extra>'
         )
 
         fig.add_trace(
@@ -430,7 +433,7 @@ def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFr
                 x=df_grouped['anomes'],
                 y=df_grouped['rolling_mean'],
                 mode='lines',
-                name='Média Móvel (3 meses)',
+                name='MÃ©dia MÃ³vel (3 meses)',
                 line=dict(color='blue')
             ),
             secondary_y=False
@@ -454,14 +457,14 @@ def evolucao_categoria(df: pd.DataFrame, anome: int, now: datetime) -> pd.DataFr
 
 
 def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
-    """Exibe extrato filtrado por mês e contas."""
+    """Exibe extrato filtrado por mÃªs e contas."""
     if df.empty or "anomes" not in df.columns:
         st.info("Sem dados para exibir no extrato.")
         return df
 
     anomes_disponiveis = sorted(df['anomes'].unique(), key=lambda x: int(x))
     if not anomes_disponiveis:
-        st.info("Sem períodos disponíveis para exibir no extrato.")
+        st.info("Sem perÃ­odos disponÃ­veis para exibir no extrato.")
         return df
 
     if anome not in anomes_disponiveis:
@@ -469,25 +472,25 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
 
     anomes = st.select_slider('Escolha o anomes para o extrato', options=anomes_disponiveis, value=anome)
 
-    st.markdown('#### Contas bancárias')
+    st.markdown('#### Contas bancÃ¡rias')
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     sector_list = []
 
     with col1:
-        if st.checkbox('Cartão Filippe'):
-            sector_list.append('Cartão Filippe')
+        if st.checkbox('CartÃ£o Filippe'):
+            sector_list.append('CartÃ£o Filippe')
     with col2:
-        if st.checkbox('Itaú CC'):
-            sector_list.append('Itaú CC')
+        if st.checkbox('ItaÃº CC'):
+            sector_list.append('ItaÃº CC')
     with col3:
         if st.checkbox('Nubank'):
             sector_list.append('Nubank')
     with col4:
-        if st.checkbox('Cartão Bianca'):
-            sector_list.append('Cartão Bianca')
+        if st.checkbox('CartÃ£o Bianca'):
+            sector_list.append('CartÃ£o Bianca')
     with col5:
-        if st.checkbox('Cartão Nath'):
-            sector_list.append('Cartão Nath')
+        if st.checkbox('CartÃ£o Nath'):
+            sector_list.append('CartÃ£o Nath')
     with col6:
         if st.checkbox('Inter'):
             sector_list.append('Inter')
@@ -520,7 +523,7 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
         df = df[df['Parcela'].isnull() == False]
 
     invest_selected = any(x in sector_list for x in ['Ion', 'C6Invest', 'Nuinvest', '99Pay'])
-    contas_selected = any(x in sector_list for x in ['Cartão Filippe', 'Itaú CC', 'Nubank', 'Cartão Bianca', 'Cartão Nath', 'Inter', 'VR', 'VA'])
+    contas_selected = any(x in sector_list for x in ['CartÃ£o Filippe', 'ItaÃº CC', 'Nubank', 'CartÃ£o Bianca', 'CartÃ£o Nath', 'Inter', 'VR', 'VA'])
 
     if invest_selected:
         data = df[(df['Conta'].isin(sector_list))]
@@ -539,7 +542,7 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
     col_pag1, col_pag2 = st.columns([1, 1])
     with col_pag1:
         tamanho_pagina = st.selectbox(
-            "Itens por página",
+            "Itens por pÃ¡gina",
             options=[50, 100, 200, 500],
             index=1,
             key="extrato_tamanho_pagina",
@@ -548,7 +551,7 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
     total_paginas = max(1, (total_linhas + tamanho_pagina - 1) // tamanho_pagina)
     with col_pag2:
         pagina_atual = st.number_input(
-            "Página",
+            "PÃ¡gina",
             min_value=1,
             max_value=total_paginas,
             value=1,
@@ -566,8 +569,8 @@ def extrato(df: pd.DataFrame, anome: int) -> pd.DataFrame:
 
 
 def aplicacoes_resgates(df: pd.DataFrame, contas_invest: list) -> None:
-    """Exibe gráfico de aplicações e resgates de investimentos."""
-    st.markdown('### Aplicações e Resgates')
+    """Exibe grÃ¡fico de aplicaÃ§Ãµes e resgates de investimentos."""
+    st.markdown('### AplicaÃ§Ãµes e Resgates')
 
     df = df[(df['Conta'].isin(contas_invest)) & (df['Tipo'] == 'Investimento')]
     data = abs(df.groupby(['anomes', 'Nome'])['Valor'].sum()).reset_index()
@@ -582,7 +585,7 @@ def aplicacoes_resgates(df: pd.DataFrame, contas_invest: list) -> None:
         x=patrimonio_total['anomes'],
         y=patrimonio_total['patrimonio'],
         mode='lines+markers',
-        name='Patrimônio',
+        name='PatrimÃ´nio',
         yaxis='y2'
     ))
 
@@ -599,7 +602,7 @@ def aplicacoes_resgates(df: pd.DataFrame, contas_invest: list) -> None:
 
     fig.update_layout(
         barmode='group',
-        yaxis2=dict(title='Patrimônio', overlaying='y', side='right')
+        yaxis2=dict(title='PatrimÃ´nio', overlaying='y', side='right')
     )
     fig.update_xaxes(type='category')
     fig.update_xaxes(categoryorder='category ascending')
@@ -608,8 +611,8 @@ def aplicacoes_resgates(df: pd.DataFrame, contas_invest: list) -> None:
 
 
 def tendencia_saldo(df: pd.DataFrame, conta: str, anome: int) -> None:
-    """Exibe gráfico de tendência de saldo por conta."""
-    st.markdown('### Saldo no mês')
+    """Exibe grÃ¡fico de tendÃªncia de saldo por conta."""
+    st.markdown('### Saldo no mÃªs')
     st.markdown('# ')
 
     anome = int(anome)
@@ -632,3 +635,4 @@ def tendencia_saldo(df: pd.DataFrame, conta: str, anome: int) -> None:
 
     fig = px.line(data, x='dia_mes', y='cumulativo', color='anomes', markers=True)
     st.plotly_chart(fig)
+

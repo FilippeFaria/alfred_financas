@@ -1,4 +1,4 @@
-"""
+﻿"""
 Pagina de Transacoes.
 Gerencia adicao de receitas, despesas, transferencias e investimentos.
 """
@@ -45,7 +45,7 @@ def salvar_transacao_api(*, recarregar_df: bool = True, **payload) -> bool:
             recarregar_df_api()
         return True
     except ApiClientError as exc:
-        st.error(f"Erro ao salvar transação via API: {exc}")
+        st.error(f"Erro ao salvar transaÃ§Ã£o via API: {exc}")
         return False
 
 
@@ -80,7 +80,7 @@ def limpar_estado_transacao():
         "valor_pagamento_cartao_nath",
         "valor_pagamento_cartao_bianca",
         "valor_pagamento_cartao_pai",
-        "valor_pagamento_cartao_Mãe",
+        "valor_pagamento_cartao_MÃ£e",
         "data_pagamento_cartao",
         "tipo_inv",
         "obs_inv",
@@ -120,6 +120,14 @@ def finalizar_confirmacao_salvamento():
     st.session_state["tipo_transacao"] = "Despesa"
 
 
+def formatar_moeda(valor):
+    """Formata um valor numÃ©rico no padrÃ£o monetÃ¡rio brasileiro."""
+    valor_float = float(valor or 0)
+    valor_formatado = f"{valor_float:,.2f}"
+    valor_formatado = valor_formatado.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {valor_formatado}"
+
+
 def adicionar_receita(df, path="."):
     """Formulario para adicionar uma receita."""
     if "duplicata_receita_encontrada" not in st.session_state:
@@ -128,14 +136,14 @@ def adicionar_receita(df, path="."):
         st.session_state.dados_receita_form = None
 
     nome = st.text_input("Nome", key="nome_receita")
-    obs = st.text_input("Comentário", key="obs_receita")
+    obs = st.text_input("ComentÃ¡rio", key="obs_receita")
     tipo = "Receita"
     valor = st.number_input("Valor", key="valor_receita")
     categoria = st.selectbox("Tipo da Receita", CATEGORIAS_RECEITA, key="cat_receita")
     conta = st.selectbox("Conta", CONTAS, key="conta_receita")
     data = st.date_input("Data", key="data_receita")
     tag = st.multiselect("TAG", df["TAG"].dropna().drop_duplicates().tolist(), key="tag_receita")
-    desconsiderar = st.checkbox("Desconsiderar na análise", key="desc_receita")
+    desconsiderar = st.checkbox("Desconsiderar na anÃ¡lise", key="desc_receita")
 
     def salvar_receita_callback():
         duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
@@ -168,8 +176,8 @@ def adicionar_receita(df, path="."):
             preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_receita_encontrada and st.session_state.dados_receita_form:
-        st.warning("⚠️ Transação similar encontrada!")
-        st.write("**Detalhes da transação existente:**")
+        st.warning("âš ï¸ TransaÃ§Ã£o similar encontrada!")
+        st.write("**Detalhes da transaÃ§Ã£o existente:**")
         duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
         if not duplicatas.empty:
             existente = duplicatas.iloc[0]
@@ -185,7 +193,7 @@ def adicionar_receita(df, path="."):
             )
             st.write(f"- Data: {data_formatada}")
             if existente["Obs"]:
-                st.write(f"- Observação: {existente['Obs']}")
+                st.write(f"- ObservaÃ§Ã£o: {existente['Obs']}")
 
         def confirmar_receita_callback():
             dados = st.session_state.dados_receita_form
@@ -223,7 +231,7 @@ def adicionar_despesa(df, last_account, path="."):
         st.session_state.dados_despesa_form = None
 
     nome = st.text_input("Nome", key="nome_despesa")
-    obs = st.text_input("Comentário", key="obs_despesa")
+    obs = st.text_input("ComentÃ¡rio", key="obs_despesa")
     tag = st.multiselect("TAG", df["TAG"].dropna().drop_duplicates().tolist(), key="tag_despesa")
     tipo = "Despesa"
     valor = -st.number_input("Valor", key="valor_despesa")
@@ -242,7 +250,7 @@ def adicionar_despesa(df, last_account, path="."):
         conta = st.selectbox("Conta", CONTAS, key="conta_despesa")
 
     data = st.date_input("Data", key="data_despesa")
-    desconsiderar = st.checkbox("Desconsiderar na análise", key="desc_despesa")
+    desconsiderar = st.checkbox("Desconsiderar na anÃ¡lise", key="desc_despesa")
 
     def salvar_despesa_callback():
         duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
@@ -277,8 +285,8 @@ def adicionar_despesa(df, last_account, path="."):
             preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_despesa_encontrada and st.session_state.dados_despesa_form:
-        st.warning("⚠️ Transação similar encontrada!")
-        st.write("**Detalhes da transação existente:**")
+        st.warning("âš ï¸ TransaÃ§Ã£o similar encontrada!")
+        st.write("**Detalhes da transaÃ§Ã£o existente:**")
         duplicatas = verificar_duplicata(df, valor, conta, datetime.combine(data, datetime.min.time()))
         if not duplicatas.empty:
             existente = duplicatas.iloc[0]
@@ -294,7 +302,7 @@ def adicionar_despesa(df, last_account, path="."):
             )
             st.write(f"- Data: {data_formatada}")
             if existente["Obs"]:
-                st.write(f"- Observação: {existente['Obs']}")
+                st.write(f"- ObservaÃ§Ã£o: {existente['Obs']}")
 
         def confirmar_despesa_callback():
             dados = st.session_state.dados_despesa_form
@@ -332,9 +340,9 @@ def adicionar_transferencia(df, opcao, path="."):
     if "dados_transferencia_form" not in st.session_state:
         st.session_state.dados_transferencia_form = None
 
-    if opcao == "Transferência":
+    if opcao == "TransferÃªncia":
         nome = opcao
-        obs = st.text_input("Comentário", key="obs_transf")
+        obs = st.text_input("ComentÃ¡rio", key="obs_transf")
         tipo = opcao
         valor = st.number_input("Valor", key="valor_transf")
         categoria = opcao
@@ -343,8 +351,8 @@ def adicionar_transferencia(df, opcao, path="."):
         data = st.date_input("Data", key="data_transf")
         tag = ""
     else:
-        nome = st.selectbox("Tipo transação", ["Aplicação", "Resgate"], key="tipo_inv")
-        obs = st.text_input("Comentário", key="obs_inv")
+        nome = st.selectbox("Tipo transaÃ§Ã£o", ["AplicaÃ§Ã£o", "Resgate"], key="tipo_inv")
+        obs = st.text_input("ComentÃ¡rio", key="obs_inv")
         tipo = opcao
         valor = st.number_input("Valor", key="valor_inv")
         categoria = st.selectbox("Tipo investimento", CATEGORIAS_INVESTIMENTO, key="cat_inv")
@@ -404,14 +412,14 @@ def adicionar_transferencia(df, opcao, path="."):
             preparar_confirmacao_salvamento()
 
     if st.session_state.duplicata_transferencia_encontrada and st.session_state.dados_transferencia_form:
-        st.warning("⚠️ Transação similar encontrada!")
-        st.write("**Detalhes da(s) transação(ões) existente(s):**")
+        st.warning("âš ï¸ TransaÃ§Ã£o similar encontrada!")
+        st.write("**Detalhes da(s) transaÃ§Ã£o(Ãµes) existente(s):**")
         duplicatas_debito = verificar_duplicata(df, -valor, conta_origem, datetime.combine(data, datetime.min.time()))
         duplicatas_credito = verificar_duplicata(df, valor, conta_destino, datetime.combine(data, datetime.min.time()))
         duplicatas = pd.concat([duplicatas_debito, duplicatas_credito])
 
         for indice, existente in duplicatas.iterrows():
-            st.write(f"**Transação {indice + 1}:**")
+            st.write(f"**TransaÃ§Ã£o {indice + 1}:**")
             st.write(f"- Nome: {existente['Nome']}")
             st.write(f"- Tipo: {existente['Tipo']}")
             st.write(f"- Categoria: {existente['Categoria']}")
@@ -424,7 +432,7 @@ def adicionar_transferencia(df, opcao, path="."):
             )
             st.write(f"- Data: {data_formatada}")
             if existente["Obs"]:
-                st.write(f"- Observação: {existente['Obs']}")
+                st.write(f"- ObservaÃ§Ã£o: {existente['Obs']}")
             st.write("---")
 
         def confirmar_transferencia_callback():
@@ -479,13 +487,13 @@ def adicionar_pagamento_cartao(df, path="."):
     if "dados_pagamento_cartao_form" not in st.session_state:
         st.session_state.dados_pagamento_cartao_form = None
 
-    conta_origem = "Itaú CC"
+    conta_origem = "ItaÃº CC"
     mapa_chaves_cartao = {
-        "Cartão Filippe": "valor_pagamento_cartao_filippe",
-        "Cartão Nath": "valor_pagamento_cartao_nath",
-        "Cartão Bianca": "valor_pagamento_cartao_bianca",
-        "Cartão Pai": "valor_pagamento_cartao_pai",
-        "Cartão Mãe": "valor_pagamento_cartao_Mãe",
+        "CartÃ£o Filippe": "valor_pagamento_cartao_filippe",
+        "CartÃ£o Nath": "valor_pagamento_cartao_nath",
+        "CartÃ£o Bianca": "valor_pagamento_cartao_bianca",
+        "CartÃ£o Pai": "valor_pagamento_cartao_pai",
+        "CartÃ£o MÃ£e": "valor_pagamento_cartao_MÃ£e",
     }
     data_pagamento_input = st.date_input(
         "Data",
@@ -518,9 +526,9 @@ def adicionar_pagamento_cartao(df, path="."):
                     {
                         "id": transacao_id,
                         "nome": nome,
-                        "tipo": "Transferência",
+                        "tipo": "TransferÃªncia",
                         "valor": -valor,
-                        "categoria": "Transferência",
+                        "categoria": "TransferÃªncia",
                         "conta": conta_origem,
                         "data": data_lancamento,
                         "obs": "",
@@ -531,9 +539,9 @@ def adicionar_pagamento_cartao(df, path="."):
                     {
                         "id": transacao_id,
                         "nome": nome,
-                        "tipo": "Transferência",
+                        "tipo": "TransferÃªncia",
                         "valor": valor,
-                        "categoria": "Transferência",
+                        "categoria": "TransferÃªncia",
                         "conta": cartao,
                         "data": data_lancamento,
                         "obs": "",
@@ -595,14 +603,14 @@ def adicionar_pagamento_cartao(df, path="."):
             recarregar_df_api()
             preparar_confirmacao_salvamento()
         except ApiClientError as exc:
-            st.error(f"Erro ao salvar pagamento de cartão via API: {exc}")
+            st.error(f"Erro ao salvar pagamento de cartÃ£o via API: {exc}")
 
     def salvar_pagamento_cartao_callback():
         valores_informados = {cartao: float(valor) for cartao, valor in valores_pagamento.items()}
         cartoes_com_valor = [cartao for cartao, valor in valores_informados.items() if valor > 0]
 
         if not cartoes_com_valor:
-            st.warning("Informe pelo menos um valor para salvar o pagamento de cartão.")
+            st.warning("Informe pelo menos um valor para salvar o pagamento de cartÃ£o.")
             return
 
         data_pagamento = datetime.combine(data_pagamento_input, datetime.min.time())
@@ -628,14 +636,14 @@ def adicionar_pagamento_cartao(df, path="."):
         salvar_lancamentos(lancamentos)
 
     if st.session_state.duplicata_pagamento_cartao_encontrada and st.session_state.dados_pagamento_cartao_form:
-        st.warning("⚠️ Transação similar encontrada!")
-        st.write("**Detalhes da(s) transação(ões) existente(s):**")
+        st.warning("âš ï¸ TransaÃ§Ã£o similar encontrada!")
+        st.write("**Detalhes da(s) transaÃ§Ã£o(Ãµes) existente(s):**")
         dados = st.session_state.dados_pagamento_cartao_form
         lancamentos = obter_lancamentos(dados["valores"], dados["ids_por_cartao"], dados["data"])
         duplicatas = obter_duplicatas_pagamento(lancamentos)
 
         for indice, existente in duplicatas.iterrows():
-            st.write(f"**Transação {indice + 1}:**")
+            st.write(f"**TransaÃ§Ã£o {indice + 1}:**")
             st.write(f"- Nome: {existente['Nome']}")
             st.write(f"- Tipo: {existente['Tipo']}")
             st.write(f"- Categoria: {existente['Categoria']}")
@@ -686,13 +694,13 @@ def render(df, path="."):
         st.button("OK", on_click=finalizar_confirmacao_salvamento, key="btn_ok_salvamento_transacao")
         return
 
-    st.title("Gerenciador Financeiro 💰")
+    st.title("Gerenciador Financeiro ðŸ’°")
 
     last_account = df["Conta"].iloc[-1] if not df.empty else CONTAS[0]
 
     opcao = st.selectbox(
-        "Tipo de transação",
-        ["Receita", "Despesa", "Transferência", "Investimento", "Pagamento de Cartão"],
+        "Tipo de transaÃ§Ã£o",
+        ["Receita", "Despesa", "TransferÃªncia", "Investimento", "Pagamento de CartÃ£o"],
         key="tipo_transacao",
     )
     st.markdown("# ")
@@ -701,7 +709,7 @@ def render(df, path="."):
         adicionar_receita(df, path)
     elif opcao == "Despesa":
         adicionar_despesa(df, last_account, path)
-    elif opcao == "Pagamento de Cartão":
+    elif opcao == "Pagamento de CartÃ£o":
         adicionar_pagamento_cartao(df, path)
     else:
         adicionar_transferencia(df, opcao, path)
@@ -714,14 +722,15 @@ def render(df, path="."):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Itaú CC", saldo_s.get("Itaú CC", 0))
-        st.metric("Cartão Filippe", saldo_s.get("Cartão Filippe", 0))
+        st.metric("ItaÃº CC", formatar_moeda(saldo_s.get("ItaÃº CC", 0)))
+        st.metric("CartÃ£o Filippe", formatar_moeda(saldo_s.get("CartÃ£o Filippe", 0)))
     with col2:
-        st.metric("Cartão Bianca", saldo_s.get("Cartão Bianca", 0))
-        st.metric("Cartão Nath", saldo_s.get("Cartão Nath", 0))
+        st.metric("CartÃ£o Bianca", formatar_moeda(saldo_s.get("CartÃ£o Bianca", 0)))
+        st.metric("CartÃ£o Nath", formatar_moeda(saldo_s.get("CartÃ£o Nath", 0)))
     with col3:
-        st.metric("Inter", saldo_s.get("Inter", 0))
-        st.metric("Nubank", saldo_s.get("Nubank", 0))
+        st.metric("Inter", formatar_moeda(saldo_s.get("Inter", 0)))
+        st.metric("Nubank", formatar_moeda(saldo_s.get("Nubank", 0)))
     with col4:
-        st.metric("VA", saldo_s.get("VA", 0))
-        st.metric("VR", saldo_s.get("VR", 0))
+        st.metric("VA", formatar_moeda(saldo_s.get("VA", 0)))
+        st.metric("VR", formatar_moeda(saldo_s.get("VR", 0)))
+
