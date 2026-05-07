@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/network/alfred_api_client.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/dto/categorias_dto.dart';
+import '../../../core/network/dto/criar_transacao_dto.dart';
 import '../../../core/network/dto/transacao_dto.dart';
 import 'transaction_models.dart';
 
@@ -98,10 +99,73 @@ class TransactionsFilterOptions {
   final List<String> tipos;
 }
 
+class CadastroTransacaoOptions {
+  CadastroTransacaoOptions({
+    required this.categoriasDespesa,
+    required this.categoriasReceita,
+    required this.categoriasInvestimento,
+    required this.contas,
+    required this.contasInvestimento,
+    required this.cartoesPagamento,
+    required this.cartoesPagamentoTransferencia,
+    required this.cartoesPagamentoDespesa,
+  });
+
+  final List<String> categoriasDespesa;
+  final List<String> categoriasReceita;
+  final List<String> categoriasInvestimento;
+  final List<String> contas;
+  final List<String> contasInvestimento;
+  final List<String> cartoesPagamento;
+  final List<String> cartoesPagamentoTransferencia;
+  final List<String> cartoesPagamentoDespesa;
+}
+
+class CadastroTransacaoInput {
+  CadastroTransacaoInput({
+    required this.nome,
+    required this.tipo,
+    required this.valor,
+    required this.categoria,
+    required this.conta,
+    required this.data,
+    this.obs = '',
+    this.tag,
+    this.desconsiderar = false,
+    this.parcelas,
+  });
+
+  final String nome;
+  final String tipo;
+  final double valor;
+  final String categoria;
+  final String conta;
+  final DateTime data;
+  final String obs;
+  final String? tag;
+  final bool desconsiderar;
+  final int? parcelas;
+}
+
 class TransactionsRepository {
   TransactionsRepository(this._apiClient);
 
   final AlfredApiClient _apiClient;
+
+  static const List<String> contasInvestimentoPadrao = ['Ion', 'Nuinvest', '99Pay', 'C6Invest'];
+  static const List<String> cartoesPagamentoPadrao = [
+    'Cartão Filippe',
+    'Cartão Nath',
+    'Cartão Bianca',
+    'Cartão Pai',
+    'Cartão Mãe',
+  ];
+  static const List<String> cartoesPagamentoTransferenciaPadrao = [
+    'Cartão Nath',
+    'Cartão Filippe',
+    'Cartão Bianca',
+  ];
+  static const List<String> cartoesPagamentoDespesaPadrao = ['Cartão Pai', 'Cartão Mãe'];
 
   Future<TransactionsPageResult> listarPaginado({
     required int pagina,
@@ -130,7 +194,12 @@ class TransactionsRepository {
     final CategoriasDto categoriasDto = await _apiClient.getCategorias();
     final transacoes = await _apiClient.getTransacoesPaginado(pagina: 1, limite: 200);
 
-    final contas = transacoes.items.map((e) => e.conta).where((e) => e.isNotEmpty).toSet().toList()..sort();
+    final contas = transacoes.items
+        .map((e) => e.conta)
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
     final categorias = <String>{
       ...categoriasDto.despesa,
       ...categoriasDto.receita,
@@ -145,6 +214,27 @@ class TransactionsRepository {
     );
   }
 
+  Future<CadastroTransacaoOptions> carregarOpcoesCadastro() async {
+    final categoriasDto = await _apiClient.getCategorias();
+    final saldo = await _apiClient.getSaldo();
+    final contasFromSaldo = saldo.map((e) => e.conta).where((e) => e.isNotEmpty).toSet().toList()
+      ..sort();
+    final contas = contasFromSaldo.isEmpty
+        ? ['Itaú CC', 'Cartão Filippe', 'Cartão Bianca', 'Cartão Nath', 'Inter', 'Nubank', 'VA', 'VR']
+        : contasFromSaldo;
+
+    return CadastroTransacaoOptions(
+      categoriasDespesa: categoriasDto.despesa,
+      categoriasReceita: categoriasDto.receita,
+      categoriasInvestimento: categoriasDto.investimento,
+      contas: contas,
+      contasInvestimento: contasInvestimentoPadrao,
+      cartoesPagamento: cartoesPagamentoPadrao,
+      cartoesPagamentoTransferencia: cartoesPagamentoTransferenciaPadrao,
+      cartoesPagamentoDespesa: cartoesPagamentoDespesaPadrao,
+    );
+  }
+
   Future<void> salvarFiltros(TransactionsFilters filtros) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_filtrosKey, jsonEncode(filtros.toMap()));
@@ -154,10 +244,27 @@ class TransactionsRepository {
     final prefs = await SharedPreferences.getInstance();
     final json = prefs.getString(_filtrosKey);
     if (json == null || json.isEmpty) {
-      return TransactionsFilters();
+      return const TransactionsFilters();
     }
     final map = jsonDecode(json) as Map<String, dynamic>;
     return TransactionsFilters.fromMap(map);
+  }
+
+  Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {
+    await _apiClient.postTransacao(
+      CriarTransacaoRequestDto(
+        nome: input.nome,
+        tipo: input.tipo,
+        valor: input.valor,
+        categoria: input.categoria,
+        conta: input.conta,
+        dataIso: input.data.toIso8601String(),
+        obs: input.obs,
+        tag: input.tag,
+        desconsiderar: input.desconsiderar,
+        parcelas: input.parcelas,
+      ),
+    );
   }
 
   TransacaoItem _mapDtoToItem(TransacaoDto item) {
@@ -287,6 +394,15 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   Future<void> atualizarFiltros(TransactionsFilters filtros) async {
     await _repository.salvarFiltros(filtros);
     state = state.copyWith(filtros: filtros);
+    await recarregar();
+  }
+
+  Future<CadastroTransacaoOptions> carregarOpcoesCadastro() {
+    return _repository.carregarOpcoesCadastro();
+  }
+
+  Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {
+    await _repository.cadastrarTransacao(input);
     await recarregar();
   }
 }

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'api_exception.dart';
 import 'dto/analise_resumo_dto.dart';
 import 'dto/categorias_dto.dart';
+import 'dto/criar_transacao_dto.dart';
 import 'dto/saldo_dto.dart';
 import 'dto/status_dto.dart';
 import 'dto/transacao_dto.dart';
@@ -135,6 +136,15 @@ class AlfredApiClient {
     try {
       final response = await _dio.post('/analise/resumo', data: payload.toJson());
       return AnaliseResumoDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<TransacaoDto> postTransacao(CriarTransacaoRequestDto payload) async {
+    try {
+      final response = await _dio.post('/transacoes', data: payload.toJson());
+      return TransacaoDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }
