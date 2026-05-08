@@ -4,6 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/formatters.dart';
 import '../data/transactions_repository.dart';
 
+const _nomesMeses = <String>[
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
 
@@ -50,7 +65,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final notifier = ref.read(transactionsNotifierProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Extrato de Transações')),
+      appBar: AppBar(title: const Text('Transações')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _abrirCadastro,
         icon: const Icon(Icons.add),
@@ -157,6 +172,53 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
     super.dispose();
   }
 
+  List<String> _categoriasDisponiveis(CadastroTransacaoOptions opcoes) {
+    return _categoriasPorTipo(opcoes).toSet().toList();
+  }
+
+  List<String> _contasDisponiveis(CadastroTransacaoOptions opcoes) {
+    return opcoes.contas.toSet().toList();
+  }
+
+  List<String> _contasDestinoDisponiveis(CadastroTransacaoOptions opcoes) {
+    return (_tipo == 'Investimento' ? [...opcoes.contas, ...opcoes.contasInvestimento] : opcoes.contas)
+        .toSet()
+        .toList();
+  }
+
+  String? _categoriaSelecionadaAtual(CadastroTransacaoOptions opcoes) {
+    final categorias = _categoriasDisponiveis(opcoes);
+    if (categorias.isEmpty) {
+      return null;
+    }
+    if (_categoria != null && categorias.contains(_categoria)) {
+      return _categoria;
+    }
+    return categorias.first;
+  }
+
+  String? _contaSelecionadaAtual(CadastroTransacaoOptions opcoes) {
+    final contas = _contasDisponiveis(opcoes);
+    if (contas.isEmpty) {
+      return null;
+    }
+    if (_conta != null && contas.contains(_conta)) {
+      return _conta;
+    }
+    return contas.first;
+  }
+
+  String? _contaDestinoSelecionadaAtual(CadastroTransacaoOptions opcoes) {
+    final contasDestino = _contasDestinoDisponiveis(opcoes);
+    if (contasDestino.isEmpty) {
+      return null;
+    }
+    if (_contaDestino != null && contasDestino.contains(_contaDestino)) {
+      return _contaDestino;
+    }
+    return contasDestino.length > 1 ? contasDestino[1] : contasDestino.first;
+  }
+
   Future<void> _selecionarData() async {
     final picked = await showDatePicker(
       context: context,
@@ -201,19 +263,25 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
 
     setState(() => _isSaving = true);
     try {
+      final categoriaAtual = _categoriaSelecionadaAtual(opcoes);
+      final contaAtual = _contaSelecionadaAtual(opcoes);
+      final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
+
       if (_tipo == 'Transferência' || _tipo == 'Investimento') {
-        if (_conta == null || _contaDestino == null || _contaDestino == _conta) {
+        if (contaAtual == null || contaDestinoAtual == null || contaDestinoAtual == contaAtual) {
           throw Exception('Selecione conta origem e destino diferentes.');
         }
+        final contaOrigem = contaAtual;
+        final contaDestino = contaDestinoAtual;
         final nome = _tipo == 'Investimento' ? (_tipoInvestimentoNome ?? 'Aplicação') : 'Transferência';
-        final categoria = _tipo == 'Transferência' ? 'Transferência' : (_categoria ?? '');
+        final categoria = _tipo == 'Transferência' ? 'Transferência' : (categoriaAtual ?? '');
         await notifier.cadastrarTransacao(
           CadastroTransacaoInput(
             nome: nome,
             tipo: _tipo,
             valor: -valorBruto,
             categoria: categoria,
-            conta: _conta!,
+            conta: contaOrigem,
             data: _data,
             obs: _obsController.text.trim(),
           ),
@@ -224,7 +292,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
             tipo: _tipo,
             valor: valorBruto,
             categoria: categoria,
-            conta: _contaDestino!,
+            conta: contaDestino,
             data: _data,
             obs: _obsController.text.trim(),
           ),
@@ -235,40 +303,40 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
         }
         final cartao = _cartaoSelecionado!;
         if (opcoes.cartoesPagamentoTransferencia.contains(cartao)) {
+        await notifier.cadastrarTransacao(
+          CadastroTransacaoInput(
+            nome: 'Pagamento $cartao',
+            tipo: 'Transferência',
+            valor: -valorBruto,
+            categoria: 'Transferência',
+            conta: contaAtual ?? 'Itaú CC',
+            data: _data,
+            obs: _obsController.text.trim(),
+          ),
+        );
           await notifier.cadastrarTransacao(
             CadastroTransacaoInput(
               nome: 'Pagamento $cartao',
-              tipo: 'Transferência',
-              valor: -valorBruto,
-              categoria: 'Transferência',
-              conta: _conta ?? 'Itaú CC',
-              data: _data,
-              obs: _obsController.text.trim(),
-            ),
-          );
-          await notifier.cadastrarTransacao(
-            CadastroTransacaoInput(
-              nome: 'Pagamento $cartao',
-              tipo: 'Transferência',
-              valor: valorBruto,
-              categoria: 'Transferência',
-              conta: cartao,
-              data: _data,
-              obs: _obsController.text.trim(),
-            ),
-          );
+            tipo: 'Transferência',
+            valor: valorBruto,
+            categoria: 'Transferência',
+            conta: cartao,
+            data: _data,
+            obs: _obsController.text.trim(),
+          ),
+        );
         } else {
           await notifier.cadastrarTransacao(
             CadastroTransacaoInput(
-              nome: 'Pagamento $cartao',
-              tipo: 'Despesa',
-              valor: -valorBruto,
-              categoria: 'Outros',
-              conta: _conta ?? 'Itaú CC',
-              data: _data,
-              obs: _obsController.text.trim(),
-              desconsiderar: true,
-            ),
+            nome: 'Pagamento $cartao',
+            tipo: 'Despesa',
+            valor: -valorBruto,
+            categoria: 'Outros',
+            conta: contaAtual ?? 'Itaú CC',
+            data: _data,
+            obs: _obsController.text.trim(),
+            desconsiderar: true,
+          ),
           );
         }
       } else {
@@ -281,8 +349,8 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
             nome: _nomeController.text.trim(),
             tipo: _tipo,
             valor: valorAjustado,
-            categoria: _categoria ?? '',
-            conta: _conta ?? '',
+            categoria: categoriaAtual ?? '',
+            conta: contaAtual ?? '',
             data: _data,
             obs: _obsController.text.trim(),
             desconsiderar: _desconsiderar,
@@ -330,10 +398,12 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
           );
         }
         final opcoes = snapshot.data!;
-        final categorias = _categoriasPorTipo(opcoes);
-        _categoria ??= categorias.isNotEmpty ? categorias.first : null;
-        _conta ??= opcoes.contas.isNotEmpty ? opcoes.contas.first : null;
-        _contaDestino ??= opcoes.contas.length > 1 ? opcoes.contas[1] : _conta;
+        final categorias = _categoriasDisponiveis(opcoes);
+        final contas = _contasDisponiveis(opcoes);
+        final contasDestino = _contasDestinoDisponiveis(opcoes);
+        final categoriaAtual = _categoriaSelecionadaAtual(opcoes);
+        final contaAtual = _contaSelecionadaAtual(opcoes);
+        final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
         _tipoInvestimentoNome ??= 'Aplicação';
         _cartaoSelecionado ??= opcoes.cartoesPagamento.isNotEmpty ? opcoes.cartoesPagamento.first : null;
 
@@ -360,7 +430,19 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                     ],
                     onChanged: (value) {
                       if (value == null) return;
-                      setState(() => _tipo = value);
+                      setState(() {
+                        _tipo = value;
+                        if (_tipo != 'Despesa' && _tipo != 'Investimento' && _tipo != 'Transferência') {
+                          _parcelado = false;
+                          _desconsiderar = false;
+                        }
+                        if (_tipo == 'Transferência' || _tipo == 'Investimento') {
+                          _categoria = null;
+                        }
+                        if (_tipo != 'Despesa') {
+                          _parcelado = false;
+                        }
+                      });
                     },
                   ),
                   const SizedBox(height: 8),
@@ -378,8 +460,8 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                         return null;
                       },
                     ),
-                  if (_tipo == 'Pagamento de Cartão')
-                    DropdownButtonFormField<String>(
+                if (_tipo == 'Pagamento de Cartão')
+                  DropdownButtonFormField<String>(
                       initialValue: _cartaoSelecionado,
                       decoration: const InputDecoration(labelText: 'Cartão'),
                       items: opcoes.cartoesPagamento
@@ -413,33 +495,30 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                     ),
                   if (_tipo != 'Pagamento de Cartão')
                     DropdownButtonFormField<String>(
-                      initialValue: _categoria,
+                      initialValue: categoriaAtual,
                       decoration: const InputDecoration(labelText: 'Categoria'),
-                      items: categorias.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                      items: categorias
+                          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                          .toList(),
                       onChanged: (value) => setState(() => _categoria = value),
                     ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    initialValue: _conta,
+                    initialValue: contaAtual,
                     decoration: InputDecoration(
                       labelText: _tipo == 'Transferência' || _tipo == 'Investimento'
                           ? 'Conta origem'
                           : 'Conta',
                     ),
-                    items: opcoes.contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                    items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                     onChanged: (value) => setState(() => _conta = value),
                   ),
                   if (_tipo == 'Transferência' || _tipo == 'Investimento') ...[
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      initialValue: _contaDestino,
+                      initialValue: contaDestinoAtual,
                       decoration: const InputDecoration(labelText: 'Conta destino'),
-                      items: (_tipo == 'Investimento'
-                              ? [...opcoes.contas, ...opcoes.contasInvestimento]
-                              : opcoes.contas)
-                          .toSet()
-                          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-                          .toList(),
+                      items: contasDestino.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                       onChanged: (value) => setState(() => _contaDestino = value),
                     ),
                   ],
@@ -513,8 +592,8 @@ class _FiltersCard extends StatefulWidget {
 }
 
 class _FiltersCardState extends State<_FiltersCard> {
-  late TextEditingController _dataInicioController;
-  late TextEditingController _dataFimController;
+  int? _mes;
+  int? _ano;
   String? _categoria;
   String? _conta;
   String? _tipo;
@@ -522,37 +601,49 @@ class _FiltersCardState extends State<_FiltersCard> {
   @override
   void initState() {
     super.initState();
-    final filtros = widget.state.filtros;
-    _dataInicioController = TextEditingController(text: filtros.dataInicio ?? '');
-    _dataFimController = TextEditingController(text: filtros.dataFim ?? '');
-    _categoria = filtros.categoria;
-    _conta = filtros.conta;
-    _tipo = filtros.tipo;
+    _carregarEstado(widget.state.filtros);
   }
 
   @override
   void didUpdateWidget(covariant _FiltersCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.state.filtros != widget.state.filtros) {
-      _dataInicioController.text = widget.state.filtros.dataInicio ?? '';
-      _dataFimController.text = widget.state.filtros.dataFim ?? '';
-      _categoria = widget.state.filtros.categoria;
-      _conta = widget.state.filtros.conta;
-      _tipo = widget.state.filtros.tipo;
+      _carregarEstado(widget.state.filtros);
     }
   }
 
-  @override
-  void dispose() {
-    _dataInicioController.dispose();
-    _dataFimController.dispose();
-    super.dispose();
+  void _carregarEstado(TransactionsFilters filtros) {
+    final mesReferencia = filtros.mesReferencia;
+    if (mesReferencia != null && mesReferencia.contains('-')) {
+      final partes = mesReferencia.split('-');
+      _ano = int.tryParse(partes[0]);
+      _mes = int.tryParse(partes[1]);
+    } else {
+      _mes = null;
+      _ano = null;
+    }
+    _categoria = filtros.categoria;
+    _conta = filtros.conta;
+    _tipo = filtros.tipo;
+  }
+
+  List<int> _anosDisponiveis() {
+    final anoAtual = DateTime.now().year;
+    return [for (var ano = 2015; ano <= anoAtual + 1; ano++) ano];
+  }
+
+  String _mesLabel(int mes) => _nomesMeses[mes - 1];
+
+  String? _mesReferenciaSelecionada() {
+    if (_mes == null || _ano == null) {
+      return null;
+    }
+    return '${_ano!.toString().padLeft(4, '0')}-${_mes!.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final opcoes = widget.state.opcoes;
-    final filtros = widget.state.filtros;
 
     return Card(
       child: Padding(
@@ -562,14 +653,43 @@ class _FiltersCardState extends State<_FiltersCard> {
           children: [
             const Text('Filtros', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            TextField(
-              controller: _dataInicioController,
-              decoration: const InputDecoration(labelText: 'Data inicio (YYYY-MM-DD)'),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _dataFimController,
-              decoration: const InputDecoration(labelText: 'Data fim (YYYY-MM-DD)'),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<int?>(
+                    initialValue: _mes,
+                    decoration: const InputDecoration(labelText: 'Mês'),
+                    items: [
+                      const DropdownMenuItem<int?>(value: null, child: Text('Todos')),
+                      ...List.generate(
+                        12,
+                        (index) => DropdownMenuItem<int?>(
+                          value: index + 1,
+                          child: Text(_mesLabel(index + 1)),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) => setState(() => _mes = value),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<int?>(
+                    initialValue: _ano,
+                    decoration: const InputDecoration(labelText: 'Ano'),
+                    items: [
+                      const DropdownMenuItem<int?>(value: null, child: Text('Todos')),
+                      ..._anosDisponiveis().map(
+                        (ano) => DropdownMenuItem<int?>(
+                          value: ano,
+                          child: Text(ano.toString()),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) => setState(() => _ano = value),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
@@ -613,9 +733,9 @@ class _FiltersCardState extends State<_FiltersCard> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async {
-                      _dataInicioController.clear();
-                      _dataFimController.clear();
                       setState(() {
+                        _mes = null;
+                        _ano = null;
                         _categoria = null;
                         _conta = null;
                         _tipo = null;
@@ -629,19 +749,14 @@ class _FiltersCardState extends State<_FiltersCard> {
                 Expanded(
                   child: FilledButton(
                     onPressed: () async {
+                      final mesReferencia = _mesReferenciaSelecionada();
                       await widget.onApply(
-                        filtros.copyWith(
-                          dataInicio: _dataInicioController.text.trim().isEmpty
-                              ? null
-                              : _dataInicioController.text.trim(),
-                          dataFim: _dataFimController.text.trim().isEmpty
-                              ? null
-                              : _dataFimController.text.trim(),
+                        widget.state.filtros.copyWith(
+                          mesReferencia: mesReferencia,
                           categoria: _categoria,
                           conta: _conta,
                           tipo: _tipo,
-                          clearDataInicio: _dataInicioController.text.trim().isEmpty,
-                          clearDataFim: _dataFimController.text.trim().isEmpty,
+                          clearMesReferencia: mesReferencia == null,
                           clearCategoria: _categoria == null,
                           clearConta: _conta == null,
                           clearTipo: _tipo == null,

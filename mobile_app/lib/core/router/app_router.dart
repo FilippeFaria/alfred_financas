@@ -10,7 +10,7 @@ import '../../features/transactions/presentation/transactions_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: '/transactions',
     routes: [
       GoRoute(
         path: '/auth',
@@ -20,12 +20,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
-            path: '/dashboard',
-            builder: (context, state) => const DashboardPage(),
-          ),
-          GoRoute(
             path: '/transactions',
             builder: (context, state) => const TransactionsPage(),
+          ),
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => const DashboardPage(),
           ),
           GoRoute(
             path: '/insights',
@@ -47,8 +47,8 @@ class AppShell extends StatelessWidget {
   final Widget child;
 
   static const _tabs = <String>[
-    '/dashboard',
     '/transactions',
+    '/dashboard',
     '/insights',
     '/settings',
   ];
@@ -68,14 +68,14 @@ class AppShell extends StatelessWidget {
           onDestinationSelected: (index) => context.go(_tabs[index]),
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
-            NavigationDestination(
               icon: Icon(Icons.swap_horiz_outlined),
               selectedIcon: Icon(Icons.swap_horiz),
               label: 'Transações',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: 'Dashboard',
             ),
             NavigationDestination(
               icon: Icon(Icons.auto_awesome_outlined),

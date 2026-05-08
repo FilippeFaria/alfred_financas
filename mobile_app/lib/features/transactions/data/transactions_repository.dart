@@ -10,7 +10,7 @@ import '../../../core/network/dto/criar_transacao_dto.dart';
 import '../../../core/network/dto/transacao_dto.dart';
 import 'transaction_models.dart';
 
-const _filtrosKey = 'transactions_filters_v1';
+const _filtrosKey = 'transactions_filters_v2';
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   return TransactionsRepository(ref.watch(alfredApiClientProvider));
@@ -18,34 +18,29 @@ final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
 
 class TransactionsFilters {
   const TransactionsFilters({
-    this.dataInicio,
-    this.dataFim,
+    this.mesReferencia,
     this.categoria,
     this.conta,
     this.tipo,
   });
 
-  final String? dataInicio;
-  final String? dataFim;
+  final String? mesReferencia;
   final String? categoria;
   final String? conta;
   final String? tipo;
 
   TransactionsFilters copyWith({
-    String? dataInicio,
-    String? dataFim,
+    String? mesReferencia,
     String? categoria,
     String? conta,
     String? tipo,
-    bool clearDataInicio = false,
-    bool clearDataFim = false,
+    bool clearMesReferencia = false,
     bool clearCategoria = false,
     bool clearConta = false,
     bool clearTipo = false,
   }) {
     return TransactionsFilters(
-      dataInicio: clearDataInicio ? null : (dataInicio ?? this.dataInicio),
-      dataFim: clearDataFim ? null : (dataFim ?? this.dataFim),
+      mesReferencia: clearMesReferencia ? null : (mesReferencia ?? this.mesReferencia),
       categoria: clearCategoria ? null : (categoria ?? this.categoria),
       conta: clearConta ? null : (conta ?? this.conta),
       tipo: clearTipo ? null : (tipo ?? this.tipo),
@@ -54,8 +49,7 @@ class TransactionsFilters {
 
   Map<String, dynamic> toMap() {
     return {
-      'data_inicio': dataInicio,
-      'data_fim': dataFim,
+      'mes_referencia': mesReferencia,
       'categoria': categoria,
       'conta': conta,
       'tipo': tipo,
@@ -64,12 +58,37 @@ class TransactionsFilters {
 
   factory TransactionsFilters.fromMap(Map<String, dynamic> map) {
     return TransactionsFilters(
-      dataInicio: map['data_inicio']?.toString(),
-      dataFim: map['data_fim']?.toString(),
+      mesReferencia: _inferirMesReferencia(map),
       categoria: map['categoria']?.toString(),
       conta: map['conta']?.toString(),
       tipo: map['tipo']?.toString(),
     );
+  }
+
+  static String? _inferirMesReferencia(Map<String, dynamic> map) {
+    final valorDireto = map['mes_referencia']?.toString();
+    if (valorDireto != null && valorDireto.trim().isNotEmpty) {
+      return valorDireto.trim();
+    }
+
+    final dataInicio = _normalizarMesReferencia(map['data_inicio']?.toString());
+    final dataFim = _normalizarMesReferencia(map['data_fim']?.toString());
+
+    if (dataInicio != null && dataFim != null) {
+      return dataInicio == dataFim ? dataInicio : null;
+    }
+    return dataInicio ?? dataFim;
+  }
+
+  static String? _normalizarMesReferencia(String? valor) {
+    if (valor == null || valor.trim().isEmpty) {
+      return null;
+    }
+    final parsed = DateTime.tryParse(valor.trim());
+    if (parsed == null) {
+      return null;
+    }
+    return '${parsed.year}-${parsed.month.toString().padLeft(2, '0')}';
   }
 }
 
@@ -172,11 +191,12 @@ class TransactionsRepository {
     required int limite,
     required TransactionsFilters filtros,
   }) async {
+    final intervaloMes = _intervaloMes(filtros.mesReferencia);
     final response = await _apiClient.getTransacoesPaginado(
       pagina: pagina,
       limite: limite,
-      dataInicio: filtros.dataInicio,
-      dataFim: filtros.dataFim,
+      dataInicio: intervaloMes?.dataInicio,
+      dataFim: intervaloMes?.dataFim,
       categoria: filtros.categoria,
       conta: filtros.conta,
       tipo: filtros.tipo,
@@ -278,6 +298,44 @@ class TransactionsRepository {
       data: item.data,
     );
   }
+
+  _IntervaloMes? _intervaloMes(String? mesReferencia) {
+    if (mesReferencia == null || mesReferencia.trim().isEmpty) {
+      return null;
+    }
+
+    final partes = mesReferencia.trim().split('-');
+    if (partes.length != 2) {
+      return null;
+    }
+
+    final ano = int.tryParse(partes[0]);
+    final mes = int.tryParse(partes[1]);
+    if (ano == null || mes == null || mes < 1 || mes > 12) {
+      return null;
+    }
+
+    final inicio = DateTime(ano, mes, 1);
+    final fim = DateTime(ano, mes + 1, 0);
+    return _IntervaloMes(
+      dataInicio: _formatarDataFiltro(inicio),
+      dataFim: _formatarDataFiltro(fim),
+    );
+  }
+
+  String _formatarDataFiltro(DateTime data) {
+    return '${data.year.toString().padLeft(4, '0')}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _IntervaloMes {
+  _IntervaloMes({
+    required this.dataInicio,
+    required this.dataFim,
+  });
+
+  final String dataInicio;
+  final String dataFim;
 }
 
 class TransactionsState {

@@ -184,7 +184,31 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 
 ---
 
-## Mudanças Recentes (v2)
+## Mudanças Recentes (v3)
+
+### ✅ Fix: Dashboard mobile inicia no mês atual e preserva a tela durante recarga (07/05/2026)
+**Problema**: ao trocar o mês no dashboard, a tela podia “sumir” enquanto a nova análise carregava e o filtro não partia de um mês intuitivo.
+
+**Implementado**:
+- `mobile_app/lib/features/dashboard/data/dashboard_repository.dart`: filtro padrão passou a usar o `anome` corrente (`YYYYMM`).
+- `mobile_app/lib/features/dashboard/presentation/dashboard_page.dart`: o slider de mês aplica o filtro no `onChangeEnd`, reduzindo re-renderizações intermediárias.
+- `mobile_app/lib/features/dashboard/presentation/dashboard_page.dart`: a UI mantém o conteúdo anterior visível enquanto a nova resposta da API é carregada.
+
+**Resultado**:
+- O dashboard abre no mês atual por padrão.
+- A troca de mês ficou mais fluida e sem “piscar” a página inteira.
+
+### ✅ Fix: Formulário de transação suporta Transferência sem quebrar o dropdown (07/05/2026)
+**Problema**: ao alternar para `Transferência`, o `DropdownButtonFormField` podia receber um valor inválido ou duplicado e quebrar a tela.
+
+**Implementado**:
+- `mobile_app/lib/features/transactions/presentation/transactions_page.dart`: remoção de valores duplicados nas listas de `DropdownMenuItem`.
+- Normalização defensiva de categoria, conta origem e conta destino antes de renderizar o formulário.
+- Limpeza de campos incompatíveis quando o tipo de transação muda.
+
+**Resultado**:
+- O formulário não quebra ao usar `Transferência`.
+- O valor selecionado sempre é coerente com as opções atuais do tipo escolhido.
 
 ### ✅ Fix: Arredondamento de métricas na página de transação (07/05/2026)
 **Problema**: saldos de contas/cartões apareciam com ruído de ponto flutuante na UI (ex.: `1607.0100000000175`).
@@ -560,5 +584,5 @@ python run_api.py
 
 ---
 
-**Última atualização**: 06/05/2026  
+**Última atualização**: 07/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot
