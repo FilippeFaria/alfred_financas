@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/formatters.dart';
 import '../data/insights_repository.dart';
 
 class InsightsPage extends ConsumerWidget {
@@ -12,16 +13,26 @@ class InsightsPage extends ConsumerWidget {
     final resumoAsync = ref.watch(analiseResumoProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Insights IA')),
+      appBar: AppBar(title: const Text('Insights')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Card(
+            color: const Color(0xFF0E7A6D).withOpacity(0.08),
+            child: const ListTile(
+              leading: Icon(Icons.auto_awesome_outlined),
+              title: Text('Análise automática pronta para evoluir'),
+              subtitle: Text('Aqui ficam os resumos analíticos e os blocos que podem alimentar a IA.'),
+            ),
+          ),
+          const SizedBox(height: 12),
           categoriasAsync.when(
             data: (categorias) => Card(
               child: ListTile(
+                leading: const Icon(Icons.category_outlined),
                 title: const Text('Categorias carregadas da API'),
                 subtitle: Text(
-                  'Despesa: ${categorias.despesa.length} • Receita: ${categorias.receita.length}',
+                  'Despesa: ${categorias.despesa.length} • Receita: ${categorias.receita.length} • Investimento: ${categorias.investimento.length}',
                 ),
               ),
             ),
@@ -32,9 +43,12 @@ class InsightsPage extends ConsumerWidget {
           resumoAsync.when(
             data: (resumo) => Card(
               child: ListTile(
-                title: const Text('Resumo analitico'),
+                leading: const Icon(Icons.analytics_outlined),
+                title: const Text('Resumo analítico'),
                 subtitle: Text(
-                  'Mes ref: ${resumo.anomeReferencia}\nGasto atual: R\$ ${resumo.metricas.gastoAtual.toStringAsFixed(2)}',
+                  'Mês ref: ${resumo.anomeReferencia}\n'
+                  'Gasto atual: ${formatarMoeda(resumo.metricas.gastoAtual)}\n'
+                  'Média 3m: ${formatarMoeda(resumo.metricas.gasto3mMedia)}',
                 ),
               ),
             ),

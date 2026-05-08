@@ -9,6 +9,8 @@
 - **Framework principal**: Streamlit
 - **Stack de IA**: LangChain + OpenAI GPT (preparado, parcialmente integrado)
 
+O repositório também contém um app mobile em Flutter dentro de `mobile_app/`, que consome a API FastAPI do Alfred.
+
 ---
 
 ## Arquitetura & Estrutura de Código
@@ -51,6 +53,7 @@ paginas/
 app.py                       # Orquestrador: carrega dados, renderiza abas
 run_api.py                   # Launcher local da API FastAPI
 run_telegram_bot.py          # Launcher local do bot para ambientes com .venv inconsistente
+mobile_app/                  # App Flutter mobile por features, com client HTTP via Dio e Riverpod
 ```
 
 ### Fluxo de Dados
@@ -77,6 +80,15 @@ run_telegram_bot.py          # Launcher local do bot para ambientes com .venv in
 - **Cache de dados**: `@st.cache_data` para DataFrames, métricas calculadas
 - **Invalidação**: Usa `last_update` timestamp em session_state para invalidar cache
 - **Estrutura de página**: Cada aba exporta função `render(df, PATH)` — **sem** `if __name__ == "__main__"`
+
+### Padrões Flutter Mobile
+- **Estrutura por features**: `mobile_app/lib/core` e `mobile_app/lib/features/*`
+- **Gerenciamento de estado**: `flutter_riverpod`
+- **HTTP**: `dio` com client centralizado em `mobile_app/lib/core/network/`
+- **Rotas**: `go_router`
+- **Ambiente**: `--dart-define=FLAVOR=dev|prod` e `--dart-define=API_BASE_URL=...`
+- **Telas**: manter `loading`, `erro amigavel`, `pull-to-refresh` e atualizacao automatica das listas quando a acao de cadastro for bem-sucedida
+- **Encoding**: nao reescrever textos ou config com encoding diferente; manter UTF-8 original dos arquivos existentes
 
 ### Estrutura de Dados
 - **Principal**: pandas DataFrame com colunas como `Data`, `Tipo`, `Categoria`, `Conta`, `Nome`, `Valor`
@@ -115,6 +127,28 @@ python run_telegram_bot.py
 # Acessar
 # -> http://localhost:8501
 ```
+
+### Flutter Mobile
+
+```bash
+# Entrar no app mobile
+cd mobile_app
+
+# Em Windows, se o flutter ainda nao estiver no PATH, chame o executavel diretamente
+C:\Users\lippe\flutter\bin\flutter.bat pub get
+
+# Rodar no navegador
+C:\Users\lippe\flutter\bin\flutter.bat run -d chrome --dart-define=FLAVOR=dev --dart-define=API_BASE_URL=http://127.0.0.1:8000
+
+# Rodar no celular Android com API remota
+C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=prod --dart-define=API_BASE_URL=https://<sua-api>.onrender.com
+```
+
+**Observações do Flutter**
+- A API do Render deve ser usada no mobile em producao; para testes locais no navegador, a FastAPI precisa aceitar CORS.
+- `flutter build apk` exige Android SDK instalado e configurado no Windows.
+- Se o `flutter` nao estiver no `PATH`, use `C:\Users\lippe\flutter\bin\flutter.bat` diretamente.
+- Para testar no celular via IP local do PC, a API deve subir com `--host 0.0.0.0`; isso e apenas para desenvolvimento.
 
 ### Variáveis de Ambiente
 - Nenhuma requerida para dev local da interface web (usa `credentials.json`)

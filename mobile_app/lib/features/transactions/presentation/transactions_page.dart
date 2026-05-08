@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/formatters.dart';
 import '../data/transactions_repository.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final notifier = ref.read(transactionsNotifierProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Extrato de Transacoes')),
+      appBar: AppBar(title: const Text('Extrato de Transações')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _abrirCadastro,
         icon: const Icon(Icons.add),
@@ -79,7 +80,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text('Falha ao carregar transacoes.'),
+                      const Text('Falha ao carregar transações.'),
                       const SizedBox(height: 8),
                       Text(state.errorMessage!, textAlign: TextAlign.center),
                       const SizedBox(height: 8),
@@ -98,8 +99,10 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 (item) => Card(
                   child: ListTile(
                     title: Text(item.nome),
-                    subtitle: Text('${item.tipo} | ${item.categoria} | ${item.conta} | ${item.data}'),
-                    trailing: Text('R\$ ${item.valor.toStringAsFixed(2)}'),
+                    subtitle: Text(
+                      '${item.tipo} | ${item.categoria} | ${item.conta} | ${formatarDataCurta(item.data)}',
+                    ),
+                    trailing: Text(formatarMoeda(item.valor)),
                   ),
                 ),
               ),
@@ -346,7 +349,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                   const Text('Nova transação', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _tipo,
+                    initialValue: _tipo,
                     decoration: const InputDecoration(labelText: 'Tipo'),
                     items: const [
                       DropdownMenuItem(value: 'Receita', child: Text('Receita')),
@@ -377,7 +380,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                     ),
                   if (_tipo == 'Pagamento de Cartão')
                     DropdownButtonFormField<String>(
-                      value: _cartaoSelecionado,
+                      initialValue: _cartaoSelecionado,
                       decoration: const InputDecoration(labelText: 'Cartão'),
                       items: opcoes.cartoesPagamento
                           .map((item) => DropdownMenuItem(value: item, child: Text(item)))
@@ -400,7 +403,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                   const SizedBox(height: 8),
                   if (_tipo == 'Investimento')
                     DropdownButtonFormField<String>(
-                      value: _tipoInvestimentoNome,
+                      initialValue: _tipoInvestimentoNome,
                       decoration: const InputDecoration(labelText: 'Tipo transação'),
                       items: const [
                         DropdownMenuItem(value: 'Aplicação', child: Text('Aplicação')),
@@ -410,14 +413,14 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                     ),
                   if (_tipo != 'Pagamento de Cartão')
                     DropdownButtonFormField<String>(
-                      value: _categoria,
+                      initialValue: _categoria,
                       decoration: const InputDecoration(labelText: 'Categoria'),
                       items: categorias.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                       onChanged: (value) => setState(() => _categoria = value),
                     ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    value: _conta,
+                    initialValue: _conta,
                     decoration: InputDecoration(
                       labelText: _tipo == 'Transferência' || _tipo == 'Investimento'
                           ? 'Conta origem'
@@ -429,7 +432,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                   if (_tipo == 'Transferência' || _tipo == 'Investimento') ...[
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _contaDestino,
+                      initialValue: _contaDestino,
                       decoration: const InputDecoration(labelText: 'Conta destino'),
                       items: (_tipo == 'Investimento'
                               ? [...opcoes.contas, ...opcoes.contasInvestimento]
@@ -570,7 +573,7 @@ class _FiltersCardState extends State<_FiltersCard> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
-              value: _categoria,
+              initialValue: _categoria,
               decoration: const InputDecoration(labelText: 'Categoria'),
               items: [
                 const DropdownMenuItem<String?>(value: null, child: Text('Todas')),
@@ -582,7 +585,7 @@ class _FiltersCardState extends State<_FiltersCard> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
-              value: _conta,
+              initialValue: _conta,
               decoration: const InputDecoration(labelText: 'Conta'),
               items: [
                 const DropdownMenuItem<String?>(value: null, child: Text('Todas')),
@@ -594,7 +597,7 @@ class _FiltersCardState extends State<_FiltersCard> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
-              value: _tipo,
+              initialValue: _tipo,
               decoration: const InputDecoration(labelText: 'Tipo'),
               items: [
                 const DropdownMenuItem<String?>(value: null, child: Text('Todos')),
