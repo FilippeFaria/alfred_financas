@@ -15,6 +15,7 @@ from src.api.schemas import (
     InsightResponse,
     SaldoResponse,
     StatusResponse,
+    DashboardSnapshotResponse,
     TransacaoResponse,
     TransacoesResponse,
 )
@@ -26,6 +27,7 @@ from src.api.services import (
     listar_transacoes_paginado,
     obter_resumo_analise,
     obter_saldo_por_conta,
+    obter_dashboard_snapshot_mobile,
 )
 
 
@@ -138,3 +140,30 @@ def post_analise_resumo(
         day_to_date=payload.day_to_date,
         anome_referencia=payload.anome_referencia,
     )
+
+
+@app.get("/mobile/dashboard_snapshot", response_model=DashboardSnapshotResponse)
+def get_mobile_dashboard_snapshot(
+    desconsiderar: bool = Query(default=True),
+    va: bool = Query(default=False),
+    vr: bool = Query(default=False),
+    bianca: bool = Query(default=False),
+    filippe: bool = Query(default=False),
+    day_to_date: bool = Query(default=True),
+    anome_referencia: int | None = Query(default=None),
+    categoria: str | None = Query(default=None),
+    meses_historico: int = Query(default=6, ge=3, le=12),
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> DashboardSnapshotResponse:
+    payload = obter_dashboard_snapshot_mobile(
+        desconsiderar=desconsiderar,
+        va=va,
+        vr=vr,
+        bianca=bianca,
+        filippe=filippe,
+        day_to_date=day_to_date,
+        anome_referencia=anome_referencia,
+        categoria=categoria,
+        meses_historico=meses_historico,
+    )
+    return DashboardSnapshotResponse(**payload)

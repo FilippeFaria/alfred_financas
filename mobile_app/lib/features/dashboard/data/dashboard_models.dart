@@ -1,5 +1,3 @@
-import '../../../core/network/dto/transacao_dto.dart';
-
 class StatusResponse {
   StatusResponse({required this.status});
 
@@ -105,7 +103,8 @@ class DashboardSnapshot {
     required this.categoriasDestaque,
     required this.ultimosLancamentos,
     required this.saldos,
-    required this.items,
+    required this.serieMensal,
+    required this.serieCategoria,
   });
 
   final String status;
@@ -119,7 +118,8 @@ class DashboardSnapshot {
   final List<CategoriaDestaque> categoriasDestaque;
   final List<LancamentoResumo> ultimosLancamentos;
   final List<SaldoConta> saldos;
-  final List<TransacaoDto> items;
+  final List<SerieMensalResumo> serieMensal;
+  final List<SerieMensalResumo> serieCategoria;
 }
 
 class CategoriaDestaque {
@@ -144,4 +144,14 @@ class LancamentoResumo {
   final String categoria;
   final double valor;
   final String data;
+}
+
+class SerieMensalResumo {
+  SerieMensalResumo({
+    required this.anome,
+    required this.valor,
+  });
+
+  final int anome;
+  final double valor;
 }

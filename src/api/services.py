@@ -400,3 +400,176 @@ def gerar_insights_basicos(pergunta: str | None) -> dict:
         total_top_categoria = float(round(categoria_serie.iloc[0], 2))
     texto_pergunta = pergunta.strip() if pergunta else "Sem pergunta especifica."
     return {"resumo": f"Saldo total atual: R$ {saldo_total:.2f}.", "insights": [f"Maior categoria de despesa no mes: {top_categoria} (R$ {total_top_categoria:.2f}).", f"Total de contas com saldo calculado: {len(saldo)}.", f"Contexto da solicitacao: {texto_pergunta}"]}
+
+
+def _serie_totais_despesa(df: pd.DataFrame, anomes: list[int]) -> list[dict]:
+    serie: list[dict] = []
+    for anome in anomes:
+        total = df[(df["Tipo"] == "Despesa") & (df["anomes"] == str(anome))]["Valor"].abs().sum()
+        serie.append({"anome": int(anome), "valor": float(total)})
+    return serie
+
+
+def _serie_categoria_despesa(df: pd.DataFrame, anomes: list[int], categoria: str | None) -> list[dict]:
+    if not categoria:
+        return []
+    serie: list[dict] = []
+    categoria_limpa = categoria.strip()
+    for anome in anomes:
+        filtro = (
+            (df["Tipo"] == "Despesa")
+            & (df["anomes"] == str(anome))
+            & (df["Categoria"].fillna("Sem categoria").replace("", "Sem categoria") == categoria_limpa)
+        )
+        total = df[filtro]["Valor"].abs().sum()
+        serie.append({"anome": int(anome), "valor": float(total)})
+    return serie
+
+
+def obter_dashboard_snapshot_mobile(
+    *,
+    desconsiderar: bool = True,
+    va: bool = False,
+    vr: bool = False,
+    bianca: bool = False,
+    filippe: bool = False,
+    day_to_date: bool = False,
+    anome_referencia: int | None = None,
+    categoria: str | None = None,
+    meses_historico: int = 6,
+) -> dict:
+    status = "ok"
+    items = listar_transacoes()
+    if not items:
+        anome_atual = int(datetime.now().strftime("%Y%m"))
+        return {
+            "status": status,
+            "anome_referencia": anome_atual,
+            "anomes_disponiveis": [],
+            "metricas": {
+                "gasto_atual": 0.0,
+                "gasto_anterior": 0.0,
+                "gasto_3m_media": 0.0,
+                "delta_anterior": None,
+                "delta_atual": None,
+                "delta_3m": None,
+                "label_prev": "",
+                "label_curr": "",
+                "label_3m": "",
+            },
+            "saldo_total": 0.0,
+            "saldos": [],
+            "gasto_mes": 0.0,
+            "orcamento_usado_percentual": 0.0,
+            "orcamento_usado_label": "Base media 3 meses: R$ 1.00",
+            "categorias_destaque": [],
+            "ultimos_lancamentos": [],
+            "serie_mensal": [],
+            "serie_categoria": [],
+        }
+
+    df = pd.DataFrame(
+        [
+            {
+                "id": i["id"],
+                "Nome": i["nome"],
+                "Tipo": i["tipo"],
+                "Valor": i["valor"],
+                "Categoria": i["categoria"],
+                "Conta": i["conta"],
+                "Data": i["data"],
+                "Obs": i["obs"],
+                "TAG": i["tag"],
+                "desconsiderar": i["desconsiderar"],
+                "Parcela": i["parcela"],
+                "Data origem": i["data_origem"],
+                "Data Criacao": i["data_criacao"],
+            }
+            for i in items
+        ]
+    )
+    df = _normalizar_datas(df)
+    df = adicionar_anomes(df)
+
+    saldos_serie = df.groupby("Conta")["Valor"].sum().sort_index()
+    saldos = [{"conta": str(conta), "saldo": float(valor)} for conta, valor in saldos_serie.items()]
+    saldo_total = float(saldos_serie.sum()) if not saldos_serie.empty else 0.0
+
+    df_temp = _aplicar_filtros_analise(df, desconsiderar=desconsiderar, va=va, vr=vr, bianca=bianca, filippe=filippe)
+    anomes_disponiveis = sorted([int(v) for v in df_temp["anomes"].dropna().astype(str).unique() if str(v).isdigit()])
+    anome_base = anome_referencia or (anomes_disponiveis[-1] if anomes_disponiveis else int(datetime.now().strftime("%Y%m")))
+
+    if day_to_date and not df_temp.empty:
+        data_max = df_temp[(df_temp["anomes"] == str(anome_base)) & (df_temp["Parcela"].isna())]["Data"].dt.day.max()
+        if pd.notna(data_max):
+            df_temp = df_temp[df_temp["Data"].dt.day <= int(data_max)]
+
+    df_despesa = df_temp[(df_temp["desconsiderar"] == False) & (df_temp["Tipo"] == "Despesa")]
+    metricas = calcular_despesa_total(df_despesa, int(anome_base))
+    gasto_mes = float(metricas["gasto_atual"])
+    referencia_orcamento = float(metricas["gasto_3m_media"]) if float(metricas["gasto_3m_media"]) > 0 else 1.0
+    orcamento_usado_percentual = float((gasto_mes / referencia_orcamento) * 100)
+
+    # Visoes do dashboard devem refletir explicitamente o mes selecionado.
+    df_mes = df_temp[df_temp["anomes"] == str(anome_base)].copy()
+    df_despesa_mes = df_mes[(df_mes["desconsiderar"] == False) & (df_mes["Tipo"] == "Despesa")].copy()
+
+    categorias_serie = (
+        df_despesa_mes.assign(_categoria=df_despesa_mes["Categoria"].fillna("Sem categoria").replace("", "Sem categoria"))
+        .groupby("_categoria")["Valor"]
+        .sum()
+        .abs()
+        .sort_values(ascending=False)
+    )
+    categorias_destaque = [
+        {"nome": str(nome), "valor": float(valor)} for nome, valor in categorias_serie.head(6).items()
+    ]
+
+    ultimos_df = df_mes.copy()
+    ultimos_df["_data_ord"] = pd.to_datetime(ultimos_df["Data"], format=DATE_FORMAT, errors="coerce")
+    ultimos_df = ultimos_df.sort_values("_data_ord", ascending=False, na_position="last")
+    ultimos_lancamentos = [
+        {
+            "nome": str(row.get("Nome", "")),
+            "categoria": str(row.get("Categoria", "")),
+            "valor": float(row.get("Valor", 0.0)),
+            "data": row["_data_ord"].strftime(DATE_FORMAT) if pd.notna(row["_data_ord"]) else "",
+        }
+        for _, row in ultimos_df.head(5).iterrows()
+    ]
+
+    limite_historico = max(3, min(int(meses_historico or 6), 12))
+    meses_visiveis = sorted([m for m in anomes_disponiveis if m <= int(anome_base)])
+    if not meses_visiveis:
+        meses_visiveis = [int(anome_base)]
+    if len(meses_visiveis) > limite_historico:
+        meses_visiveis = meses_visiveis[-limite_historico:]
+
+    serie_mensal = _serie_totais_despesa(df_temp, meses_visiveis)
+    serie_categoria = _serie_categoria_despesa(df_temp, meses_visiveis, categoria)
+
+    return {
+        "status": status,
+        "anome_referencia": int(anome_base),
+        "anomes_disponiveis": anomes_disponiveis,
+        "metricas": {
+            "gasto_atual": gasto_mes,
+            "gasto_anterior": float(metricas["gasto_anterior"]),
+            "gasto_3m_media": float(metricas["gasto_3m_media"]),
+            "delta_anterior": metricas["delta_anterior"],
+            "delta_atual": metricas["delta_atual"],
+            "delta_3m": metricas["delta_3m"],
+            "label_prev": metricas["label_prev"],
+            "label_curr": metricas["label_curr"],
+            "label_3m": metricas["label_3m"],
+        },
+        "saldo_total": saldo_total,
+        "saldos": saldos,
+        "gasto_mes": gasto_mes,
+        "orcamento_usado_percentual": orcamento_usado_percentual,
+        "orcamento_usado_label": f"Base media 3 meses: R$ {referencia_orcamento:.2f}",
+        "categorias_destaque": categorias_destaque,
+        "ultimos_lancamentos": ultimos_lancamentos,
+        "serie_mensal": serie_mensal,
+        "serie_categoria": serie_categoria,
+    }

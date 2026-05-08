@@ -122,3 +122,36 @@ class AnaliseResumoResponse(BaseModel):
     anomes_disponiveis: list[int]
     metricas: AnaliseMetricasResponse
     items: list[TransacaoResponse]
+
+
+class SerieMensalResponse(BaseModel):
+    anome: int
+    valor: float
+
+
+class CategoriaDestaqueResponse(BaseModel):
+    nome: str
+    valor: float
+
+
+class UltimoLancamentoResponse(BaseModel):
+    nome: str
+    categoria: str
+    valor: float
+    data: str
+
+
+class DashboardSnapshotResponse(BaseModel):
+    status: str
+    anome_referencia: int
+    anomes_disponiveis: list[int]
+    metricas: AnaliseMetricasResponse
+    saldo_total: float
+    saldos: list[SaldoContaResponse]
+    gasto_mes: float
+    orcamento_usado_percentual: float
+    orcamento_usado_label: str
+    categorias_destaque: list[CategoriaDestaqueResponse]
+    ultimos_lancamentos: list[UltimoLancamentoResponse]
+    serie_mensal: list[SerieMensalResponse]
+    serie_categoria: list[SerieMensalResponse]

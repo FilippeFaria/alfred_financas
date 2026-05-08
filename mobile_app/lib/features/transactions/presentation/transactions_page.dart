@@ -733,14 +733,17 @@ class _FiltersCardState extends State<_FiltersCard> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async {
+                      final agora = DateTime.now();
+                      final mesReferenciaAtual =
+                          '${agora.year.toString().padLeft(4, '0')}-${agora.month.toString().padLeft(2, '0')}';
                       setState(() {
-                        _mes = null;
-                        _ano = null;
+                        _mes = agora.month;
+                        _ano = agora.year;
                         _categoria = null;
                         _conta = null;
                         _tipo = null;
                       });
-                      await widget.onApply(const TransactionsFilters());
+                      await widget.onApply(TransactionsFilters(mesReferencia: mesReferenciaAtual));
                     },
                     child: const Text('Limpar'),
                   ),

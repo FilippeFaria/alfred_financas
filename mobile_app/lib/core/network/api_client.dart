@@ -16,12 +16,14 @@ final dioProvider = Provider<Dio>((ref) {
   );
 
   dio.interceptors.add(RetryInterceptor(dio: dio));
-  dio.interceptors.add(
-    LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ),
-  );
+  if (AppEnv.flavor == AppFlavor.dev) {
+    dio.interceptors.add(
+      LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+      ),
+    );
+  }
 
   return dio;
 });

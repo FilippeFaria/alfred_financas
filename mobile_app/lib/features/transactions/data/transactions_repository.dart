@@ -90,6 +90,15 @@ class TransactionsFilters {
     }
     return '${parsed.year}-${parsed.month.toString().padLeft(2, '0')}';
   }
+
+  static String mesReferenciaAtual() {
+    final agora = DateTime.now();
+    return '${agora.year.toString().padLeft(4, '0')}-${agora.month.toString().padLeft(2, '0')}';
+  }
+
+  static TransactionsFilters padraoMesAtual() {
+    return TransactionsFilters(mesReferencia: mesReferenciaAtual());
+  }
 }
 
 class TransactionsPageResult {
@@ -264,10 +273,14 @@ class TransactionsRepository {
     final prefs = await SharedPreferences.getInstance();
     final json = prefs.getString(_filtrosKey);
     if (json == null || json.isEmpty) {
-      return const TransactionsFilters();
+      return TransactionsFilters.padraoMesAtual();
     }
     final map = jsonDecode(json) as Map<String, dynamic>;
-    return TransactionsFilters.fromMap(map);
+    final filtros = TransactionsFilters.fromMap(map);
+    if (filtros.mesReferencia == null || filtros.mesReferencia!.trim().isEmpty) {
+      return filtros.copyWith(mesReferencia: TransactionsFilters.mesReferenciaAtual());
+    }
+    return filtros;
   }
 
   Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {

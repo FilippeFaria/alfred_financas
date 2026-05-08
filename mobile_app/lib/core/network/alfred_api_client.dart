@@ -4,6 +4,7 @@ import 'api_exception.dart';
 import 'dto/analise_resumo_dto.dart';
 import 'dto/categorias_dto.dart';
 import 'dto/criar_transacao_dto.dart';
+import 'dto/dashboard_snapshot_dto.dart';
 import 'dto/saldo_dto.dart';
 import 'dto/status_dto.dart';
 import 'dto/transacao_dto.dart';
@@ -145,6 +146,43 @@ class AlfredApiClient {
     try {
       final response = await _dio.post('/transacoes', data: payload.toJson());
       return TransacaoDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<DashboardSnapshotDto> getDashboardSnapshot({
+    required bool desconsiderar,
+    required bool va,
+    required bool vr,
+    required bool bianca,
+    required bool filippe,
+    required bool dayToDate,
+    int? anomeReferencia,
+    String? categoria,
+    int mesesHistorico = 6,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{
+        'desconsiderar': desconsiderar,
+        'va': va,
+        'vr': vr,
+        'bianca': bianca,
+        'filippe': filippe,
+        'day_to_date': dayToDate,
+        'meses_historico': mesesHistorico,
+      };
+      if (anomeReferencia != null) {
+        queryParameters['anome_referencia'] = anomeReferencia;
+      }
+      if (categoria != null && categoria.trim().isNotEmpty) {
+        queryParameters['categoria'] = categoria.trim();
+      }
+      final response = await _dio.get(
+        '/mobile/dashboard_snapshot',
+        queryParameters: queryParameters,
+      );
+      return DashboardSnapshotDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }

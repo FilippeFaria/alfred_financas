@@ -43,14 +43,14 @@ class AppTheme {
         color: colorScheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.55)),
+          side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.55)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white.withOpacity(0.94),
+        backgroundColor: Colors.white.withValues(alpha: 0.94),
         elevation: 0,
         indicatorColor: colorScheme.secondaryContainer,
-        labelTextStyle: const MaterialStatePropertyAll(
+        labelTextStyle: const WidgetStatePropertyAll(
           TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
@@ -64,7 +64,7 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.55)),
+          borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.55)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),

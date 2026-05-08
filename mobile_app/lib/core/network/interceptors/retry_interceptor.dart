@@ -12,6 +12,16 @@ class RetryInterceptor extends Interceptor {
   final Duration retryDelay;
 
   bool _shouldRetry(DioException error) {
+    final method = error.requestOptions.method.toUpperCase();
+    if (method != 'GET') {
+      return false;
+    }
+
+    final path = error.requestOptions.path;
+    if (path.contains('/mobile/dashboard_snapshot')) {
+      return false;
+    }
+
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout ||

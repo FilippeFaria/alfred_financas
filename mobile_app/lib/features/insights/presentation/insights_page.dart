@@ -18,7 +18,7 @@ class InsightsPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Card(
-            color: const Color(0xFF0E7A6D).withOpacity(0.08),
+            color: const Color(0xFF0E7A6D).withValues(alpha: 0.08),
             child: const ListTile(
               leading: Icon(Icons.auto_awesome_outlined),
               title: Text('Análise automática pronta para evoluir'),

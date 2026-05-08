@@ -1,12 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/network/alfred_api_client.dart';
 import '../../../core/network/api_client.dart';
-import '../../../core/network/dto/analise_resumo_dto.dart';
-import '../../../core/network/dto/saldo_dto.dart';
-import '../../../core/network/dto/status_dto.dart';
-import '../../../core/network/dto/transacao_dto.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../core/network/dto/dashboard_snapshot_dto.dart';
 import 'dashboard_models.dart';
 
 final dashboardFiltersProvider =
@@ -63,7 +60,7 @@ class DashboardRepository {
   final AlfredApiClient _apiClient;
   final Map<String, DashboardSnapshot> _cache = {};
 
-  String _cacheKey(DashboardFilters filtros) {
+  String _cacheKey(DashboardFilters filtros, String? categoria, int mesesHistorico) {
     return [
       filtros.anomeReferencia?.toString() ?? 'latest',
       filtros.desconsiderar,
@@ -72,121 +69,90 @@ class DashboardRepository {
       filtros.bianca,
       filtros.filippe,
       filtros.dayToDate,
+      categoria?.trim().isEmpty == false ? categoria!.trim() : 'all',
+      mesesHistorico.clamp(3, 12),
     ].join('|');
   }
 
-  DashboardSnapshot? getCache(DashboardFilters filtros) {
-    return _cache[_cacheKey(filtros)];
+  DashboardSnapshot? getCache(
+    DashboardFilters filtros, {
+    String? categoria,
+    int mesesHistorico = 6,
+  }) {
+    return _cache[_cacheKey(filtros, categoria, mesesHistorico)];
   }
 
   Future<DashboardSnapshot> carregarResumo({
     required DashboardFilters filtros,
+    String? categoria,
+    int mesesHistorico = 6,
     bool forceRefresh = false,
   }) async {
-    final key = _cacheKey(filtros);
+    final key = _cacheKey(filtros, categoria, mesesHistorico);
     if (!forceRefresh && _cache.containsKey(key)) {
       return _cache[key]!;
     }
+    final stopwatch = Stopwatch()..start();
 
-    final StatusDto statusDto = await _apiClient.getHealth();
-    final List<SaldoDto> saldosDto = await _apiClient.getSaldo();
-    final AnaliseResumoDto analiseDto = await _apiClient.postAnaliseResumo(
-      AnaliseResumoRequestDto(
-        desconsiderar: filtros.desconsiderar,
-        va: filtros.va,
-        vr: filtros.vr,
-        bianca: filtros.bianca,
-        filippe: filtros.filippe,
-        dayToDate: filtros.dayToDate,
-        anomeReferencia: filtros.anomeReferencia,
-      ),
+    final DashboardSnapshotDto dto = await _apiClient.getDashboardSnapshot(
+      desconsiderar: filtros.desconsiderar,
+      va: filtros.va,
+      vr: filtros.vr,
+      bianca: filtros.bianca,
+      filippe: filtros.filippe,
+      dayToDate: filtros.dayToDate,
+      anomeReferencia: filtros.anomeReferencia,
+      categoria: categoria,
+      mesesHistorico: mesesHistorico,
     );
 
-    final saldoJson = saldosDto
+    final saldoJson = dto.saldos
         .map((item) => SaldoConta(conta: item.conta, saldo: item.saldo))
         .toList()
       ..sort((a, b) => a.conta.compareTo(b.conta));
-    final saldoTotal = saldoJson.fold<double>(0, (sum, item) => sum + item.saldo);
-
-    final gastoMes = analiseDto.metricas.gastoAtual;
-    final referenciaOrcamento = analiseDto.metricas.gasto3mMedia <= 0
-        ? 1
-        : analiseDto.metricas.gasto3mMedia;
-    final orcamentoUsadoPercentual = (gastoMes / referenciaOrcamento) * 100;
-
-    final categoriasDestaque = _agruparCategorias(analiseDto.items);
-    final ultimosLancamentos = _ultimosLancamentos(analiseDto.items);
 
     final snapshot = DashboardSnapshot(
-      status: statusDto.status,
+      status: dto.status,
       metricas: AnaliseMetricas(
-        gastoAtual: analiseDto.metricas.gastoAtual,
-        gastoAnterior: analiseDto.metricas.gastoAnterior,
-        gasto3mMedia: analiseDto.metricas.gasto3mMedia,
-        deltaAnterior: analiseDto.metricas.deltaAnterior,
-        deltaAtual: analiseDto.metricas.deltaAtual,
-        delta3m: analiseDto.metricas.delta3m,
-        labelPrev: analiseDto.metricas.labelPrev,
-        labelCurr: analiseDto.metricas.labelCurr,
-        label3m: analiseDto.metricas.label3m,
+        gastoAtual: dto.metricas.gastoAtual,
+        gastoAnterior: dto.metricas.gastoAnterior,
+        gasto3mMedia: dto.metricas.gasto3mMedia,
+        deltaAnterior: dto.metricas.deltaAnterior,
+        deltaAtual: dto.metricas.deltaAtual,
+        delta3m: dto.metricas.delta3m,
+        labelPrev: dto.metricas.labelPrev,
+        labelCurr: dto.metricas.labelCurr,
+        label3m: dto.metricas.label3m,
       ),
-      anomeReferencia: analiseDto.anomeReferencia,
-      anomesDisponiveis: analiseDto.anomesDisponiveis,
-      saldoTotal: saldoTotal,
-      gastoMes: gastoMes,
-      orcamentoUsadoPercentual: orcamentoUsadoPercentual,
-      orcamentoUsadoLabel: 'Base media 3 meses: R\$ ${referenciaOrcamento.toStringAsFixed(2)}',
-      categoriasDestaque: categoriasDestaque,
-      ultimosLancamentos: ultimosLancamentos,
+      anomeReferencia: dto.anomeReferencia,
+      anomesDisponiveis: dto.anomesDisponiveis,
+      saldoTotal: dto.saldoTotal,
+      gastoMes: dto.gastoMes,
+      orcamentoUsadoPercentual: dto.orcamentoUsadoPercentual,
+      orcamentoUsadoLabel: dto.orcamentoUsadoLabel,
+      categoriasDestaque: dto.categoriasDestaque
+          .map((item) => CategoriaDestaque(nome: item.nome, valor: item.valor))
+          .toList(),
+      ultimosLancamentos: dto.ultimosLancamentos
+          .map((item) => LancamentoResumo(nome: item.nome, categoria: item.categoria, valor: item.valor, data: item.data))
+          .toList(),
       saldos: saldoJson,
-      items: analiseDto.items,
+      serieMensal: dto.serieMensal.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
+      serieCategoria: dto.serieCategoria.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
     );
 
     _cache[key] = snapshot;
+    stopwatch.stop();
+    debugPrint('[dashboard] snapshot carregado em ${stopwatch.elapsedMilliseconds}ms (forceRefresh=$forceRefresh)');
     return snapshot;
-  }
-
-  List<CategoriaDestaque> _agruparCategorias(List<TransacaoDto> items) {
-    final mapa = <String, double>{};
-    for (final item in items) {
-      if (item.tipo != 'Despesa') {
-        continue;
-      }
-      final chave = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
-      mapa[chave] = (mapa[chave] ?? 0) + item.valor.abs();
-    }
-
-    final categorias = mapa.entries
-        .map((entry) => CategoriaDestaque(nome: entry.key, valor: entry.value))
-        .toList()
-      ..sort((a, b) => b.valor.compareTo(a.valor));
-
-    return categorias.take(6).toList();
-  }
-
-  List<LancamentoResumo> _ultimosLancamentos(List<TransacaoDto> items) {
-    final ordenados = [...items]
-      ..sort((a, b) {
-        final dataA = tentarConverterParaData(a.data) ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final dataB = tentarConverterParaData(b.data) ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return dataB.compareTo(dataA);
-      });
-    return ordenados
-        .take(5)
-        .map(
-          (item) => LancamentoResumo(
-            nome: item.nome,
-            categoria: item.categoria,
-            valor: item.valor,
-            data: item.data,
-          ),
-        )
-        .toList();
   }
 }
 
-final dashboardSnapshotProvider = FutureProvider<DashboardSnapshot>((ref) async {
+final dashboardSnapshotProvider = FutureProvider.family<DashboardSnapshot, ({DashboardFilters filtros, String? categoria, int mesesHistorico})>((ref, args) async {
   final repository = ref.watch(dashboardRepositoryProvider);
-  final filtros = ref.watch(dashboardFiltersProvider);
-  return repository.carregarResumo(filtros: filtros);
+  return repository.carregarResumo(
+    filtros: args.filtros,
+    categoria: args.categoria,
+    mesesHistorico: args.mesesHistorico,
+  );
 });

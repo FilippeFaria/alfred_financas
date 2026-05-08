@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
-import '../../../core/network/dto/transacao_dto.dart';
 import '../data/dashboard_models.dart';
 import '../data/dashboard_repository.dart';
 
@@ -17,23 +16,37 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   String? _categoriaSelecionada;
   bool _detalharCategorias = false;
   int _mesesHistorico = 6;
+  DashboardSnapshot? _ultimoSnapshotVisivel;
 
   Future<void> _recarregar() async {
     final filtros = ref.read(dashboardFiltersProvider);
     final repository = ref.read(dashboardRepositoryProvider);
+    final providerArgs = (
+      filtros: filtros,
+      categoria: _categoriaSelecionada,
+      mesesHistorico: _mesesHistorico,
+    );
     await repository.carregarResumo(
       filtros: filtros,
+      categoria: _categoriaSelecionada,
+      mesesHistorico: _mesesHistorico,
       forceRefresh: true,
     );
-    ref.invalidate(dashboardSnapshotProvider);
-    await ref.read(dashboardSnapshotProvider.future);
+    ref.invalidate(dashboardSnapshotProvider(providerArgs));
+    await ref.read(dashboardSnapshotProvider(providerArgs).future);
   }
 
   @override
   Widget build(BuildContext context) {
     final filtros = ref.watch(dashboardFiltersProvider);
-    final snapshotAsync = ref.watch(dashboardSnapshotProvider);
+    final providerArgs = (
+      filtros: filtros,
+      categoria: _categoriaSelecionada,
+      mesesHistorico: _mesesHistorico,
+    );
+    final snapshotAsync = ref.watch(dashboardSnapshotProvider(providerArgs));
     final repository = ref.watch(dashboardRepositoryProvider);
+    snapshotAsync.whenData((data) => _ultimoSnapshotVisivel = data);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard analítico')),
@@ -53,9 +66,29 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
             onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
           ),
-          loading: () => const _DashboardSkeleton(),
+          loading: () {
+            if (_ultimoSnapshotVisivel != null) {
+              return _DashboardBody(
+                data: _ultimoSnapshotVisivel!,
+                filtros: filtros,
+                categoriaSelecionada: _categoriaSelecionada,
+                detalharCategorias: _detalharCategorias,
+                mesesHistorico: _mesesHistorico,
+                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value),
+                onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
+                onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
+                onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+                avisoOffline: 'Atualizando filtros...',
+              );
+            }
+            return const _DashboardSkeleton();
+          },
           error: (error, stack) {
-            final cache = repository.getCache(filtros);
+            final cache = repository.getCache(
+              filtros,
+              categoria: _categoriaSelecionada,
+              mesesHistorico: _mesesHistorico,
+            );
             if (cache != null) {
               return _DashboardBody(
                 data: cache,
@@ -90,7 +123,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () => ref.refresh(dashboardSnapshotProvider),
+                  onPressed: () => ref.refresh(dashboardSnapshotProvider(providerArgs)),
                   child: const Text('Tentar novamente'),
                 ),
               ],
@@ -131,17 +164,20 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedAnome = filtros.anomeReferencia ?? data.anomeReferencia;
     final anomeLabel = _formatarAnome(selectedAnome);
-    final mesesVisiveis = _mesesVisiveis(data.items, selectedAnome, mesesHistorico);
-    final despesasMes = _despesasDoMes(data.items, selectedAnome);
-    final categoriasMes = _categoriasDoMes(despesasMes);
-    final categoriasDisponiveis = categoriasMes.map((item) => item.nome).toList();
+    final mesesVisiveis = data.serieMensal.map((item) => item.anome).toList();
+    final categoriasMes = data.categoriasDestaque
+        .map((item) => _CategoriaTotal(nome: item.nome, valor: item.valor))
+        .toList();
+    final categoriasDisponiveis = data.categoriasDestaque.map((item) => item.nome).toList();
     final categoriaEfetiva = categoriasDisponiveis.contains(categoriaSelecionada)
         ? categoriaSelecionada
         : (categoriasDisponiveis.isNotEmpty ? categoriasDisponiveis.first : null);
-    final evolucaoCategoria = categoriaEfetiva == null
-        ? const <_SerieMensal>[]
-        : _serieCategoria(data.items, categoriaEfetiva, mesesVisiveis);
-    final tendenciaMeses = _serieTotal(data.items, mesesVisiveis);
+    final evolucaoCategoria = data.serieCategoria
+        .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
+        .toList();
+    final tendenciaMeses = data.serieMensal
+        .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
+        .toList();
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -253,7 +289,7 @@ class _DashboardBody extends StatelessWidget {
               child: Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF0E7A6D).withOpacity(0.12),
+                    backgroundColor: const Color(0xFF0E7A6D).withValues(alpha: 0.12),
                     child: const Icon(Icons.label_outline, color: Color(0xFF0E7A6D)),
                   ),
                   title: Text(categoria.nome),
@@ -279,8 +315,8 @@ class _DashboardBody extends StatelessWidget {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: item.valor >= 0
-                      ? const Color(0xFF0E7A6D).withOpacity(0.12)
-                      : const Color(0xFFB76E00).withOpacity(0.12),
+                      ? const Color(0xFF0E7A6D).withValues(alpha: 0.12)
+                      : const Color(0xFFB76E00).withValues(alpha: 0.12),
                   child: Icon(
                     item.valor >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     color: item.valor >= 0 ? const Color(0xFF0E7A6D) : const Color(0xFFB76E00),
@@ -313,7 +349,7 @@ class _DashboardBody extends StatelessWidget {
             child: Card(
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.black.withOpacity(0.06),
+                  backgroundColor: Colors.black.withValues(alpha: 0.06),
                   child: const Icon(Icons.account_balance_outlined),
                 ),
                 title: Text(saldo.conta),
@@ -330,7 +366,7 @@ class _DashboardBody extends StatelessWidget {
   }
 }
 
-class _AnalysisFiltersCard extends StatelessWidget {
+class _AnalysisFiltersCard extends StatefulWidget {
   const _AnalysisFiltersCard({
     required this.data,
     required this.filtros,
@@ -341,19 +377,27 @@ class _AnalysisFiltersCard extends StatelessWidget {
   final DashboardFilters filtros;
   final ValueChanged<DashboardFilters> onAtualizarFiltros;
 
+  @override
+  State<_AnalysisFiltersCard> createState() => _AnalysisFiltersCardState();
+}
+
+class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
+  double? _sliderTempIndex;
+
   String _labelMesSelecionado(int anome) => _formatarAnome(anome);
 
   @override
   Widget build(BuildContext context) {
-    final selectedAnome = filtros.anomeReferencia ?? data.anomeReferencia;
+    final selectedAnome = widget.filtros.anomeReferencia ?? widget.data.anomeReferencia;
     final options = <int>{
-      ...data.anomesDisponiveis,
+      ...widget.data.anomesDisponiveis,
       selectedAnome,
     }.toList()
       ..sort();
     final index = options.indexWhere((item) => item == selectedAnome);
     final selectedIndex = index >= 0 ? index : options.length - 1;
     final maxIndex = (options.length - 1).clamp(0, 999).toDouble();
+    final sliderValue = ((_sliderTempIndex ?? selectedIndex.toDouble()).clamp(0.0, maxIndex)).toDouble();
 
     return Card(
       child: Padding(
@@ -372,18 +416,23 @@ class _AnalysisFiltersCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Slider(
-              value: selectedIndex.toDouble(),
+              value: sliderValue,
               min: 0,
               max: maxIndex,
               divisions: options.length > 1 ? options.length - 1 : null,
-              label: _labelMesSelecionado(options[selectedIndex]),
-              onChanged: options.length <= 1 ? null : (value) {},
+              label: _labelMesSelecionado(options[sliderValue.round()]),
+              onChanged: options.length <= 1
+                  ? null
+                  : (value) {
+                      setState(() => _sliderTempIndex = value);
+                    },
               onChangeEnd: options.length <= 1
                   ? null
                   : (value) {
-                      final chosen = options[value.round()];
-                      onAtualizarFiltros(
-                        filtros.copyWith(anomeReferencia: chosen, clearAnomeReferencia: false),
+                      setState(() => _sliderTempIndex = null);
+                      final chosen = options[value.round().clamp(0, options.length - 1)];
+                      widget.onAtualizarFiltros(
+                        widget.filtros.copyWith(anomeReferencia: chosen, clearAnomeReferencia: false),
                       );
                     },
             ),
@@ -394,33 +443,33 @@ class _AnalysisFiltersCard extends StatelessWidget {
               children: [
                 FilterChip(
                   label: const Text('Grandes transações'),
-                  selected: filtros.desconsiderar,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(desconsiderar: value)),
+                  selected: widget.filtros.desconsiderar,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(desconsiderar: value)),
                 ),
                 FilterChip(
                   label: const Text('VA'),
-                  selected: filtros.va,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(va: value)),
+                  selected: widget.filtros.va,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(va: value)),
                 ),
                 FilterChip(
                   label: const Text('VR'),
-                  selected: filtros.vr,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(vr: value)),
+                  selected: widget.filtros.vr,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(vr: value)),
                 ),
                 FilterChip(
                   label: const Text('Bianca'),
-                  selected: filtros.bianca,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(bianca: value)),
+                  selected: widget.filtros.bianca,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(bianca: value)),
                 ),
                 FilterChip(
                   label: const Text('Filippe'),
-                  selected: filtros.filippe,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(filippe: value)),
+                  selected: widget.filtros.filippe,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(filippe: value)),
                 ),
                 FilterChip(
                   label: const Text('Dias do mês'),
-                  selected: filtros.dayToDate,
-                  onSelected: (value) => onAtualizarFiltros(filtros.copyWith(dayToDate: value)),
+                  selected: widget.filtros.dayToDate,
+                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(dayToDate: value)),
                 ),
               ],
             ),
@@ -808,7 +857,7 @@ class _MetricCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              backgroundColor: accentColor.withOpacity(0.12),
+              backgroundColor: accentColor.withValues(alpha: 0.12),
               child: Icon(icon, color: accentColor),
             ),
             const SizedBox(height: 8),
@@ -893,7 +942,7 @@ class _HeroCard extends StatelessWidget {
                         Text(
                           'Visão rápida do caixa, orçamento e despesas no mês selecionado.',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -909,7 +958,7 @@ class _HeroCard extends StatelessWidget {
               Text(
                 'Mês em análise',
                 style: theme.textTheme.labelLarge?.copyWith(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                 ),
               ),
               const SizedBox(height: 4),
@@ -924,7 +973,7 @@ class _HeroCard extends StatelessWidget {
               Text(
                 'Saldo total: ${formatarMoeda(data.saldoTotal)}',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
             ],
@@ -948,7 +997,7 @@ class _StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Colors.white24),
       ),
@@ -1048,106 +1097,6 @@ String _formatarDelta(double? delta) {
 String _formatarAnome(int anome) {
   final texto = anome.toString().padLeft(6, '0');
   return '${texto.substring(4, 6)}/${texto.substring(0, 4)}';
-}
-
-List<_CategoriaTotal> _categoriasDoMes(List<TransacaoDto> items) {
-  final mapa = <String, double>{};
-  for (final item in items) {
-    if (item.tipo != 'Despesa') {
-      continue;
-    }
-    final categoria = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
-    mapa[categoria] = (mapa[categoria] ?? 0) + item.valor.abs();
-  }
-  final categorias = mapa.entries
-      .map((entry) => _CategoriaTotal(nome: entry.key, valor: entry.value))
-      .toList()
-    ..sort((a, b) => b.valor.compareTo(a.valor));
-  return categorias;
-}
-
-List<TransacaoDto> _despesasDoMes(List<TransacaoDto> items, int anome) {
-  return items.where((item) {
-    if (item.tipo != 'Despesa') {
-      return false;
-    }
-    final data = tentarConverterParaData(item.data);
-    if (data == null) {
-      return false;
-    }
-    return data.year * 100 + data.month == anome;
-  }).toList();
-}
-
-List<int> _mesesVisiveis(List<TransacaoDto> items, int selectedAnome, int lookback) {
-  final meses = items
-      .map((item) => tentarConverterParaData(item.data))
-      .whereType<DateTime>()
-      .map((data) => data.year * 100 + data.month)
-      .where((anome) => anome <= selectedAnome)
-      .toSet()
-      .toList()
-    ..sort();
-
-  if (meses.isEmpty) {
-    return [selectedAnome];
-  }
-
-    final limite = lookback.clamp(3, 12).toInt();
-  final selecionados = meses.length > limite ? meses.sublist(meses.length - limite) : meses;
-  return selecionados;
-}
-
-List<_SerieMensal> _serieCategoria(List<TransacaoDto> items, String categoria, List<int> meses) {
-  return meses
-      .map(
-        (anome) => _SerieMensal(
-          anome: anome,
-          valor: _totalCategoriaMes(items, categoria, anome),
-        ),
-      )
-      .toList();
-}
-
-List<_SerieMensal> _serieTotal(List<TransacaoDto> items, List<int> meses) {
-  return meses
-      .map(
-        (anome) => _SerieMensal(
-          anome: anome,
-          valor: _totalMes(items, anome),
-        ),
-      )
-      .toList();
-}
-
-double _totalCategoriaMes(List<TransacaoDto> items, String categoria, int anome) {
-  return items.fold<double>(0, (sum, item) {
-    if (item.tipo != 'Despesa') {
-      return sum;
-    }
-    final data = tentarConverterParaData(item.data);
-    if (data == null || data.year * 100 + data.month != anome) {
-      return sum;
-    }
-    final itemCategoria = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
-    if (itemCategoria != categoria) {
-      return sum;
-    }
-    return sum + item.valor.abs();
-  });
-}
-
-double _totalMes(List<TransacaoDto> items, int anome) {
-  return items.fold<double>(0, (sum, item) {
-    if (item.tipo != 'Despesa') {
-      return sum;
-    }
-    final data = tentarConverterParaData(item.data);
-    if (data == null || data.year * 100 + data.month != anome) {
-      return sum;
-    }
-    return sum + item.valor.abs();
-  });
 }
 
 class _CategoriaTotal {
