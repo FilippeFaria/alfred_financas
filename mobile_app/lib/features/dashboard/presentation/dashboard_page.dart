@@ -17,6 +17,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _detalharCategorias = false;
   int _mesesHistorico = 6;
   DashboardSnapshot? _ultimoSnapshotVisivel;
+  bool _salvandoOrcamento = false;
 
   Future<void> _recarregar() async {
     final filtros = ref.read(dashboardFiltersProvider);
@@ -34,6 +35,105 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
     ref.invalidate(dashboardSnapshotProvider(providerArgs));
     await ref.read(dashboardSnapshotProvider(providerArgs).future);
+  }
+
+  Future<void> _abrirEditorOrcamento(DashboardSnapshot data) async {
+    final repository = ref.read(dashboardRepositoryProvider);
+    final categoriasApi = await repository.carregarCategoriasDespesa();
+    final orcamentoAtual = await repository.carregarOrcamentoAtual();
+    final categorias = <String>{
+      ...categoriasApi,
+      ...orcamentoAtual.keys,
+      ...data.categoriasDestaque.map((e) => e.nome),
+    }.toList()
+      ..sort();
+    final valores = <String, double>{
+      for (final categoria in categorias) categoria: orcamentoAtual[categoria] ?? 0.0,
+    };
+
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Editar valores desejados',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: categorias.length,
+                  itemBuilder: (context, index) {
+                    final categoria = categorias[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: TextFormField(
+                        initialValue: (valores[categoria] ?? 0.0).toStringAsFixed(2),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: categoria,
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          final normalizado = value.replaceAll(',', '.').trim();
+                          final parsed = double.tryParse(normalizado) ?? 0.0;
+                          valores[categoria] = parsed < 0 ? 0.0 : parsed;
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _salvandoOrcamento
+                      ? null
+                      : () async {
+                          Navigator.of(context).pop();
+                          setState(() => _salvandoOrcamento = true);
+                          try {
+                            await repository.salvarOrcamento(valores);
+                            await _recarregar();
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(content: Text('Orçamento salvo com sucesso.')),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(content: Text('Erro ao salvar orçamento: $error')),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _salvandoOrcamento = false);
+                            }
+                          }
+                        },
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Salvar'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -65,6 +165,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
             onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
             onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+            onEditarOrcamento: () => _abrirEditorOrcamento(data),
           ),
           loading: () {
             if (_ultimoSnapshotVisivel != null) {
@@ -78,6 +179,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
                 onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+                onEditarOrcamento: () => _abrirEditorOrcamento(_ultimoSnapshotVisivel!),
                 avisoOffline: 'Atualizando filtros...',
               );
             }
@@ -100,6 +202,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
                 onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+                onEditarOrcamento: () => _abrirEditorOrcamento(cache),
                 avisoOffline: 'Exibindo último cache local. Não foi possível atualizar agora.',
               );
             }
@@ -146,6 +249,7 @@ class _DashboardBody extends StatelessWidget {
     required this.onDetalharCategoriasChanged,
     required this.onMesesHistoricoChanged,
     required this.onAtualizarFiltros,
+    required this.onEditarOrcamento,
     this.avisoOffline,
   });
 
@@ -158,6 +262,7 @@ class _DashboardBody extends StatelessWidget {
   final ValueChanged<bool> onDetalharCategoriasChanged;
   final ValueChanged<int> onMesesHistoricoChanged;
   final ValueChanged<DashboardFilters> onAtualizarFiltros;
+  final VoidCallback onEditarOrcamento;
   final String? avisoOffline;
 
   @override
@@ -166,7 +271,11 @@ class _DashboardBody extends StatelessWidget {
     final anomeLabel = _formatarAnome(selectedAnome);
     final mesesVisiveis = data.serieMensal.map((item) => item.anome).toList();
     final categoriasMes = data.categoriasDestaque
-        .map((item) => _CategoriaTotal(nome: item.nome, valor: item.valor))
+        .map((item) => _CategoriaTotal(
+              nome: item.nome,
+              valor: item.valor,
+              percentualOrcamento: item.percentualOrcamento,
+            ))
         .toList();
     final categoriasDisponiveis = data.categoriasDestaque.map((item) => item.nome).toList();
     final categoriaEfetiva = categoriasDisponiveis.contains(categoriaSelecionada)
@@ -249,7 +358,10 @@ class _DashboardBody extends StatelessWidget {
           },
         ),
         const SizedBox(height: 12),
-        _ResumoOrcamentoCard(data: data),
+        _ResumoOrcamentoCard(
+          data: data,
+          onEditarOrcamento: onEditarOrcamento,
+        ),
         const SizedBox(height: 12),
         _DistribuicaoCategoriaCard(
           categorias: categoriasMes,
@@ -481,9 +593,13 @@ class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
 }
 
 class _ResumoOrcamentoCard extends StatelessWidget {
-  const _ResumoOrcamentoCard({required this.data});
+  const _ResumoOrcamentoCard({
+    required this.data,
+    required this.onEditarOrcamento,
+  });
 
   final DashboardSnapshot data;
+  final VoidCallback onEditarOrcamento;
 
   @override
   Widget build(BuildContext context) {
@@ -502,6 +618,17 @@ class _ResumoOrcamentoCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: onEditarOrcamento,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Editar'),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: const Size(0, 30),
+                  ),
                 ),
                 const Spacer(),
                 Text(
@@ -544,7 +671,6 @@ class _DistribuicaoCategoriaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itens = detalharCategorias ? categorias : categorias.take(5).toList();
-    final total = categorias.fold<double>(0, (sum, item) => sum + item.valor);
     final maxValor = categorias.isEmpty ? 0.0 : categorias.first.valor;
 
     return Card(
@@ -604,7 +730,9 @@ class _DistribuicaoCategoriaCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        total <= 0 ? '0%' : '${((item.valor / total) * 100).toStringAsFixed(1).replaceAll('.', ',')}%',
+                        item.percentualOrcamento == null
+                            ? 'Sem orçamento definido'
+                            : '${item.percentualOrcamento!.toStringAsFixed(1).replaceAll('.', ',')}% do orçamento da categoria',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -1103,10 +1231,12 @@ class _CategoriaTotal {
   _CategoriaTotal({
     required this.nome,
     required this.valor,
+    this.percentualOrcamento,
   });
 
   final String nome;
   final double valor;
+  final double? percentualOrcamento;
 }
 
 class _SerieMensal {

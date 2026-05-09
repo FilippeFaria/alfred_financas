@@ -180,6 +180,16 @@ class TransactionsRepository {
 
   final AlfredApiClient _apiClient;
 
+  static const List<String> contasPadrao = [
+    'Itaú CC',
+    'Cartão Filippe',
+    'Cartão Bianca',
+    'Cartão Nath',
+    'Inter',
+    'Nubank',
+    'VA',
+    'VR',
+  ];
   static const List<String> contasInvestimentoPadrao = ['Ion', 'Nuinvest', '99Pay', 'C6Invest'];
   static const List<String> cartoesPagamentoPadrao = [
     'Cartão Filippe',
@@ -246,11 +256,9 @@ class TransactionsRepository {
   Future<CadastroTransacaoOptions> carregarOpcoesCadastro() async {
     final categoriasDto = await _apiClient.getCategorias();
     final saldo = await _apiClient.getSaldo();
-    final contasFromSaldo = saldo.map((e) => e.conta).where((e) => e.isNotEmpty).toSet().toList()
-      ..sort();
-    final contas = contasFromSaldo.isEmpty
-        ? ['Itaú CC', 'Cartão Filippe', 'Cartão Bianca', 'Cartão Nath', 'Inter', 'Nubank', 'VA', 'VR']
-        : contasFromSaldo;
+    final contasSaldo = saldo.map((e) => e.conta).where((e) => e.isNotEmpty).toSet();
+    final contas = contasPadrao.where((conta) => contasSaldo.contains(conta)).toList();
+    final contasFinal = contas.isEmpty ? [...contasPadrao] : contas;
 
     return CadastroTransacaoOptions(
       categoriasDespesa: categoriasDto.despesa,
@@ -300,6 +308,40 @@ class TransactionsRepository {
     );
   }
 
+  Future<void> editarTransacao(int id, CadastroTransacaoInput input) async {
+    await _apiClient.putTransacao(
+      id,
+      CriarTransacaoRequestDto(
+        nome: input.nome,
+        tipo: input.tipo,
+        valor: input.valor,
+        categoria: input.categoria,
+        conta: input.conta,
+        dataIso: input.data.toIso8601String(),
+        obs: input.obs,
+        tag: input.tag,
+        desconsiderar: input.desconsiderar,
+        parcelas: input.parcelas,
+      ),
+    );
+  }
+
+  Future<void> excluirTransacao(int id) async {
+    await _apiClient.deleteTransacao(id);
+  }
+
+  Future<void> atualizarFlagsTransacao(
+    int id, {
+    bool? desconsiderar,
+    bool? grandeTransacao,
+  }) async {
+    await _apiClient.patchTransacaoFlags(
+      id,
+      desconsiderar: desconsiderar,
+      grandeTransacao: grandeTransacao,
+    );
+  }
+
   TransacaoItem _mapDtoToItem(TransacaoDto item) {
     return TransacaoItem(
       id: item.id,
@@ -309,6 +351,9 @@ class TransactionsRepository {
       categoria: item.categoria,
       conta: item.conta,
       data: item.data,
+      obs: item.obs,
+      tag: item.tag,
+      desconsiderar: item.desconsiderar,
     );
   }
 
@@ -405,10 +450,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   static const int _limite = 30;
   final TransactionsRepository _repository;
+  CadastroTransacaoOptions? _opcoesCadastroCache;
+  Future<CadastroTransacaoOptions>? _opcoesCadastroFuture;
 
   Future<void> inicializar() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
+      _precarregarOpcoesCadastro();
       final filtros = await _repository.carregarFiltros();
       final opcoes = await _repository.carregarOpcoesFiltros();
       state = state.copyWith(filtros: filtros, opcoes: opcoes);
@@ -469,12 +517,57 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   Future<CadastroTransacaoOptions> carregarOpcoesCadastro() {
-    return _repository.carregarOpcoesCadastro();
+    if (_opcoesCadastroCache != null) {
+      return Future.value(_opcoesCadastroCache);
+    }
+    _opcoesCadastroFuture ??= _repository.carregarOpcoesCadastro().then((opcoes) {
+      _opcoesCadastroCache = opcoes;
+      return opcoes;
+    }).whenComplete(() {
+      _opcoesCadastroFuture = null;
+    });
+    return _opcoesCadastroFuture!;
   }
 
   Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {
     await _repository.cadastrarTransacao(input);
+    _precarregarOpcoesCadastro(forcar: true);
     await recarregar();
+  }
+
+  Future<void> editarTransacao(int id, CadastroTransacaoInput input) async {
+    await _repository.editarTransacao(id, input);
+    await recarregar();
+  }
+
+  Future<void> excluirTransacao(int id) async {
+    await _repository.excluirTransacao(id);
+    await recarregar();
+  }
+
+  Future<void> atualizarFlagsTransacao(
+    int id, {
+    bool? desconsiderar,
+    bool? grandeTransacao,
+  }) async {
+    await _repository.atualizarFlagsTransacao(
+      id,
+      desconsiderar: desconsiderar,
+      grandeTransacao: grandeTransacao,
+    );
+    await recarregar();
+  }
+
+  void _precarregarOpcoesCadastro({bool forcar = false}) {
+    if (!forcar && (_opcoesCadastroCache != null || _opcoesCadastroFuture != null)) {
+      return;
+    }
+    _opcoesCadastroFuture = _repository.carregarOpcoesCadastro().then((opcoes) {
+      _opcoesCadastroCache = opcoes;
+      return opcoes;
+    }).whenComplete(() {
+      _opcoesCadastroFuture = null;
+    });
   }
 }
 
@@ -482,3 +575,6 @@ final transactionsNotifierProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
   return TransactionsNotifier(ref.watch(transactionsRepositoryProvider));
 });
+
+
+

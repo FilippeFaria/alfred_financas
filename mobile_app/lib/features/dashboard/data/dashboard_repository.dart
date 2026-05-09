@@ -82,6 +82,36 @@ class DashboardRepository {
     return _cache[_cacheKey(filtros, categoria, mesesHistorico)];
   }
 
+  Future<List<String>> carregarCategoriasDespesa() async {
+    final categorias = await _apiClient.getCategorias();
+    return categorias.despesa;
+  }
+
+  Future<Map<String, double>> carregarOrcamentoAtual() async {
+    final payload = await _apiClient.getOrcamentoValores();
+    final rawItems = (payload['items'] as List? ?? <dynamic>[]);
+    final result = <String, double>{};
+    for (final raw in rawItems) {
+      final item = Map<String, dynamic>.from(raw as Map);
+      final categoria = (item['categoria'] ?? '').toString().trim();
+      if (categoria.isEmpty) {
+        continue;
+      }
+      result[categoria] = (item['valor'] as num?)?.toDouble() ?? 0.0;
+    }
+    return result;
+  }
+
+  Future<void> salvarOrcamento(Map<String, double> valores) async {
+    final items = valores.entries
+        .map((entry) => <String, dynamic>{
+              'categoria': entry.key,
+              'valor': entry.value,
+            })
+        .toList();
+    await _apiClient.postOrcamentoValores(items: items);
+  }
+
   Future<DashboardSnapshot> carregarResumo({
     required DashboardFilters filtros,
     String? categoria,
@@ -131,7 +161,11 @@ class DashboardRepository {
       orcamentoUsadoPercentual: dto.orcamentoUsadoPercentual,
       orcamentoUsadoLabel: dto.orcamentoUsadoLabel,
       categoriasDestaque: dto.categoriasDestaque
-          .map((item) => CategoriaDestaque(nome: item.nome, valor: item.valor))
+          .map((item) => CategoriaDestaque(
+                nome: item.nome,
+                valor: item.valor,
+                percentualOrcamento: item.percentualOrcamento,
+              ))
           .toList(),
       ultimosLancamentos: dto.ultimosLancamentos
           .map((item) => LancamentoResumo(nome: item.nome, categoria: item.categoria, valor: item.valor, data: item.data))

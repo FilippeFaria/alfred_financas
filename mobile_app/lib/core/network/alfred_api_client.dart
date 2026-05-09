@@ -151,6 +151,41 @@ class AlfredApiClient {
     }
   }
 
+  Future<TransacaoDto> putTransacao(int id, CriarTransacaoRequestDto payload) async {
+    try {
+      final response = await _dio.put('/transacoes/$id', data: payload.toJson());
+      return TransacaoDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<void> deleteTransacao(int id) async {
+    try {
+      await _dio.delete('/transacoes/$id');
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<void> patchTransacaoFlags(
+    int id, {
+    bool? desconsiderar,
+    bool? grandeTransacao,
+  }) async {
+    try {
+      await _dio.patch(
+        '/transacoes/$id/flags',
+        data: {
+          if (desconsiderar != null) 'desconsiderar': desconsiderar,
+          if (grandeTransacao != null) 'grande_transacao': grandeTransacao,
+        },
+      );
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
   Future<DashboardSnapshotDto> getDashboardSnapshot({
     required bool desconsiderar,
     required bool va,
@@ -183,6 +218,29 @@ class AlfredApiClient {
         queryParameters: queryParameters,
       );
       return DashboardSnapshotDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<Map<String, dynamic>> getOrcamentoValores() async {
+    try {
+      final response = await _dio.get('/orcamento/valores');
+      return _asMap(response.data);
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<Map<String, dynamic>> postOrcamentoValores({
+    required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/orcamento/valores',
+        data: {'items': items},
+      );
+      return _asMap(response.data);
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }

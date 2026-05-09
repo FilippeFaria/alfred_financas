@@ -10,7 +10,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from src.database.models import Account, Category, Transaction, User
+from src.database.models import Account, Budget, Category, Transaction, User
 
 
 def _uuid_to_legacy_int(value: UUID) -> int:
@@ -148,6 +148,29 @@ class TransactionRepository:
             self.db.delete(item)
         return total
 
+    def get_by_legacy_id(self, *, user_id: UUID, legacy_id: int) -> list[Transaction]:
+        return (
+            self.db.query(Transaction)
+            .filter(Transaction.user_id == user_id, Transaction.legacy_id == legacy_id)
+            .order_by(Transaction.data.asc())
+            .all()
+        )
+
+    def update_flags_by_legacy_id(
+        self,
+        *,
+        user_id: UUID,
+        legacy_id: int,
+        desconsiderar: bool | None = None,
+        tag: str | None = None,
+    ) -> int:
+        itens = self.get_by_legacy_id(user_id=user_id, legacy_id=legacy_id)
+        for item in itens:
+            if desconsiderar is not None:
+                item.desconsiderar = bool(desconsiderar)
+            item.tag = tag
+        return len(itens)
+
     def get_next_legacy_id(self, *, user_id: UUID) -> int:
         atual = (
             self.db.query(func.max(Transaction.legacy_id))
@@ -206,3 +229,45 @@ class CategoryRepository:
         self.db.add(item)
         self.db.flush()
         return item
+
+
+class BudgetRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def get_latest(self, *, user_id: UUID) -> tuple[datetime | None, list[Budget]]:
+        data_ref = (
+            self.db.query(func.max(Budget.data))
+            .filter(Budget.user_id == user_id)
+            .scalar()
+        )
+        if data_ref is None:
+            return None, []
+
+        itens = (
+            self.db.query(Budget)
+            .filter(Budget.user_id == user_id, Budget.data == data_ref)
+            .order_by(Budget.categoria.asc())
+            .all()
+        )
+        return data_ref, itens
+
+    def create_snapshot(
+        self,
+        *,
+        user_id: UUID,
+        data: datetime,
+        valores: dict[str, float],
+    ) -> list[Budget]:
+        itens: list[Budget] = []
+        for categoria, valor in valores.items():
+            item = Budget(
+                user_id=user_id,
+                data=data,
+                categoria=categoria,
+                valor=Decimal(str(float(valor))),
+            )
+            self.db.add(item)
+            itens.append(item)
+        self.db.flush()
+        return itens

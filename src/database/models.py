@@ -37,6 +37,7 @@ class User(Base):
     accounts: Mapped[list["Account"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     categories: Mapped[list["Category"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    budgets: Mapped[list["Budget"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Account(Base):
@@ -151,3 +152,27 @@ class Transaction(Base):
     user: Mapped["User"] = relationship(back_populates="transactions")
     account: Mapped["Account"] = relationship(back_populates="transactions")
     category: Mapped["Category"] = relationship(back_populates="transactions")
+
+
+class Budget(Base):
+    """Orcamento desejado por categoria (snapshot por data)."""
+
+    __tablename__ = "budgets"
+
+    id: Mapped[UUIDValue] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUIDValue] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+    )
+    data: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    categoria: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    valor: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    user: Mapped["User"] = relationship(back_populates="budgets")

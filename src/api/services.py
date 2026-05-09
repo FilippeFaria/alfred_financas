@@ -17,6 +17,7 @@ from src.config import CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO, CATEGORIAS_R
 from src.database.connection import SessionLocal
 from src.database.repositories import (
     AccountRepository,
+    BudgetRepository,
     CategoryRepository,
     TransactionRepository,
     UserRepository,
@@ -238,6 +239,69 @@ def listar_categorias() -> dict[str, list[str]]:
     return {"despesa": CATEGORIAS_DESPESA, "receita": CATEGORIAS_RECEITA, "investimento": CATEGORIAS_INVESTIMENTO}
 
 
+def obter_orcamento_valores() -> dict:
+    try:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            data_ref, itens = BudgetRepository(db).get_latest(user_id=user.id)
+            return {
+                "data": data_ref.strftime("%d/%m/%Y") if data_ref else None,
+                "items": [
+                    {"categoria": str(item.categoria), "valor": float(item.valor)}
+                    for item in itens
+                ],
+            }
+    except Exception as exc:
+        LOGGER.exception("Falha ao carregar orcamento no PostgreSQL")
+        raise ApiServiceError(
+            code="FALHA_POSTGRES",
+            message="Falha ao ler orcamento no PostgreSQL.",
+            status_code=503,
+            details={"error_type": type(exc).__name__, "error": str(exc)},
+        ) from exc
+
+
+def salvar_orcamento_valores(*, items: list[dict]) -> dict:
+    valores: dict[str, float] = {}
+    for item in items:
+        categoria = str(item.get("categoria", "")).strip()
+        if not categoria:
+            continue
+        valor = float(item.get("valor", 0.0) or 0.0)
+        valores[categoria] = max(0.0, valor)
+
+    if not valores:
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="Nenhuma categoria de orcamento valida foi informada.",
+            status_code=400,
+        )
+
+    data_snapshot = datetime.now()
+    try:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            BudgetRepository(db).create_snapshot(
+                user_id=user.id,
+                data=data_snapshot,
+                valores=valores,
+            )
+            db.commit()
+    except Exception as exc:
+        LOGGER.exception("Falha ao salvar orcamento no PostgreSQL")
+        raise ApiServiceError(
+            code="FALHA_POSTGRES",
+            message="Falha ao salvar orcamento no PostgreSQL.",
+            status_code=503,
+            details={"error_type": type(exc).__name__, "error": str(exc)},
+        ) from exc
+
+    return {
+        "data": data_snapshot.strftime("%d/%m/%Y"),
+        "items": [{"categoria": cat, "valor": float(val)} for cat, val in sorted(valores.items())],
+    }
+
+
 def _validar_categoria_por_tipo(tipo: str, categoria: str) -> None:
     mapa = {
         "Despesa": CATEGORIAS_DESPESA,
@@ -340,6 +404,105 @@ def excluir_transacao_por_id(transacao_id: int) -> dict:
     except Exception as exc:
         _log_error("postgres_delete_error", error_type=type(exc).__name__)
         raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao excluir transacao.", status_code=503) from exc
+
+
+def atualizar_transacao_por_id(
+    transacao_id: int,
+    *,
+    nome: str,
+    tipo: str,
+    valor: float,
+    categoria: str,
+    conta: str,
+    data: datetime,
+    obs: str = "",
+    tag: str | None = None,
+    desconsiderar: bool = False,
+    parcelas: int | None = None,
+) -> dict:
+    _validar_categoria_por_tipo(tipo, categoria)
+    if tipo == "Despesa" and valor > 0:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message="Despesa deve possuir valor negativo.", status_code=400)
+    if tipo in {"Receita", "Investimento"} and valor < 0:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=f"{tipo} deve possuir valor positivo.", status_code=400)
+
+    try:
+        with SessionLocal() as db:
+            user_repo = UserRepository(db)
+            account_repo = AccountRepository(db)
+            category_repo = CategoryRepository(db)
+            tx_repo = TransactionRepository(db)
+
+            user = user_repo.get_or_create_default()
+            tx_repo.delete_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+
+            account = account_repo.get_or_create(user_id=user.id, nome=conta)
+            cat = category_repo.get_or_create(user_id=user.id, nome=categoria, tipo=tipo)
+            total_parcelas = int(parcelas) if parcelas and parcelas > 1 else 1
+            item = None
+            for i in range(total_parcelas):
+                data_item = (pd.Timestamp(data) + pd.DateOffset(months=i)).to_pydatetime()
+                parcela_item = (i + 1) if total_parcelas > 1 else None
+                data_origem_item = data if total_parcelas > 1 else None
+                item = tx_repo.create(
+                    user_id=user.id,
+                    account_id=account.id,
+                    category_id=cat.id,
+                    legacy_id=transacao_id,
+                    nome=nome,
+                    tipo=tipo,
+                    valor=Decimal(str(valor)),
+                    data=data_item,
+                    observacao=obs or None,
+                    tag=tag,
+                    desconsiderar=desconsiderar,
+                    parcela=parcela_item,
+                    data_origem=data_origem_item,
+                )
+            db.commit()
+            if item is None:
+                raise ApiServiceError(code="DADOS_INVALIDOS", message="Nenhuma transacao atualizada.", status_code=400)
+            db.refresh(item)
+            return _map_tx_to_api_dict(item)
+    except ApiServiceError:
+        raise
+    except Exception as exc:
+        _log_error("postgres_update_error", error_type=type(exc).__name__, error=str(exc))
+        raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao atualizar transacao.", status_code=503) from exc
+
+
+def atualizar_flags_transacao_por_id(
+    transacao_id: int,
+    *,
+    desconsiderar: bool | None = None,
+    grande_transacao: bool | None = None,
+) -> dict:
+    tag: str | None = None
+    if grande_transacao is True:
+        tag = "GRANDE_TRANSACAO"
+        if desconsiderar is None:
+            desconsiderar = True
+    elif grande_transacao is False:
+        tag = None
+
+    try:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            atualizados = TransactionRepository(db).update_flags_by_legacy_id(
+                user_id=user.id,
+                legacy_id=transacao_id,
+                desconsiderar=desconsiderar,
+                tag=tag,
+            )
+            db.commit()
+            return {
+                "id": transacao_id,
+                "removidos": 0,
+                "mensagem": f"{atualizados} registro(s) atualizado(s) para o id {transacao_id}.",
+            }
+    except Exception as exc:
+        _log_error("postgres_update_flags_error", error_type=type(exc).__name__, error=str(exc))
+        raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao atualizar flags da transacao.", status_code=503) from exc
 
 
 def _aplicar_filtros_analise(df: pd.DataFrame, *, desconsiderar: bool, va: bool, vr: bool, bianca: bool, filippe: bool) -> pd.DataFrame:
@@ -461,7 +624,7 @@ def obter_dashboard_snapshot_mobile(
             "saldos": [],
             "gasto_mes": 0.0,
             "orcamento_usado_percentual": 0.0,
-            "orcamento_usado_label": "Base media 3 meses: R$ 1.00",
+            "orcamento_usado_label": "Orcamento total: R$ 0.00",
             "categorias_destaque": [],
             "ultimos_lancamentos": [],
             "serie_mensal": [],
@@ -507,8 +670,17 @@ def obter_dashboard_snapshot_mobile(
     df_despesa = df_temp[(df_temp["desconsiderar"] == False) & (df_temp["Tipo"] == "Despesa")]
     metricas = calcular_despesa_total(df_despesa, int(anome_base))
     gasto_mes = float(metricas["gasto_atual"])
-    referencia_orcamento = float(metricas["gasto_3m_media"]) if float(metricas["gasto_3m_media"]) > 0 else 1.0
-    orcamento_usado_percentual = float((gasto_mes / referencia_orcamento) * 100)
+    try:
+        orcamento_payload = obter_orcamento_valores()
+    except ApiServiceError:
+        orcamento_payload = {"data": None, "items": []}
+    orcamento_map = {
+        str(item.get("categoria", "")).strip(): float(item.get("valor", 0.0) or 0.0)
+        for item in orcamento_payload.get("items", [])
+        if str(item.get("categoria", "")).strip()
+    }
+    total_orcamento = float(sum(orcamento_map.values()))
+    orcamento_usado_percentual = float((gasto_mes / total_orcamento) * 100) if total_orcamento > 0 else 0.0
 
     # Visoes do dashboard devem refletir explicitamente o mes selecionado.
     df_mes = df_temp[df_temp["anomes"] == str(anome_base)].copy()
@@ -521,9 +693,17 @@ def obter_dashboard_snapshot_mobile(
         .abs()
         .sort_values(ascending=False)
     )
-    categorias_destaque = [
-        {"nome": str(nome), "valor": float(valor)} for nome, valor in categorias_serie.head(6).items()
-    ]
+    categorias_destaque = []
+    for nome, valor in categorias_serie.items():
+        orcado = float(orcamento_map.get(str(nome), 0.0))
+        percentual_orcamento = float((float(valor) / orcado) * 100) if orcado > 0 else None
+        categorias_destaque.append(
+            {
+                "nome": str(nome),
+                "valor": float(valor),
+                "percentual_orcamento": percentual_orcamento,
+            }
+        )
 
     ultimos_df = df_mes.copy()
     ultimos_df["_data_ord"] = pd.to_datetime(ultimos_df["Data"], format=DATE_FORMAT, errors="coerce")
@@ -567,7 +747,7 @@ def obter_dashboard_snapshot_mobile(
         "saldos": saldos,
         "gasto_mes": gasto_mes,
         "orcamento_usado_percentual": orcamento_usado_percentual,
-        "orcamento_usado_label": f"Base media 3 meses: R$ {referencia_orcamento:.2f}",
+        "orcamento_usado_label": f"Orcamento total: R$ {total_orcamento:.2f}",
         "categorias_destaque": categorias_destaque,
         "ultimos_lancamentos": ultimos_lancamentos,
         "serie_mensal": serie_mensal,

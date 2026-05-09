@@ -126,10 +126,12 @@ class CategoriaDestaque {
   CategoriaDestaque({
     required this.nome,
     required this.valor,
+    this.percentualOrcamento,
   });
 
   final String nome;
   final double valor;
+  final double? percentualOrcamento;
 }
 
 class LancamentoResumo {

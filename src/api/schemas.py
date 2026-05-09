@@ -58,6 +58,24 @@ class ExcluirTransacaoResponse(BaseModel):
     mensagem: str
 
 
+class AtualizarTransacaoRequest(BaseModel):
+    nome: str = Field(min_length=1)
+    tipo: str = Field(min_length=1)
+    valor: float
+    categoria: str = Field(min_length=1)
+    conta: str = Field(min_length=1)
+    data: datetime
+    obs: str = ""
+    tag: Optional[str] = None
+    desconsiderar: bool = False
+    parcelas: Optional[int] = Field(default=None, ge=1)
+
+
+class AtualizarTransacaoFlagsRequest(BaseModel):
+    desconsiderar: Optional[bool] = None
+    grande_transacao: Optional[bool] = None
+
+
 class CategoriasResponse(BaseModel):
     despesa: list[str]
     receita: list[str]
@@ -132,6 +150,7 @@ class SerieMensalResponse(BaseModel):
 class CategoriaDestaqueResponse(BaseModel):
     nome: str
     valor: float
+    percentual_orcamento: Optional[float] = None
 
 
 class UltimoLancamentoResponse(BaseModel):
@@ -155,3 +174,17 @@ class DashboardSnapshotResponse(BaseModel):
     ultimos_lancamentos: list[UltimoLancamentoResponse]
     serie_mensal: list[SerieMensalResponse]
     serie_categoria: list[SerieMensalResponse]
+
+
+class OrcamentoCategoriaItem(BaseModel):
+    categoria: str
+    valor: float
+
+
+class OrcamentoValoresResponse(BaseModel):
+    data: Optional[str] = None
+    items: list[OrcamentoCategoriaItem]
+
+
+class SalvarOrcamentoRequest(BaseModel):
+    items: list[OrcamentoCategoriaItem]

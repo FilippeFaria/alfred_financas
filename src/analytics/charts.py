@@ -16,11 +16,11 @@ except ImportError:  # pragma: no cover - fallback para ambientes locais inconsi
     LinearRegression = None
 
 from src.analytics.calculations import COLOR_MAP, forecast
-from src.services.google_sheets import read_valores_desejados, write_valores_desejados
+from src.api.client import ApiClientError, obter_orcamento_valores, salvar_orcamento_valores
 
 
 def _carregar_valores_desejados(path: str) -> None:
-    """Carrega valores desejados do Google Sheets para a sessÃ£o."""
+    """Carrega valores desejados da API (Supabase) para a sessÃ£o."""
     if 'valores_desejados' not in st.session_state:
         st.session_state.valores_desejados = {}
     if 'valores_desejados_carregados' not in st.session_state:
@@ -30,13 +30,15 @@ def _carregar_valores_desejados(path: str) -> None:
         return
 
     try:
-        df_valores = read_valores_desejados(path)
-        if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
-            st.session_state.valores_desejados = dict(zip(df_valores['Categoria'], df_valores['Valor']))
+        payload = obter_orcamento_valores()
+        st.session_state.valores_desejados = {
+            str(item.get("categoria", "")).strip(): float(item.get("valor", 0.0) or 0.0)
+            for item in payload.get("items", [])
+            if str(item.get("categoria", "")).strip()
+        }
         st.session_state.valores_desejados_carregados = True
-    except Exception:
-        # Em ambientes sem credenciais do Sheets, seguimos com fallback local em memÃ³ria
-        # para nÃ£o poluir a UI da pÃ¡gina de anÃ¡lise com aviso operacional.
+    except (ApiClientError, Exception):
+        # Em falha da API, mantemos fallback local em memÃ³ria para preservar a UX.
         st.session_state.valores_desejados = st.session_state.get('valores_desejados', {})
         st.session_state.valores_desejados_carregados = True
 
@@ -44,10 +46,13 @@ def _carregar_valores_desejados(path: str) -> None:
 def _obter_valores_desejados(path: str) -> dict:
     """ObtÃ©m valores desejados por categoria fora do contexto de UI."""
     try:
-        df_valores = read_valores_desejados(path)
-        if not df_valores.empty and 'Categoria' in df_valores.columns and 'Valor' in df_valores.columns:
-            return dict(zip(df_valores['Categoria'], df_valores['Valor']))
-    except Exception:
+        payload = obter_orcamento_valores()
+        return {
+            str(item.get("categoria", "")).strip(): float(item.get("valor", 0.0) or 0.0)
+            for item in payload.get("items", [])
+            if str(item.get("categoria", "")).strip()
+        }
+    except (ApiClientError, Exception):
         return {}
     return {}
 
@@ -76,7 +81,7 @@ def _render_editor_valores_desejados(df: pd.DataFrame, anome: int, path: str) ->
         st.session_state.editando_categorias = False
 
     if not st.session_state.editando_categorias:
-        if st.button("âœï¸ Definir valores desejados"):
+        if st.button("✏️ Editar valores desejados"):
             st.session_state.editando_categorias = True
             st.rerun()
         return
@@ -107,18 +112,16 @@ def _render_editor_valores_desejados(df: pd.DataFrame, anome: int, path: str) ->
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("ðŸ’¾ Salvar"):
-                st.session_state.valores_desejados = valores_input.copy()
-                st.session_state.editando_categorias = False
-
-                now = datetime.now()
-                df_salvar = pd.DataFrame([
-                    {'Data': now.strftime('%d/%m/%Y'), 'Categoria': cat, 'Valor': val}
-                    for cat, val in valores_input.items()
-                ])
-                write_valores_desejados(path, df_salvar)
-                st.success("Valores salvos no Google Sheets!")
-                st.rerun()
+            if st.button("💾 Salvar"):
+                payload = [{"categoria": cat, "valor": float(val)} for cat, val in valores_input.items()]
+                try:
+                    salvar_orcamento_valores(payload)
+                    st.session_state.valores_desejados = valores_input.copy()
+                    st.session_state.editando_categorias = False
+                    st.success("Orçamento salvo no Supabase com a data atual.")
+                    st.rerun()
+                except ApiClientError as exc:
+                    st.error(f"Erro ao salvar orçamento: {exc}")
 
         with col_btn2:
             if st.button("âŒ Cancelar"):

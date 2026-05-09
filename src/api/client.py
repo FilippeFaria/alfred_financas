@@ -162,6 +162,12 @@ class AlfredApiClient:
         }
         return self._request("POST", "/analise/resumo", json_payload=payload)
 
+    def obter_orcamento_valores(self) -> dict[str, Any]:
+        return self._request("GET", "/orcamento/valores")
+
+    def salvar_orcamento_valores(self, items: list[dict[str, Any]]) -> dict[str, Any]:
+        return self._request("POST", "/orcamento/valores", json_payload={"items": items})
+
 
 _client_padrao: AlfredApiClient | None = None
 
@@ -240,6 +246,14 @@ def obter_resumo_analise(
         day_to_date=day_to_date,
         anome_referencia=anome_referencia,
     )
+
+
+def obter_orcamento_valores() -> dict[str, Any]:
+    return obter_client_api().obter_orcamento_valores()
+
+
+def salvar_orcamento_valores(items: list[dict[str, Any]]) -> dict[str, Any]:
+    return obter_client_api().salvar_orcamento_valores(items)
 
 
 def transacoes_para_dataframe(payload: dict[str, Any]) -> pd.DataFrame:

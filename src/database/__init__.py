@@ -1,6 +1,6 @@
 from src.database.base import Base
 from src.database.connection import SessionLocal, engine, get_db, init_db
-from src.database.models import Account, Category, Transaction, User
+from src.database.models import Account, Budget, Category, Transaction, User
 
 __all__ = [
     "Base",
@@ -12,4 +12,5 @@ __all__ = [
     "Account",
     "Category",
     "Transaction",
+    "Budget",
 ]

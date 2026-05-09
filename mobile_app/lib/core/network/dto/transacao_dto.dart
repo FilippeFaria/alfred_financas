@@ -8,6 +8,8 @@ class TransacaoDto {
     required this.conta,
     required this.data,
     this.obs = '',
+    this.tag,
+    this.desconsiderar = false,
   });
 
   final int id;
@@ -18,6 +20,8 @@ class TransacaoDto {
   final String conta;
   final String data;
   final String obs;
+  final String? tag;
+  final bool desconsiderar;
 
   factory TransacaoDto.fromJson(Map<String, dynamic> json) {
     return TransacaoDto(
@@ -29,6 +33,8 @@ class TransacaoDto {
       conta: (json['conta'] ?? '').toString(),
       data: (json['data'] ?? '').toString(),
       obs: (json['obs'] ?? '').toString(),
+      tag: json['tag']?.toString(),
+      desconsiderar: json['desconsiderar'] == true,
     );
   }
 }

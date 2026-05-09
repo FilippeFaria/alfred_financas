@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.auth import UserContext, auth_context_middleware, get_current_user_optional
 from src.api.errors import register_exception_handlers
 from src.api.schemas import (
+    AtualizarTransacaoFlagsRequest,
+    AtualizarTransacaoRequest,
     CategoriaResponse,
     CriarTransacaoRequest,
     ExcluirTransacaoResponse,
@@ -16,10 +18,14 @@ from src.api.schemas import (
     SaldoResponse,
     StatusResponse,
     DashboardSnapshotResponse,
+    OrcamentoValoresResponse,
+    SalvarOrcamentoRequest,
     TransacaoResponse,
     TransacoesResponse,
 )
 from src.api.services import (
+    atualizar_flags_transacao_por_id,
+    atualizar_transacao_por_id,
     criar_transacao,
     excluir_transacao_por_id,
     gerar_insights_basicos,
@@ -28,7 +34,10 @@ from src.api.services import (
     obter_resumo_analise,
     obter_saldo_por_conta,
     obter_dashboard_snapshot_mobile,
+    obter_orcamento_valores,
+    salvar_orcamento_valores,
 )
+from src.database.connection import init_db
 
 
 app = FastAPI(
@@ -46,6 +55,11 @@ app.add_middleware(
 )
 register_exception_handlers(app)
 app.middleware("http")(auth_context_middleware)
+
+
+@app.on_event("startup")
+def startup_db() -> None:
+    init_db()
 
 
 @app.get("/", response_model=StatusResponse)
@@ -113,6 +127,40 @@ def delete_transacao(
     return excluir_transacao_por_id(transacao_id)
 
 
+@app.put("/transacoes/{transacao_id}", response_model=TransacaoResponse)
+def put_transacao(
+    transacao_id: int,
+    payload: AtualizarTransacaoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> TransacaoResponse:
+    return atualizar_transacao_por_id(
+        transacao_id,
+        nome=payload.nome,
+        tipo=payload.tipo,
+        valor=payload.valor,
+        categoria=payload.categoria,
+        conta=payload.conta,
+        data=payload.data,
+        obs=payload.obs,
+        tag=payload.tag,
+        desconsiderar=payload.desconsiderar,
+        parcelas=payload.parcelas,
+    )
+
+
+@app.patch("/transacoes/{transacao_id}/flags", response_model=ExcluirTransacaoResponse)
+def patch_transacao_flags(
+    transacao_id: int,
+    payload: AtualizarTransacaoFlagsRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> ExcluirTransacaoResponse:
+    return atualizar_flags_transacao_por_id(
+        transacao_id,
+        desconsiderar=payload.desconsiderar,
+        grande_transacao=payload.grande_transacao,
+    )
+
+
 @app.get("/categorias", response_model=CategoriaResponse)
 def get_categorias(user_context: UserContext = Depends(get_current_user_optional)) -> CategoriaResponse:
     return listar_categorias()
@@ -167,3 +215,18 @@ def get_mobile_dashboard_snapshot(
         meses_historico=meses_historico,
     )
     return DashboardSnapshotResponse(**payload)
+
+
+@app.get("/orcamento/valores", response_model=OrcamentoValoresResponse)
+def get_orcamento_valores(
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> OrcamentoValoresResponse:
+    return OrcamentoValoresResponse(**obter_orcamento_valores())
+
+
+@app.post("/orcamento/valores", response_model=OrcamentoValoresResponse)
+def post_orcamento_valores(
+    payload: SalvarOrcamentoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> OrcamentoValoresResponse:
+    return OrcamentoValoresResponse(**salvar_orcamento_valores(items=[item.model_dump() for item in payload.items]))

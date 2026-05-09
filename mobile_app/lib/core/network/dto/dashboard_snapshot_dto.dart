@@ -22,15 +22,18 @@ class DashboardCategoriaDestaqueDto {
   DashboardCategoriaDestaqueDto({
     required this.nome,
     required this.valor,
+    this.percentualOrcamento,
   });
 
   final String nome;
   final double valor;
+  final double? percentualOrcamento;
 
   factory DashboardCategoriaDestaqueDto.fromJson(Map<String, dynamic> json) {
     return DashboardCategoriaDestaqueDto(
       nome: (json['nome'] ?? '').toString(),
       valor: (json['valor'] as num?)?.toDouble() ?? 0,
+      percentualOrcamento: (json['percentual_orcamento'] as num?)?.toDouble(),
     );
   }
 }

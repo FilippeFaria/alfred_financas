@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../data/transaction_models.dart';
 import '../data/transactions_repository.dart';
 
 const _nomesMeses = <String>[
@@ -51,6 +52,62 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       isScrollControlled: true,
       builder: (_) => const _CadastroTransacaoSheet(),
     );
+  }
+
+  Future<void> _abrirEdicao(TransacaoItem item) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _CadastroTransacaoSheet(transacaoInicial: item),
+    );
+  }
+
+  Future<void> _confirmarExclusao(TransacaoItem item) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir transação'),
+        content: Text('Deseja excluir "${item.nome}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Excluir')),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+    try {
+      await ref.read(transactionsNotifierProvider.notifier).excluirTransacao(item.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transação excluída.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao excluir: $error')));
+    }
+  }
+
+  Future<void> _alternarDesconsiderar(TransacaoItem item) async {
+    try {
+      await ref.read(transactionsNotifierProvider.notifier).atualizarFlagsTransacao(
+            item.id,
+            desconsiderar: !item.desconsiderar,
+          );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao atualizar: $error')));
+    }
+  }
+
+  Future<void> _alternarGrandeTransacao(TransacaoItem item) async {
+    final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
+    try {
+      await ref.read(transactionsNotifierProvider.notifier).atualizarFlagsTransacao(
+            item.id,
+            grandeTransacao: !marcada,
+          );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao atualizar: $error')));
+    }
   }
 
   @override
@@ -117,7 +174,40 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     subtitle: Text(
                       '${item.tipo} | ${item.categoria} | ${item.conta} | ${formatarDataCurta(item.data)}',
                     ),
-                    trailing: Text(formatarMoeda(item.valor)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(formatarMoeda(item.valor)),
+                        PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            if (value == 'desconsiderar') {
+                              await _alternarDesconsiderar(item);
+                            } else if (value == 'grande') {
+                              await _alternarGrandeTransacao(item);
+                            } else if (value == 'editar') {
+                              await _abrirEdicao(item);
+                            } else if (value == 'excluir') {
+                              await _confirmarExclusao(item);
+                            }
+                          },
+                          itemBuilder: (context) {
+                            final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
+                            return [
+                              PopupMenuItem<String>(
+                                value: 'desconsiderar',
+                                child: Text(item.desconsiderar ? 'Considerar novamente' : 'Desconsiderar'),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'grande',
+                                child: Text(marcada ? 'Remover grande transação' : 'Grande transação'),
+                              ),
+                              const PopupMenuItem<String>(value: 'editar', child: Text('Editar')),
+                              const PopupMenuItem<String>(value: 'excluir', child: Text('Excluir')),
+                            ];
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -140,7 +230,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 }
 
 class _CadastroTransacaoSheet extends ConsumerStatefulWidget {
-  const _CadastroTransacaoSheet();
+  const _CadastroTransacaoSheet({this.transacaoInicial});
+
+  final TransacaoItem? transacaoInicial;
 
   @override
   ConsumerState<_CadastroTransacaoSheet> createState() => _CadastroTransacaoSheetState();
@@ -162,6 +254,22 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   String? _cartaoSelecionado;
   String? _tipoInvestimentoNome;
   bool _parcelado = false;
+  bool get _modoEdicao => widget.transacaoInicial != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final tx = widget.transacaoInicial;
+    if (tx == null) return;
+    _nomeController.text = tx.nome;
+    _valorController.text = tx.valor.abs().toStringAsFixed(2);
+    _obsController.text = tx.obs;
+    _tipo = tx.tipo;
+    _categoria = tx.categoria;
+    _conta = tx.conta;
+    _desconsiderar = tx.desconsiderar;
+    _data = _parseDataBr(tx.data) ?? DateTime.now();
+  }
 
   @override
   void dispose() {
@@ -177,6 +285,9 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   }
 
   List<String> _contasDisponiveis(CadastroTransacaoOptions opcoes) {
+    if (_tipo == 'Investimento') {
+      return [...opcoes.contas, ...opcoes.contasInvestimento].toSet().toList();
+    }
     return opcoes.contas.toSet().toList();
   }
 
@@ -231,6 +342,20 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
     }
   }
 
+  DateTime? _parseDataBr(String raw) {
+    try {
+      final dataPart = raw.split(' ').first;
+      final partes = dataPart.split('/');
+      if (partes.length != 3) return null;
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final ano = int.parse(partes[2]);
+      return DateTime(ano, mes, dia);
+    } catch (_) {
+      return null;
+    }
+  }
+
   List<String> _categoriasPorTipo(CadastroTransacaoOptions opcoes) {
     if (_tipo == 'Despesa') {
       return opcoes.categoriasDespesa;
@@ -266,6 +391,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
       final categoriaAtual = _categoriaSelecionadaAtual(opcoes);
       final contaAtual = _contaSelecionadaAtual(opcoes);
       final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
+
+      if (_modoEdicao && (_tipo == 'Transferência' || _tipo == 'Investimento' || _tipo == 'Pagamento de Cartão')) {
+        throw Exception('Edição para este tipo ainda não está disponível. Exclua e recrie.');
+      }
 
       if (_tipo == 'Transferência' || _tipo == 'Investimento') {
         if (contaAtual == null || contaDestinoAtual == null || contaDestinoAtual == contaAtual) {
@@ -344,24 +473,27 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
         final parcelas = _tipo == 'Despesa' && _parcelado
             ? int.tryParse(_parcelasController.text.trim())
             : null;
-        await notifier.cadastrarTransacao(
-          CadastroTransacaoInput(
-            nome: _nomeController.text.trim(),
-            tipo: _tipo,
-            valor: valorAjustado,
-            categoria: categoriaAtual ?? '',
-            conta: contaAtual ?? '',
-            data: _data,
-            obs: _obsController.text.trim(),
-            desconsiderar: _desconsiderar,
-            parcelas: parcelas,
-          ),
+        final input = CadastroTransacaoInput(
+          nome: _nomeController.text.trim(),
+          tipo: _tipo,
+          valor: valorAjustado,
+          categoria: categoriaAtual ?? '',
+          conta: contaAtual ?? '',
+          data: _data,
+          obs: _obsController.text.trim(),
+          desconsiderar: _desconsiderar,
+          parcelas: parcelas,
         );
+        if (_modoEdicao) {
+          await notifier.editarTransacao(widget.transacaoInicial!.id, input);
+        } else {
+          await notifier.cadastrarTransacao(input);
+        }
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transação salva com sucesso.')),
+          SnackBar(content: Text(_modoEdicao ? 'Transação atualizada com sucesso.' : 'Transação salva com sucesso.')),
         );
         Navigator.of(context).pop();
       }
@@ -416,7 +548,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Nova transação', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  Text(
+                    _modoEdicao ? 'Editar transação' : 'Nova transação',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: _tipo,
