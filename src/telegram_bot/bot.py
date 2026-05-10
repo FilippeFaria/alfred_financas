@@ -1,10 +1,22 @@
 import logging
 import os
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler, ContextTypes, CommandHandler, MessageHandler, filters
 from .alert_service import registrar_rotina_alertas
 from .daily_report_service import registrar_rotina_informe_diario
-from .handlers import alertas, categorias_despesas, chat_id, despesas, echo, help_command, informe_diario, saldo, start
+from .handlers import (
+    alertas,
+    callback_pendencia,
+    categorias_despesas,
+    chat_id,
+    despesas,
+    echo,
+    help_command,
+    informe_diario,
+    receber_audio_transacao,
+    saldo,
+    start,
+)
 
 # Configurar logging
 logging.basicConfig(
@@ -53,6 +65,8 @@ def main():
     application.add_handler(CommandHandler("informe_diario", informe_diario))
     application.add_handler(CommandHandler("chat_id", chat_id))
     application.add_handler(CommandHandler("alertas", alertas))
+    application.add_handler(CallbackQueryHandler(callback_pendencia, pattern=r"^pendencia:"))
+    application.add_handler(MessageHandler(filters.VOICE | filters.AUDIO | filters.Document.AUDIO, receber_audio_transacao))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), echo))
     application.add_error_handler(error_handler)
 

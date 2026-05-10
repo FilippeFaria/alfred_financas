@@ -7,7 +7,7 @@
 - **Execução**: `streamlit run app.py`
 - **Linguagem**: Python 3.x
 - **Framework principal**: Streamlit
-- **Stack de IA**: LangChain + OpenAI GPT (preparado, parcialmente integrado)
+- **Stack de IA**: OpenAI API + pipeline próprio (`src/ingestion` + `src/ai`) para sugestão de transações pendentes
 
 O repositório também contém um app mobile em Flutter dentro de `mobile_app/`, que consome a API FastAPI do Alfred.
 
@@ -20,6 +20,7 @@ O repositório também contém um app mobile em Flutter dentro de `mobile_app/`,
 src/
   ├── config.py              # Configurações centralizadas (contas, categorias, caminhos, Telegram)
   ├── models/transaction.py  # Classes de dados (Transaction)
+  ├── models/pending_transaction.py # Modelo de domínio para pendências de IA
   ├── api/
   │   ├── main.py            # Aplicação FastAPI e rotas
   │   ├── schemas.py         # Contratos request/response (Pydantic)
@@ -30,6 +31,27 @@ src/
   ├── services/
   │   ├── google_sheets.py   # Autenticação e sync com Google Sheets
   │   └── data_handler.py    # Manipulação de DataFrames (transformações, filtros)
+  │   └── pending_transaction_service.py # Ciclo de vida de pendências (criar, confirmar, ignorar)
+  ├── ingestion/
+  │   ├── __init__.py
+  │   ├── audio/
+  │   │   ├── normalizer.py  # Validação de extensão/tamanho e metadados
+  │   │   └── transcriber.py # Transcrição de áudio para português
+  │   └── text/
+  │       └── normalizer.py  # Normalização de texto de entrada
+  ├── ai/
+  │   ├── __init__.py
+  │   ├── clients.py         # Cliente OpenAI centralizado e tratamento de erro
+  │   ├── schemas.py         # Contratos de sugestão de transação
+  │   ├── services.py        # Orquestração IA + criação de pendência
+  │   ├── validators.py      # Validações financeiras da sugestão
+  │   ├── confidence.py      # Cálculo de confiança
+  │   ├── matching.py        # Canonicalização categórica (normalização, exato, fuzzy, LLM)
+  │   ├── prompts/
+  │   │   └── transaction_from_text.md
+  │   └── parsers/
+  │       ├── text_parser.py
+  │       └── audio_parser.py
   ├── analytics/
   │   ├── calculations.py    # Cálculos (saldo, despesas, comparativos por dia do mês)
   │   └── charts.py          # Gráficos Plotly
@@ -46,14 +68,14 @@ src/
 paginas/
   ├── transacao.py          # Aba: Registro de transações
   ├── analise.py            # Aba: Análise de despesas
-  ├── alfred.py             # Aba: Análise automática (IA) — PLACEHOLDER
+  ├── alfred.py             # Aba Streamlit para evolução de IA (web)
   ├── patrimonio.py         # Aba: Patrimônio/ativos
   └── extrato.py            # Aba: Extrato de movimentações
 
 app.py                       # Orquestrador: carrega dados, renderiza abas
 run_api.py                   # Launcher local da API FastAPI
 run_telegram_bot.py          # Launcher local do bot para ambientes com .venv inconsistente
-mobile_app/                  # App Flutter mobile por features, com client HTTP via Dio e Riverpod
+mobile_app/                  # App Flutter por features; aba Alfred (Insights) já integra texto+áudio com IA
 ```
 
 ### Fluxo de Dados
@@ -165,6 +187,11 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
   - `ALERTA_PERCENTUAL_GASTO_MENSAL`
   - `ALERTA_MULTIPLICADOR_DESPESA_CATEGORIA`
   - `ALERTA_PERCENTUAL_CATEGORIA_DESEJADA`
+- Para IA (API FastAPI):
+  - `OPENAI_API_KEY`
+  - `OPENAI_TEXT_MODEL` (ex.: `gpt-5.5`)
+  - `OPENAI_TRANSCRIPTION_MODEL` (ex.: `gpt-4o-transcribe`)
+  - `OPENAI_REQUEST_TIMEOUT_SECONDS` (ex.: `30`)
 
 ---
 
@@ -177,7 +204,7 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 | **plotly** | Visualizações interativas |
 | **gspread** | Acesso a Google Sheets API |
 | **google-auth-oauthlib** | OAuth2 para Google |
-| **langchain + langchain-openai** | IA (preparado, não fully integrado) |
+| **openai** | Interpretação de texto e transcrição de áudio |
 | **dataclasses-json** | Serialização de modelos |
 | **python-telegram-bot** | Integração com Telegram Bot API |
 | **APScheduler** | Suporte ao agendamento do `JobQueue` do Telegram Bot |
@@ -185,6 +212,40 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 ---
 
 ## Mudanças Recentes (v3)
+
+### ✅ Feature: Épicos 1-4 de IA (texto + áudio + pendências + mobile) (10/05/2026)
+**Objetivo**: permitir cadastro inteligente por texto e áudio com revisão antes da persistência final.
+
+**Backend implementado**:
+- `src/ingestion/` para entrada bruta de texto/áudio (normalização e transcrição)
+- `src/ai/` para parser, validação, confiança e matching categórico
+- `src/database/models.py`: nova tabela `pending_transactions`
+- `src/services/pending_transaction_service.py`: criar, listar, confirmar e ignorar pendências
+- Endpoints novos em `src/api/main.py`:
+  - `POST /ai/texto/transacao`
+  - `POST /ai/audio/transacao`
+  - `POST /transacoes/pendentes/{pending_id}/confirmar`
+  - `POST /transacoes/pendentes/{pending_id}/ignorar`
+  - endpoints de apoio em `/ia/pendencias/*` para ciclo completo
+
+**Regras implementadas de IA**:
+- IA nunca salva transação definitiva diretamente
+- Toda sugestão vira pendência antes da confirmação
+- Campo `data` assume data atual quando não informado pelo usuário
+- `Tipo`, `Conta` e `Categoria` passam por pipe de canonicalização:
+  1. normalização de string
+  2. matching exato
+  3. matching fuzzy
+  4. desempate por LLM
+  5. validação final contra catálogo permitido
+
+**Mobile implementado (`mobile_app/lib/features/insights`)**:
+- aba Alfred deixou de ser placeholder
+- entrada por texto natural com botão `Interpretar`
+- fluxo de áudio com gravação/seleção e `Interpretar áudio`
+- exibição de transcrição + transação sugerida
+- ações `Confirmar`, `Editar` e `Ignorar`
+- edição com dropdown para campos categóricos (`Tipo`, `Categoria`, `Conta`)
 
 ### ✅ Fix: Dashboard mobile inicia no mês atual e preserva a tela durante recarga (07/05/2026)
 **Problema**: ao trocar o mês no dashboard, a tela podia “sumir” enquanto a nova análise carregava e o filtro não partia de um mês intuitivo.
@@ -492,9 +553,9 @@ python run_api.py
 - **Problema**: Múltiplas abas atualizando simultaneamente podem desincronizar
 - **Solução**: Usar `st.cache_data(ttl=...)` com TTL curto ou invalidar explicitamente via session_state
 
-### ⚠️ Página "Alfred" está Vazia
-- **Status**: Placeholder apenas
-- **Próximo passo**: Implementar análise automática com GPT
+### ⚠️ Catálogo categórico ainda parcialmente hardcoded
+- **Problema**: parte do matching de `Conta`/`Categoria` ainda depende do catálogo em `src/config.py`.
+- **Próximo passo**: complementar catálogo com leitura dinâmica por usuário no PostgreSQL para evitar divergência entre base viva e configuração.
 
 ### ⚠️ Contas & Categorias Hardcoded
 - **Problema**: Valores estão em [src/config.py](src/config.py)
@@ -584,5 +645,5 @@ python run_api.py
 
 ---
 
-**Última atualização**: 07/05/2026  
+**Última atualização**: 10/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot

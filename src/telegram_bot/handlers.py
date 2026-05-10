@@ -2,16 +2,21 @@ from datetime import date
 from io import BytesIO
 import logging
 from pathlib import Path
+import os
+import tempfile
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.analytics.calculations import adicionar_anomes, calcular_saldo, calcular_despesa_total
 from src.analytics.charts import montar_grafico_categorias_despesas
 from src.config import TELEGRAM_CHAT_NOMES
+from src.services.pending_transaction_service import confirmar_transacao_pendente, ignorar_transacao_pendente
 from src.telegram_bot.alert_service import executar_ciclo_alertas
 from src.telegram_bot.daily_report_service import gerar_mensagem_informe_diario
 from src.telegram_bot.data_provider import carregar_dados_financeiros
+from src.ai.services import criar_pendencia_por_texto, sugerir_transacao_por_audio
+from src.services.pending_transaction_service import criar_transacao_pendente
 
 ROOT_PATH = Path(__file__).resolve().parents[2]
 LOGGER = logging.getLogger(__name__)
@@ -57,6 +62,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/informe_diario - Gerar o resumo diario do fluxo\n"
         "/chat_id - Mostrar o ID desta conversa\n"
         "/alertas - Executar uma checagem manual de alertas\n"
+        "Envie texto livre (ex.: 'gastei 50 no mercado no nubank') para criar uma pendencia de transacao\n"
+        "Envie um audio para transcrever e criar uma pendencia automaticamente\n"
         "/help - Mostrar esta mensagem"
     )
 
@@ -69,10 +76,185 @@ async def chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Chat ID desta conversa: {chat_id_atual}{complemento}")
 
 
+def _teclado_pendencia(pending_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("Confirmar", callback_data=f"pendencia:confirmar:{pending_id}"),
+                InlineKeyboardButton("Ignorar", callback_data=f"pendencia:ignorar:{pending_id}"),
+            ]
+        ]
+    )
+
+
+def _fmt_data(valor: str | None) -> str:
+    if not valor:
+        return "-"
+    return valor.split("T")[0]
+
+
+def _fmt_valor(valor) -> str:
+    try:
+        return format_real(float(valor))
+    except Exception:
+        return "-"
+
+
+def _montar_texto_sugestao(
+    *,
+    pending_id: str,
+    sugestao: dict,
+    transcricao: str | None = None,
+) -> str:
+    linhas = [
+        "Transacao sugerida (pendente):",
+        f"ID: {pending_id}",
+    ]
+    if transcricao:
+        linhas.append(f'Transcricao: "{transcricao}"')
+    linhas.extend(
+        [
+            f"Data: {_fmt_data(sugestao.get('data'))}",
+            f"Tipo: {sugestao.get('tipo') or '-'}",
+            f"Categoria: {sugestao.get('categoria') or '-'}",
+            f"Conta: {sugestao.get('conta') or '-'}",
+            f"Nome: {sugestao.get('nome') or '-'}",
+            f"Valor: {_fmt_valor(sugestao.get('valor'))}",
+            f"Confianca: {int(float(sugestao.get('confianca') or 0) * 100)}%",
+        ]
+    )
+    campos_incertos = sugestao.get("campos_incertos") or []
+    if isinstance(campos_incertos, list) and campos_incertos:
+        linhas.append(f"Campos incertos: {', '.join(str(c) for c in campos_incertos)}")
+    return "\n".join(linhas)
+
+
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
-    LOGGER.info("Mensagem texto recebida fora de comando. chat_id=%s", chat_id_atual)
-    await update.message.reply_text(f"{montar_saudacao(update)} Voce disse: {update.message.text}")
+    texto = (update.message.text or "").strip() if update.message else ""
+    LOGGER.info("Mensagem texto recebida para cadastro IA. chat_id=%s", chat_id_atual)
+
+    if not texto:
+        await update.message.reply_text("Texto vazio. Envie uma frase de transacao para interpretar.")
+        return
+
+    try:
+        pendencia = criar_pendencia_por_texto(texto)
+        sugestao = pendencia.suggested_payload or {}
+        mensagem = _montar_texto_sugestao(
+            pending_id=pendencia.id,
+            sugestao=sugestao,
+            transcricao=None,
+        )
+        await update.message.reply_text(
+            mensagem,
+            reply_markup=_teclado_pendencia(pendencia.id),
+        )
+    except Exception as exc:
+        LOGGER.exception("Falha ao interpretar texto no Telegram. chat_id=%s", chat_id_atual)
+        await update.message.reply_text(
+            "Nao foi possivel interpretar sua mensagem agora. Tente novamente em instantes.\n"
+            f"Erro: {exc}"
+        )
+
+
+async def receber_audio_transacao(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
+    LOGGER.info("Audio recebido para cadastro IA. chat_id=%s", chat_id_atual)
+    if not update.message:
+        return
+
+    arquivo_telegram = None
+    if update.message.voice:
+        arquivo_telegram = await update.message.voice.get_file()
+    elif update.message.audio:
+        arquivo_telegram = await update.message.audio.get_file()
+    elif update.message.document:
+        arquivo_telegram = await update.message.document.get_file()
+
+    if arquivo_telegram is None:
+        await update.message.reply_text("Nao encontrei um arquivo de audio valido nessa mensagem.")
+        return
+
+    caminho_temp = None
+    try:
+        sufixo = ".ogg" if update.message.voice else ".mp3"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=sufixo) as tmp:
+            caminho_temp = tmp.name
+        await arquivo_telegram.download_to_drive(custom_path=caminho_temp)
+
+        resultado = sugerir_transacao_por_audio(caminho_temp)
+        sugestao = resultado.sugestao.model_dump(mode="json")
+        pendencia = criar_transacao_pendente(
+            source="audio",
+            raw_text=resultado.sugestao.descricao_original,
+            transcription=resultado.texto_transcrito,
+            suggested_payload=sugestao,
+            confidence=resultado.confianca,
+        )
+
+        mensagem = _montar_texto_sugestao(
+            pending_id=pendencia.id,
+            sugestao=sugestao,
+            transcricao=resultado.texto_transcrito,
+        )
+        await update.message.reply_text(
+            mensagem,
+            reply_markup=_teclado_pendencia(pendencia.id),
+        )
+    except Exception as exc:
+        LOGGER.exception("Falha ao interpretar audio no Telegram. chat_id=%s", chat_id_atual)
+        await update.message.reply_text(
+            "Nao foi possivel processar seu audio agora. Tente novamente em instantes.\n"
+            f"Erro: {exc}"
+        )
+    finally:
+        if caminho_temp and os.path.exists(caminho_temp):
+            os.remove(caminho_temp)
+
+
+async def callback_pendencia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if query is None:
+        return
+    await query.answer()
+
+    data = query.data or ""
+    partes = data.split(":")
+    if len(partes) != 3 or partes[0] != "pendencia":
+        return
+
+    acao = partes[1]
+    pending_id = partes[2]
+
+    try:
+        if acao == "confirmar":
+            pendencia, transacao = confirmar_transacao_pendente(
+                pending_id=pending_id,
+                payload_confirmado=None,
+                auto_confirmed=False,
+            )
+            await query.edit_message_text(
+                "Transacao confirmada com sucesso.\n"
+                f"ID pendencia: {pendencia.id}\n"
+                f"Transacao criada: {transacao.get('nome')} | {format_real(float(transacao.get('valor', 0.0)))}"
+            )
+            return
+
+        if acao == "ignorar":
+            pendencia = ignorar_transacao_pendente(pending_id=pending_id)
+            await query.edit_message_text(
+                "Sugestao ignorada.\n"
+                f"ID pendencia: {pendencia.id}"
+            )
+            return
+
+    except Exception as exc:
+        LOGGER.exception("Falha ao processar callback de pendencia. pending_id=%s", pending_id)
+        await query.edit_message_text(
+            "Nao foi possivel concluir a acao da pendencia.\n"
+            f"Erro: {exc}"
+        )
 
 
 async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
