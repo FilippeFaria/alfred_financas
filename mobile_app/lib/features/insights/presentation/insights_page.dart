@@ -621,6 +621,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
 
     String? tipoSelecionado = (sugestao.tipo != null && tipos.contains(sugestao.tipo)) ? sugestao.tipo : null;
     String? contaSelecionada = (sugestao.conta != null && contas.contains(sugestao.conta)) ? sugestao.conta : null;
+    String? contaDestinoSelecionada = (sugestao.contaDestino != null && contas.contains(sugestao.contaDestino))
+        ? sugestao.contaDestino
+        : null;
     String? categoriaSelecionada = sugestao.categoria;
 
     List<String> categoriasPorTipo(String? tipo) {
@@ -636,8 +639,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
           final categoriasDisponiveis = categoriasPorTipo(tipoSelecionado);
+          final isTransferencia = tipoSelecionado == 'Transferência';
           if (categoriaSelecionada != null && !categoriasDisponiveis.contains(categoriaSelecionada)) {
             categoriaSelecionada = null;
+          }
+          if (contaSelecionada != null && !contas.contains(contaSelecionada)) {
+            contaSelecionada = null;
+          }
+          if (contaDestinoSelecionada != null && !contas.contains(contaDestinoSelecionada)) {
+            contaDestinoSelecionada = null;
           }
 
           return AlertDialog(
@@ -652,6 +662,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                     items: tipos.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                     onChanged: (value) => setStateDialog(() {
                       tipoSelecionado = value;
+                      if (tipoSelecionado != 'Transferência') {
+                        contaDestinoSelecionada = null;
+                      }
                     }),
                   ),
                   DropdownButtonFormField<String>(
@@ -666,12 +679,23 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                   ),
                   DropdownButtonFormField<String>(
                     initialValue: contaSelecionada,
-                    decoration: const InputDecoration(labelText: 'Conta'),
+                    decoration: InputDecoration(
+                      labelText: isTransferencia ? 'Conta origem' : 'Conta',
+                    ),
                     items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                     onChanged: (value) => setStateDialog(() {
                       contaSelecionada = value;
                     }),
                   ),
+                  if (isTransferencia)
+                    DropdownButtonFormField<String>(
+                      initialValue: contaDestinoSelecionada,
+                      decoration: const InputDecoration(labelText: 'Conta destino'),
+                      items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                      onChanged: (value) => setStateDialog(() {
+                        contaDestinoSelecionada = value;
+                      }),
+                    ),
                   TextField(controller: nomeController, decoration: const InputDecoration(labelText: 'Nome')),
                   TextField(
                     controller: valorController,
@@ -697,6 +721,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     if (tipoSelecionado != null && tipoSelecionado!.trim().isNotEmpty) payload['tipo'] = tipoSelecionado!.trim();
     if (categoriaSelecionada != null && categoriaSelecionada!.trim().isNotEmpty) payload['categoria'] = categoriaSelecionada!.trim();
     if (contaSelecionada != null && contaSelecionada!.trim().isNotEmpty) payload['conta'] = contaSelecionada!.trim();
+    if (contaDestinoSelecionada != null && contaDestinoSelecionada!.trim().isNotEmpty) {
+      payload['conta_destino'] = contaDestinoSelecionada!.trim();
+    }
     if (nomeController.text.trim().isNotEmpty) payload['nome'] = nomeController.text.trim();
     if (valorController.text.trim().isNotEmpty) {
       final valor = double.tryParse(valorController.text.replaceAll(',', '.').trim());
