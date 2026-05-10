@@ -113,6 +113,32 @@ class LocalNotificationService {
     await _saveSeenPendingIds(seen);
   }
 
+  Future<void> showDebugNotification() async {
+    final enabled = await areNotificationsEnabled();
+    if (!enabled) {
+      final granted = await requestPermission();
+      if (!granted) return;
+    }
+
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
+
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      'Alfred Financas',
+      'Teste de notificacao local - se voce viu isso, o canal esta funcionando.',
+      details,
+      payload: jsonEncode({'type': 'detected_transaction'}),
+    );
+  }
+
   Future<Set<String>> _getSeenPendingIds() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_seenPendingIdsKey) ?? const <String>[];
@@ -151,4 +177,3 @@ class LocalNotificationService {
     }
   }
 }
-

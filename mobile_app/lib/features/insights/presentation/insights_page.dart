@@ -856,6 +856,18 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             label: const Text('Ativar leitura de notificacoes'),
           ),
             const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await LocalNotificationService.instance.showDebugNotification();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Notificacao de teste enviada. Verifique a bandeja do Android.')),
+                );
+              },
+              icon: const Icon(Icons.notification_add_outlined),
+              label: const Text('Testar notificacao local'),
+            ),
+            const SizedBox(height: 8),
             const Text(
               'Nenhuma transacao sera salva automaticamente. Todas as sugestoes passam por confirmacao, edicao ou ignorar.',
               style: TextStyle(color: Colors.black54),
