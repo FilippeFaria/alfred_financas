@@ -129,6 +129,16 @@ def _montar_texto_sugestao(
     return "\n".join(linhas)
 
 
+def _mensagem_erro_interpretacao(exc: Exception) -> str:
+    erro = str(exc).lower()
+    if "network is unreachable" in erro or "supabase.co" in erro or "operationalerror" in erro:
+        return (
+            "Nao foi possivel interpretar sua mensagem agora por instabilidade na conexao com o banco.\n"
+            "Tente novamente em instantes. Se persistir, ajuste o DATABASE_URL para o Session Pooler IPv4 do Supabase."
+        )
+    return "Nao foi possivel interpretar sua mensagem agora. Tente novamente em instantes."
+
+
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id_atual = update.effective_chat.id if update.effective_chat else "indisponivel"
     texto = (update.message.text or "").strip() if update.message else ""
@@ -152,10 +162,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     except Exception as exc:
         LOGGER.exception("Falha ao interpretar texto no Telegram. chat_id=%s", chat_id_atual)
-        await update.message.reply_text(
-            "Nao foi possivel interpretar sua mensagem agora. Tente novamente em instantes.\n"
-            f"Erro: {exc}"
-        )
+        await update.message.reply_text(_mensagem_erro_interpretacao(exc))
 
 
 async def receber_audio_transacao(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -204,10 +211,7 @@ async def receber_audio_transacao(update: Update, context: ContextTypes.DEFAULT_
         )
     except Exception as exc:
         LOGGER.exception("Falha ao interpretar audio no Telegram. chat_id=%s", chat_id_atual)
-        await update.message.reply_text(
-            "Nao foi possivel processar seu audio agora. Tente novamente em instantes.\n"
-            f"Erro: {exc}"
-        )
+        await update.message.reply_text(_mensagem_erro_interpretacao(exc))
     finally:
         if caminho_temp and os.path.exists(caminho_temp):
             os.remove(caminho_temp)

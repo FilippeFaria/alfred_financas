@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import '../../../core/notifications/local_notification_service.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/dto/ai_transacao_dto.dart';
+import '../../../core/network/dto/categorias_dto.dart';
 import '../../../core/network/dto/pending_transaction_dto.dart';
 import '../../../core/utils/formatters.dart';
 import '../data/insights_repository.dart';
@@ -38,6 +39,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   bool _processingNotifications = false;
   bool _loadingPendenciasNotificacao = false;
   List<PendingTransactionDto> _pendenciasNotificacao = const [];
+  final Set<String> _pendenciasEmAcao = <String>{};
+  CategoriasDto? _categoriasCache;
 
   String? _audioFilePath;
   List<int>? _audioBytes;
@@ -70,6 +73,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     _sincronizarStatusNotificacoes(processQueue: true);
     _carregarPendenciasNotificacao();
+    _precarregarCategorias();
   }
 
   @override
@@ -193,6 +197,24 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   Future<void> _refreshTudo() async {
     await _sincronizarStatusNotificacoes(processQueue: true);
     await _carregarPendenciasNotificacao();
+  }
+
+  Future<void> _precarregarCategorias() async {
+    if (_categoriasCache != null) return;
+    try {
+      await _carregarCategoriasComCache();
+    } catch (_) {
+      // Melhor esforço: nao bloqueia a tela nem mostra erro no preload.
+    }
+  }
+
+  Future<CategoriasDto> _carregarCategoriasComCache() async {
+    final cached = _categoriasCache;
+    if (cached != null) return cached;
+    final repo = ref.read(insightsRepositoryProvider);
+    final categorias = await repo.carregarCategorias();
+    _categoriasCache = categorias;
+    return categorias;
   }
 
   Future<void> _abrirConfiguracaoNotificacoes() async {
@@ -485,36 +507,74 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     PendingTransactionDto pendencia, {
     Map<String, dynamic>? payload,
   }) async {
+    if (_pendenciasEmAcao.contains(pendencia.id)) return;
+    final indexOriginal = _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
+    if (indexOriginal < 0) return;
+
+    setState(() {
+      _pendenciasEmAcao.add(pendencia.id);
+      _pendenciasNotificacao = List<PendingTransactionDto>.from(_pendenciasNotificacao)
+        ..removeWhere((item) => item.id == pendencia.id);
+    });
+
     try {
       final repo = ref.read(insightsRepositoryProvider);
       await repo.confirmarTransacaoPendente(pendencia.id, payload: payload);
       if (!mounted) return;
-      setState(() {
-        _pendenciasNotificacao = _pendenciasNotificacao.where((item) => item.id != pendencia.id).toList();
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Transacao confirmada com sucesso.')),
       );
     } catch (error) {
       if (!mounted) return;
+      setState(() {
+        final items = List<PendingTransactionDto>.from(_pendenciasNotificacao);
+        final insertAt = indexOriginal.clamp(0, items.length);
+        items.insert(insertAt, pendencia);
+        _pendenciasNotificacao = items;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendenciasEmAcao.remove(pendencia.id);
+        });
+      }
     }
   }
 
   Future<void> _ignorarPendenciaNotificacao(PendingTransactionDto pendencia) async {
+    if (_pendenciasEmAcao.contains(pendencia.id)) return;
+    final indexOriginal = _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
+    if (indexOriginal < 0) return;
+
+    setState(() {
+      _pendenciasEmAcao.add(pendencia.id);
+      _pendenciasNotificacao = List<PendingTransactionDto>.from(_pendenciasNotificacao)
+        ..removeWhere((item) => item.id == pendencia.id);
+    });
+
     try {
       final repo = ref.read(insightsRepositoryProvider);
       await repo.ignorarTransacaoPendente(pendencia.id);
       if (!mounted) return;
-      setState(() {
-        _pendenciasNotificacao = _pendenciasNotificacao.where((item) => item.id != pendencia.id).toList();
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sugestao ignorada.')),
       );
     } catch (error) {
       if (!mounted) return;
+      setState(() {
+        final items = List<PendingTransactionDto>.from(_pendenciasNotificacao);
+        final insertAt = indexOriginal.clamp(0, items.length);
+        items.insert(insertAt, pendencia);
+        _pendenciasNotificacao = items;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendenciasEmAcao.remove(pendencia.id);
+        });
+      }
     }
   }
 
@@ -592,8 +652,14 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     final valorController = TextEditingController(
       text: sugestao.valor != null ? sugestao.valor!.toStringAsFixed(2) : '',
     );
-    final repo = ref.read(insightsRepositoryProvider);
-    final categorias = await repo.carregarCategorias();
+    CategoriasDto categorias;
+    try {
+      categorias = await _carregarCategoriasComCache();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      return;
+    }
     if (!mounted) return;
 
     final tipos = <String>[
@@ -886,7 +952,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             OutlinedButton.icon(
               onPressed: () async {
                 await LocalNotificationService.instance.showDebugNotification();
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Notificacao de teste enviada. Verifique a bandeja do Android.')),
                 );
@@ -928,6 +994,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     final categoria = s?.categoria ?? '-';
     final conta = s?.conta ?? '-';
     final valor = s?.valor;
+    final emAcao = _pendenciasEmAcao.contains(pendencia.id);
 
     return Card(
       child: Padding(
@@ -952,11 +1019,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: () => _confirmarPendenciaNotificacao(pendencia),
-                  child: const Text('Confirmar'),
+                  onPressed: emAcao ? null : () => _confirmarPendenciaNotificacao(pendencia),
+                  child: emAcao
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Confirmar'),
                 ),
                 OutlinedButton(
-                  onPressed: s == null
+                  onPressed: emAcao || s == null
                       ? null
                       : () => _abrirEditorEConfirmar(
                             sugestao: s,
@@ -965,7 +1034,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                   child: const Text('Editar'),
                 ),
                 TextButton(
-                  onPressed: () => _ignorarPendenciaNotificacao(pendencia),
+                  onPressed: emAcao ? null : () => _ignorarPendenciaNotificacao(pendencia),
                   child: const Text('Ignorar'),
                 ),
               ],

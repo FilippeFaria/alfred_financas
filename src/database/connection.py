@@ -10,10 +10,12 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+import logging
 
 from src.database.base import Base
 
 load_dotenv()
+LOGGER = logging.getLogger(__name__)
 
 
 def _garantir_sslmode_require(database_url: str) -> str:
@@ -32,9 +34,25 @@ def _garantir_sslmode_require(database_url: str) -> str:
 
 
 def _obter_database_url() -> str:
-    database_url = os.getenv("DATABASE_URL")
+    database_url = (
+        os.getenv("DATABASE_URL_POOLER")
+        or os.getenv("SUPABASE_SESSION_POOLER_URL")
+        or os.getenv("DATABASE_URL")
+    )
     if not database_url:
         raise RuntimeError("Variavel de ambiente DATABASE_URL nao configurada.")
+
+    partes = urlsplit(database_url)
+    host = (partes.hostname or "").lower()
+    porta = partes.port
+    usa_supabase_direto = host.startswith("db.") and host.endswith(".supabase.co") and porta == 5432
+    if usa_supabase_direto:
+        LOGGER.warning(
+            "DATABASE_URL parece usar conexao direta IPv6 do Supabase (%s:%s). "
+            "Prefira Session Pooler IPv4 (aws-*.pooler.supabase.com:5432).",
+            host,
+            porta,
+        )
     return _garantir_sslmode_require(database_url)
 
 

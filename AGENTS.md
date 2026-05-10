@@ -217,6 +217,27 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 
 ## Mudanças Recentes (v3)
 
+### ✅ Feature: Otimização de performance da tela Insights (11/05/2026)
+**Objetivo**: melhorar a responsividade das ações `Confirmar`, `Ignorar` e `Editar` nas pendências detectadas por notificação.
+
+**Mobile implementado (`mobile_app/lib/features/insights/presentation/insights_page.dart`)**:
+- Atualização otimista nas pendências de notificação:
+  - remove o card imediatamente ao confirmar/ignorar
+  - mantém chamada de API em background
+  - faz rollback do item na posição original quando ocorre falha
+- Estado de carregamento por item:
+  - controle por ID de pendência em processamento
+  - desabilita ações apenas do card afetado
+  - evita duplo clique e requests duplicadas
+- Cache local de categorias para o fluxo `Editar`:
+  - preload em `initState` sem bloquear a renderização inicial
+  - reutiliza categorias em memória nas aberturas seguintes do diálogo
+
+**Resultado**:
+- A tela reage de forma imediata ao toque nas ações de pendência.
+- O fluxo de edição fica mais rápido após a primeira carga de categorias.
+- O pull-to-refresh permanece como mecanismo manual de sincronização completa.
+
 ### ✅ Feature: Épicos 5-6 — Notificações Android -> Pendências com revisão (10/05/2026)
 **Objetivo**: detectar notificações financeiras no Android, transformar em sugestão de transação e criar pendência (sem salvar direto).
 

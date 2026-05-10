@@ -81,7 +81,7 @@ class LocalNotificationService {
     final contaLabel = conta.trim().isEmpty ? 'conta desconhecida' : conta.trim();
     final body = '$valorLabel em $nomeLabel - $contaLabel\nToque para revisar';
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
         channelName,
@@ -115,7 +115,7 @@ class LocalNotificationService {
       if (!granted) return;
     }
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
         channelName,
