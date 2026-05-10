@@ -1,59 +1,44 @@
 ﻿from __future__ import annotations
 
-from src.config import CATEGORIAS_DESPESA, CATEGORIAS_INVESTIMENTO, CATEGORIAS_RECEITA, CONTAS
+from src.config import CATEGORIAS_DESPESA, CATEGORIAS_RECEITA, CONTAS
 
-from .schemas import CampoPendente, ExtracaoIA, SugestaoTransacao
+from .schemas import TransacaoSugerida
 
 
-def validar_extracao(extracao: ExtracaoIA) -> tuple[list[str], list[CampoPendente]]:
+TIPOS_VALIDOS = {"Despesa", "Receita", "Transferência", "Pagamento de Cartão"}
+
+
+def validar_transacao_sugerida(sugestao: TransacaoSugerida) -> tuple[list[str], list[str]]:
     avisos: list[str] = []
-    pendentes = set(extracao.campos_pendentes)
+    campos_incertos = set(sugestao.campos_incertos)
 
-    if not extracao.nome:
-        pendentes.add(CampoPendente.NOME)
+    obrigatorios = ["nome", "tipo", "valor", "categoria", "conta", "data"]
+    for campo in obrigatorios:
+        if getattr(sugestao, campo) is None:
+            campos_incertos.add(campo)
 
-    if not extracao.tipo:
-        pendentes.add(CampoPendente.TIPO)
-    elif extracao.tipo not in {"Despesa", "Receita", "Investimento", "Transferencia", "Transferência", "Pagamento de Cartao", "Pagamento de Cartão"}:
-        avisos.append(f"Tipo nao reconhecido: {extracao.tipo}")
+    if sugestao.tipo and sugestao.tipo not in TIPOS_VALIDOS:
+        avisos.append(f"Tipo nao reconhecido: {sugestao.tipo}")
+        campos_incertos.add("tipo")
 
-    if extracao.valor is None:
-        pendentes.add(CampoPendente.VALOR)
+    if sugestao.tipo == "Despesa" and sugestao.categoria and sugestao.categoria not in CATEGORIAS_DESPESA:
+        avisos.append(f"Categoria '{sugestao.categoria}' fora da lista de despesas")
+        campos_incertos.add("categoria")
 
-    if not extracao.categoria:
-        pendentes.add(CampoPendente.CATEGORIA)
-    elif extracao.tipo == "Despesa" and extracao.categoria not in CATEGORIAS_DESPESA:
-        avisos.append(f"Categoria '{extracao.categoria}' fora da lista de despesas")
-    elif extracao.tipo == "Receita" and extracao.categoria not in CATEGORIAS_RECEITA:
-        avisos.append(f"Categoria '{extracao.categoria}' fora da lista de receitas")
-    elif extracao.tipo == "Investimento" and extracao.categoria not in CATEGORIAS_INVESTIMENTO:
-        avisos.append(f"Categoria '{extracao.categoria}' fora da lista de investimentos")
+    if sugestao.tipo == "Receita" and sugestao.categoria and sugestao.categoria not in CATEGORIAS_RECEITA:
+        avisos.append(f"Categoria '{sugestao.categoria}' fora da lista de receitas")
+        campos_incertos.add("categoria")
 
-    if not extracao.conta:
-        pendentes.add(CampoPendente.CONTA)
-    elif extracao.conta not in CONTAS:
-        avisos.append(f"Conta '{extracao.conta}' nao cadastrada")
+    if sugestao.conta and sugestao.conta not in CONTAS:
+        avisos.append(f"Conta '{sugestao.conta}' nao cadastrada")
+        campos_incertos.add("conta")
 
-    if extracao.data is None:
-        pendentes.add(CampoPendente.DATA)
-
-    if extracao.tipo == "Despesa" and extracao.valor is not None and extracao.valor > 0:
+    if sugestao.tipo == "Despesa" and sugestao.valor is not None and sugestao.valor > 0:
         avisos.append("Despesa normalmente deve ser negativa")
-    if extracao.tipo in {"Receita", "Investimento"} and extracao.valor is not None and extracao.valor < 0:
-        avisos.append(f"{extracao.tipo} normalmente deve ser positiva")
+        campos_incertos.add("valor")
 
-    return avisos, sorted(pendentes, key=lambda campo: campo.value)
+    if sugestao.tipo == "Receita" and sugestao.valor is not None and sugestao.valor < 0:
+        avisos.append("Receita normalmente deve ser positiva")
+        campos_incertos.add("valor")
 
-
-def normalizar_para_sugestao(extracao: ExtracaoIA) -> SugestaoTransacao:
-    return SugestaoTransacao(
-        nome=extracao.nome,
-        tipo=extracao.tipo,
-        valor=extracao.valor,
-        categoria=extracao.categoria,
-        conta=extracao.conta,
-        data=extracao.data,
-        obs=extracao.obs or "",
-        tag=extracao.tag,
-        desconsiderar=extracao.desconsiderar,
-    )
+    return avisos, sorted(campos_incertos)

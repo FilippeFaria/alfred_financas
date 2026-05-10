@@ -12,6 +12,8 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from src.ai.clients import AIClientError
+
 
 LOGGER = logging.getLogger("alfred.api")
 
@@ -63,6 +65,24 @@ def _error_response(
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AIClientError)
+    async def handle_ai_client_error(request: Request, exc: AIClientError) -> JSONResponse:
+        _log_event(
+            "error",
+            "ai_client_error",
+            path=str(request.url.path),
+            method=request.method,
+            code=exc.code,
+            status_code=exc.status_code,
+            details=exc.details or {},
+        )
+        return _error_response(
+            code=exc.code,
+            message=exc.message,
+            status_code=exc.status_code,
+            details=exc.details,
+        )
+
     @app.exception_handler(ApiServiceError)
     async def handle_api_service_error(request: Request, exc: ApiServiceError) -> JSONResponse:
         _log_event(

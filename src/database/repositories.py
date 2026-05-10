@@ -10,7 +10,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from src.database.models import Account, Budget, Category, Transaction, User
+from src.database.models import Account, Budget, Category, PendingTransaction, Transaction, User
 
 
 def _uuid_to_legacy_int(value: UUID) -> int:
@@ -271,3 +271,56 @@ class BudgetRepository:
             itens.append(item)
         self.db.flush()
         return itens
+
+
+class PendingTransactionRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def create(
+        self,
+        *,
+        user_id: UUID,
+        source: str,
+        raw_text: str,
+        transcription: str | None,
+        suggested_payload: dict,
+        confidence: float,
+        status: str = "pending",
+    ) -> PendingTransaction:
+        item = PendingTransaction(
+            user_id=user_id,
+            source=source,
+            raw_text=raw_text,
+            transcription=transcription,
+            suggested_payload=suggested_payload,
+            confidence=confidence,
+            status=status,
+        )
+        self.db.add(item)
+        self.db.flush()
+        self.db.refresh(item)
+        return item
+
+    def get_by_id(self, *, user_id: UUID, pending_id: UUID) -> PendingTransaction | None:
+        return (
+            self.db.query(PendingTransaction)
+            .filter(PendingTransaction.user_id == user_id, PendingTransaction.id == pending_id)
+            .one_or_none()
+        )
+
+    def list_by_status(self, *, user_id: UUID, status: str | None = "pending") -> list[PendingTransaction]:
+        query = (
+            self.db.query(PendingTransaction)
+            .filter(PendingTransaction.user_id == user_id)
+            .order_by(PendingTransaction.created_at.desc())
+        )
+        if status:
+            query = query.filter(PendingTransaction.status == status)
+        return query.all()
+
+    def update_status(self, *, item: PendingTransaction, status: str) -> PendingTransaction:
+        item.status = status
+        self.db.flush()
+        self.db.refresh(item)
+        return item

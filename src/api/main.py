@@ -4,12 +4,17 @@ from fastapi import Depends, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth import UserContext, auth_context_middleware, get_current_user_optional
-from src.api.errors import register_exception_handlers
+from src.api.errors import ApiServiceError, register_exception_handlers
 from src.api.schemas import (
     AtualizarTransacaoFlagsRequest,
     AtualizarTransacaoRequest,
     CategoriaResponse,
+    ConfirmarPendenciaRequest,
+    ConfirmarPendenciaResponse,
+    CriarPendenciaAudioRequest,
+    CriarPendenciaTextoRequest,
     CriarTransacaoRequest,
+    PendingTransactionResponse,
     ExcluirTransacaoResponse,
     AnaliseResumoRequest,
     AnaliseResumoResponse,
@@ -37,7 +42,13 @@ from src.api.services import (
     obter_orcamento_valores,
     salvar_orcamento_valores,
 )
+from src.ai.services import criar_pendencia_por_audio, criar_pendencia_por_texto
 from src.database.connection import init_db
+from src.services.pending_transaction_service import (
+    confirmar_transacao_pendente,
+    ignorar_transacao_pendente,
+    listar_transacoes_pendentes,
+)
 
 
 app = FastAPI(
@@ -230,3 +241,71 @@ def post_orcamento_valores(
     user_context: UserContext = Depends(get_current_user_optional),
 ) -> OrcamentoValoresResponse:
     return OrcamentoValoresResponse(**salvar_orcamento_valores(items=[item.model_dump() for item in payload.items]))
+
+
+@app.post("/ia/pendencias/texto", response_model=PendingTransactionResponse)
+def post_ia_pendencia_texto(
+    payload: CriarPendenciaTextoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> PendingTransactionResponse:
+    try:
+        pendencia = criar_pendencia_por_texto(payload.texto)
+        return PendingTransactionResponse(**pendencia.__dict__)
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.post("/ia/pendencias/audio", response_model=PendingTransactionResponse)
+def post_ia_pendencia_audio(
+    payload: CriarPendenciaAudioRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> PendingTransactionResponse:
+    try:
+        pendencia = criar_pendencia_por_audio(payload.caminho_arquivo)
+        return PendingTransactionResponse(**pendencia.__dict__)
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.get("/ia/pendencias", response_model=list[PendingTransactionResponse])
+def get_ia_pendencias(
+    status: str | None = Query(default="pending"),
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> list[PendingTransactionResponse]:
+    try:
+        pendencias = listar_transacoes_pendentes(status=status)
+        return [PendingTransactionResponse(**item.__dict__) for item in pendencias]
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.post("/ia/pendencias/{pending_id}/confirmar", response_model=ConfirmarPendenciaResponse)
+def post_ia_confirmar_pendencia(
+    pending_id: str,
+    payload: ConfirmarPendenciaRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> ConfirmarPendenciaResponse:
+    try:
+        pendencia, transacao = confirmar_transacao_pendente(
+            pending_id=pending_id,
+            payload_confirmado=payload.payload_confirmado,
+            auto_confirmed=payload.auto_confirmed,
+        )
+        return ConfirmarPendenciaResponse(
+            pendencia=PendingTransactionResponse(**pendencia.__dict__),
+            transacao=TransacaoResponse(**transacao),
+        )
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.post("/ia/pendencias/{pending_id}/ignorar", response_model=PendingTransactionResponse)
+def post_ia_ignorar_pendencia(
+    pending_id: str,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> PendingTransactionResponse:
+    try:
+        pendencia = ignorar_transacao_pendente(pending_id=pending_id)
+        return PendingTransactionResponse(**pendencia.__dict__)
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc

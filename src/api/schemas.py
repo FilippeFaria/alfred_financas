@@ -188,3 +188,34 @@ class OrcamentoValoresResponse(BaseModel):
 
 class SalvarOrcamentoRequest(BaseModel):
     items: list[OrcamentoCategoriaItem]
+
+
+class CriarPendenciaTextoRequest(BaseModel):
+    texto: str = Field(min_length=1)
+
+
+class CriarPendenciaAudioRequest(BaseModel):
+    caminho_arquivo: str = Field(min_length=1)
+
+
+class PendingTransactionResponse(BaseModel):
+    id: str
+    user_id: str
+    source: str
+    raw_text: str
+    transcription: Optional[str] = None
+    suggested_payload: dict
+    confidence: float = Field(ge=0.0, le=1.0)
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConfirmarPendenciaRequest(BaseModel):
+    payload_confirmado: Optional[dict] = None
+    auto_confirmed: bool = False
+
+
+class ConfirmarPendenciaResponse(BaseModel):
+    pendencia: PendingTransactionResponse
+    transacao: TransacaoResponse
