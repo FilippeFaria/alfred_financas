@@ -20,6 +20,10 @@ class AlfredNotificationListenerService : NotificationListenerService() {
         "com.google.android.apps.walletnfcrel",
         "com.samsung.android.spay",
     )
+    private val allowedPackagePrefixes = listOf(
+        "com.itau.",
+        "com.itau",
+    )
 
     private val financeHints = listOf(
         "r$",
@@ -33,7 +37,8 @@ class AlfredNotificationListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName ?: return
-        if (!allowedPackages.contains(packageName)) return
+        val allowedByPrefix = allowedPackagePrefixes.any { prefix -> packageName.startsWith(prefix) }
+        if (!allowedPackages.contains(packageName) && !allowedByPrefix) return
 
         val extras = sbn.notification.extras
         val title = extras?.getCharSequence("android.title")?.toString()?.trim().orEmpty()

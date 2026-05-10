@@ -16,6 +16,10 @@ ALLOWED_NOTIFICATION_PACKAGES = {
     "com.google.android.apps.walletnfcrel",
     "com.samsung.android.spay",
 }
+ALLOWED_NOTIFICATION_PACKAGE_PREFIXES = (
+    "com.itau.",
+    "com.itau",
+)
 
 FINANCIAL_HINTS = (
     "r$",
@@ -69,9 +73,12 @@ def normalizar_notificacao(payload: dict) -> NotificacaoNormalizada:
 def eh_notificacao_financeira(notificacao: NotificacaoNormalizada) -> bool:
     if not notificacao.text:
         return False
-    if notificacao.package_name not in ALLOWED_NOTIFICATION_PACKAGES:
+    package_allowed = (
+        notificacao.package_name in ALLOWED_NOTIFICATION_PACKAGES
+        or any(notificacao.package_name.startswith(prefix) for prefix in ALLOWED_NOTIFICATION_PACKAGE_PREFIXES)
+    )
+    if not package_allowed:
         return False
 
     texto_base = f"{notificacao.title} {notificacao.text} {notificacao.sub_text or ''}".lower()
     return any(hint in texto_base for hint in FINANCIAL_HINTS)
-

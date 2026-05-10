@@ -69,8 +69,11 @@ def extrair_valor(texto: str) -> float | None:
 
 
 def inferir_conta(notificacao: NotificacaoNormalizada) -> str | None:
-    if notificacao.package_name in _PACKAGE_CONTA_MAP:
-        return _PACKAGE_CONTA_MAP[notificacao.package_name]
+    package_name = notificacao.package_name or ""
+    if package_name in _PACKAGE_CONTA_MAP:
+        return _PACKAGE_CONTA_MAP[package_name]
+    if package_name.startswith("com.itau"):
+        return "Itaú CC"
     app = (notificacao.app_name or "").lower()
     if "nubank" in app:
         return "Nubank"
@@ -109,4 +112,3 @@ def parse_posted_at_iso(posted_at: str) -> str | None:
         return datetime.fromisoformat(raw).isoformat()
     except ValueError:
         return None
-
