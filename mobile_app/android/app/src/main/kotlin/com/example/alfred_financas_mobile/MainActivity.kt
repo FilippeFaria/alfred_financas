@@ -47,6 +47,11 @@ class MainActivity : FlutterActivity() {
                     "getLastNotificationProcessedAt" -> {
                         result.success(NotificationCaptureStore.getLastProcessedAt(this))
                     }
+                    "getPendingOpenRoute" -> {
+                        val route = intent?.getStringExtra("open_route")
+                        intent?.removeExtra("open_route")
+                        result.success(route)
+                    }
                     else -> result.notImplemented()
                 }
             }

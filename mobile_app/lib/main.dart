@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/notifications/local_notification_service.dart';
@@ -21,17 +22,31 @@ class AlfredApp extends ConsumerStatefulWidget {
 }
 
 class _AlfredAppState extends ConsumerState<AlfredApp> {
+  static const MethodChannel _notificationChannel = MethodChannel('alfred_financas/notifications');
   StreamSubscription<LocalNotificationAction>? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
+    _abrirRotaPendenteAoIniciar();
     _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
       if (!mounted) return;
       if (action.type == 'detected_transaction') {
         ref.read(appRouterProvider).go('/insights');
       }
     });
+  }
+
+  Future<void> _abrirRotaPendenteAoIniciar() async {
+    try {
+      final route = await _notificationChannel.invokeMethod<String>('getPendingOpenRoute');
+      if (!mounted) return;
+      if (route != null && route.isNotEmpty) {
+        ref.read(appRouterProvider).go(route);
+      }
+    } catch (_) {
+      // Ignora falha de ponte nativa para nao bloquear inicializacao.
+    }
   }
 
   @override
