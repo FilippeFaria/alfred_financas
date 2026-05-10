@@ -244,25 +244,35 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
 
         final appName = (map['app_name'] ?? '').toString().trim();
         final title = (map['title'] ?? '').toString().trim();
-        final contexto = [
-          if (appName.isNotEmpty) 'App: $appName',
-          if (title.isNotEmpty) 'Titulo: $title',
-          'Texto: $text',
-        ].join(' | ');
+        final packageName = (map['package_name'] ?? '').toString().trim();
+        final subText = map['sub_text']?.toString();
+        final postedAt = (map['posted_at'] ?? '').toString().trim();
 
         try {
-          await repo.interpretarTransacaoPorTexto(contexto);
+          final response = await repo.interpretarTransacaoPorNotificacao(
+            packageName: packageName,
+            appName: appName.isEmpty ? packageName : appName,
+            title: title,
+            text: text,
+            subText: subText,
+            postedAt: postedAt.isEmpty ? DateTime.now().toIso8601String() : postedAt,
+            notificationKey: key,
+          );
           _processedNotificationKeys.add(key);
-          criadas += 1;
+          if (response.created) {
+            criadas += 1;
+          }
         } catch (_) {
           // Ignora falhas pontuais para nao interromper o lote.
         }
       }
 
-      if (!mounted || criadas == 0) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$criadas notificacoes processadas e enviadas para revisao.')),
-      );
+      if (!mounted) return;
+      if (criadas > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$criadas notificacoes processadas e enviadas para revisao.')),
+        );
+      }
       await _sincronizarStatusNotificacoes(processQueue: false);
       await _carregarPendenciasNotificacao();
     } finally {

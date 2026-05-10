@@ -5,6 +5,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/network/dto/ai_transacao_dto.dart';
 import '../../../core/network/dto/analise_resumo_dto.dart';
 import '../../../core/network/dto/categorias_dto.dart';
+import '../../../core/network/dto/notificacao_transacao_dto.dart';
 import '../../../core/network/dto/pending_transaction_dto.dart';
 import '../../../core/network/dto/transacao_dto.dart';
 
@@ -66,6 +67,26 @@ class InsightsRepository {
   Future<List<PendingTransactionDto>> carregarPendenciasNotificacao() async {
     final pendencias = await _apiClient.getPendenciasIa(status: 'pending');
     return pendencias.where((item) => item.source == 'android_notification').toList();
+  }
+
+  Future<NotificacaoTransacaoResponseDto> interpretarTransacaoPorNotificacao({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+    String? subText,
+    required String postedAt,
+    required String notificationKey,
+  }) {
+    return _apiClient.postAiNotificacaoTransacao(
+      packageName: packageName,
+      appName: appName,
+      title: title,
+      text: text,
+      subText: subText,
+      postedAt: postedAt,
+      notificationKey: notificationKey,
+    );
   }
 }
 

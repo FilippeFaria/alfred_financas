@@ -7,6 +7,7 @@ import 'dto/analise_resumo_dto.dart';
 import 'dto/categorias_dto.dart';
 import 'dto/criar_transacao_dto.dart';
 import 'dto/dashboard_snapshot_dto.dart';
+import 'dto/notificacao_transacao_dto.dart';
 import 'dto/pending_transaction_dto.dart';
 import 'dto/saldo_dto.dart';
 import 'dto/status_dto.dart';
@@ -341,6 +342,35 @@ class AlfredApiClient {
       );
       final list = _asList(response.data);
       return list.map((item) => PendingTransactionDto.fromJson(_asMap(item))).toList();
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<NotificacaoTransacaoResponseDto> postAiNotificacaoTransacao({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+    String? subText,
+    required String postedAt,
+    required String notificationKey,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/ai/notificacao/transacao',
+        data: {
+          'source': 'android_notification',
+          'package_name': packageName,
+          'app_name': appName,
+          'title': title,
+          'text': text,
+          'sub_text': subText,
+          'posted_at': postedAt,
+          'notification_key': notificationKey,
+        },
+      );
+      return NotificacaoTransacaoResponseDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }
