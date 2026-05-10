@@ -252,8 +252,8 @@ async def callback_pendencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except Exception as exc:
         LOGGER.exception("Falha ao processar callback de pendencia. pending_id=%s", pending_id)
         await query.edit_message_text(
-            "Nao foi possivel concluir a acao da pendencia.\n"
-            f"Erro: {exc}"
+            "Nao foi possivel concluir a acao da pendencia agora.\n"
+            "Se o problema persistir, valide a conexao do banco (DATABASE_URL com Session Pooler IPv4 no Render)."
         )
 
 
