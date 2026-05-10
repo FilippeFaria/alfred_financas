@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
+import '../../../core/notifications/local_notification_service.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/dto/ai_transacao_dto.dart';
 import '../../../core/network/dto/pending_transaction_dto.dart';
@@ -46,6 +47,22 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   String? _transcricaoAudio;
   TextoParaTransacaoResponseDto? _resultado;
   final Set<String> _processedNotificationKeys = <String>{};
+
+  double? _extrairValorDaNotificacao(String text) {
+    final regex = RegExp(r'r\$\s*([0-9\.\,]+)', caseSensitive: false);
+    final match = regex.firstMatch(text);
+    if (match == null) return null;
+    final raw = (match.group(1) ?? '').replaceAll('.', '').replaceAll(',', '.').trim();
+    return double.tryParse(raw);
+  }
+
+  String _extrairNomeDaNotificacao(String text) {
+    final em = RegExp(r'\bem\s+(.+)$', caseSensitive: false).firstMatch(text);
+    final para = RegExp(r'\bpara\s+(.+?)(?:,|\.)', caseSensitive: false).firstMatch(text);
+    final nome = (em?.group(1) ?? para?.group(1) ?? '').trim();
+    if (nome.isEmpty) return 'Transacao detectada';
+    return nome.split(',').first.trim();
+  }
 
   @override
   void initState() {
@@ -261,6 +278,16 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           _processedNotificationKeys.add(key);
           if (response.created) {
             criadas += 1;
+            final pendingId = response.pendingTransactionId;
+            if (pendingId != null && pendingId.trim().isNotEmpty) {
+              await LocalNotificationService.instance.showDetectedTransactionNotification(
+                pendingTransactionId: pendingId,
+                conta: appName.isEmpty ? packageName : appName,
+                nome: _extrairNomeDaNotificacao(text),
+                valor: _extrairValorDaNotificacao(text),
+                confidence: response.confidence,
+              );
+            }
           }
         } catch (_) {
           // Ignora falhas pontuais para nao interromper o lote.

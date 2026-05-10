@@ -37,6 +37,9 @@ src/
   │   ├── audio/
   │   │   ├── normalizer.py  # Validação de extensão/tamanho e metadados
   │   │   └── transcriber.py # Transcrição de áudio para português
+  │   ├── notification/
+  │   │   ├── normalizer.py  # Whitelist/filtro financeiro de notificações Android
+  │   │   └── deduplicator.py # Deduplicação por chave/similaridade temporal
   │   └── text/
   │       └── normalizer.py  # Normalização de texto de entrada
   ├── ai/
@@ -52,6 +55,7 @@ src/
   │   └── parsers/
   │       ├── text_parser.py
   │       └── audio_parser.py
+  │       └── notification_parser.py
   ├── analytics/
   │   ├── calculations.py    # Cálculos (saldo, despesas, comparativos por dia do mês)
   │   └── charts.py          # Gráficos Plotly
@@ -212,6 +216,45 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 ---
 
 ## Mudanças Recentes (v3)
+
+### ✅ Feature: Épicos 5-6 — Notificações Android -> Pendências com revisão (10/05/2026)
+**Objetivo**: detectar notificações financeiras no Android, transformar em sugestão de transação e criar pendência (sem salvar direto).
+
+**Backend implementado**:
+- Endpoint novo em `src/api/main.py`:
+  - `POST /ai/notificacao/transacao`
+- Contratos novos em `src/api/schemas.py`:
+  - `NotificacaoTransacaoRequest`
+  - `NotificacaoTransacaoResponse`
+- Novo pipeline de notificação:
+  - `src/ingestion/notification/normalizer.py` (whitelist + indícios financeiros)
+  - `src/ingestion/notification/deduplicator.py` (chave + similaridade em janela de 5 min)
+  - `src/ai/parsers/notification_parser.py` (heurísticas de tipo/valor/conta/nome/data)
+  - `src/ai/services.py` (orquestração IA + regras + criação de pendência)
+- `src/services/pending_transaction_service.py` agora aceita `source="android_notification"`.
+
+**Regras de notificação implementadas**:
+- Nunca cria transação definitiva diretamente.
+- Se não houver valor identificável, não cria pendência (`created=false`).
+- Deduplicação por:
+  - `notification_key`
+  - `package_name + valor + estabelecimento + janela de 5 minutos`
+- Retorna motivo quando ignora por duplicidade.
+- Inferência de conta por `package_name/app_name` (com suporte a variantes `com.itau*`).
+
+**Mobile implementado (`mobile_app/lib/features/insights`)**:
+- Leitura de notificações Android via serviço nativo:
+  - `mobile_app/android/app/src/main/kotlin/.../AlfredNotificationListenerService.kt`
+  - `NotificationCaptureStore.kt` + `MethodChannel` no `MainActivity.kt`
+- Seção na Insights:
+  - Status da permissão
+  - Ação para abrir configurações de acesso a notificações
+  - Lista de `Pendencias detectadas por notificacao` com:
+    - `Confirmar`
+    - `Editar`
+    - `Ignorar`
+  - Pull-to-refresh para atualizar status + lista
+- Cliente mobile chama `POST /ai/notificacao/transacao` para processamento automático.
 
 ### ✅ Feature: Épicos 1-4 de IA (texto + áudio + pendências + mobile) (10/05/2026)
 **Objetivo**: permitir cadastro inteligente por texto e áudio com revisão antes da persistência final.
@@ -645,5 +688,5 @@ python run_api.py
 
 ---
 
-**Última atualização**: 10/05/2026  
+**Última atualização**: 11/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot
