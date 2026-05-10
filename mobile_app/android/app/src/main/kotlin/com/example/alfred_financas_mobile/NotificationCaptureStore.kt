@@ -8,7 +8,9 @@ import org.json.JSONObject
 private const val PREFS_NAME = "alfred_notification_listener"
 private const val KEY_QUEUE = "pending_notifications"
 private const val KEY_LAST_PROCESSED_AT = "last_processed_at"
+private const val KEY_NOTIFIED_KEYS = "notified_notification_keys"
 private const val KEY_MAX_QUEUE_ITEMS = 40
+private const val KEY_MAX_NOTIFIED_KEYS = 400
 
 object NotificationCaptureStore {
     private fun prefs(context: Context): SharedPreferences {
@@ -41,5 +43,32 @@ object NotificationCaptureStore {
 
     fun getLastProcessedAt(context: Context): String? {
         return prefs(context).getString(KEY_LAST_PROCESSED_AT, null)
+    }
+
+    fun wasNotificationNotified(context: Context, notificationKey: String): Boolean {
+        if (notificationKey.isBlank()) return false
+        val pref = prefs(context)
+        val current = pref.getString(KEY_NOTIFIED_KEYS, null)
+        val items = if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+        for (i in 0 until items.length()) {
+            if (items.optString(i) == notificationKey) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun markNotificationNotified(context: Context, notificationKey: String) {
+        if (notificationKey.isBlank()) return
+        val pref = prefs(context)
+        val current = pref.getString(KEY_NOTIFIED_KEYS, null)
+        val items = if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+        items.put(notificationKey)
+
+        while (items.length() > KEY_MAX_NOTIFIED_KEYS) {
+            items.remove(0)
+        }
+
+        pref.edit().putString(KEY_NOTIFIED_KEYS, items.toString()).apply()
     }
 }

@@ -1,7 +1,16 @@
 package com.example.alfred_financas_mobile
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -9,6 +18,11 @@ import java.util.TimeZone
 import org.json.JSONObject
 
 class AlfredNotificationListenerService : NotificationListenerService() {
+    private val localChannelId = "alfred_detected_transactions"
+    private val localChannelName = "Transações detectadas"
+    private val localChannelDescription =
+        "Notificações enviadas quando o Alfred identifica uma possível transação automaticamente"
+
     private val allowedPackages = setOf(
         "com.nu.production",
         "com.itau",
@@ -67,11 +81,64 @@ class AlfredNotificationListenerService : NotificationListenerService() {
 
         NotificationCaptureStore.enqueue(this, payload)
         NotificationCaptureStore.setLastProcessedAt(this, formatIsoOffset(System.currentTimeMillis()))
+        showLocalDetectedNotification(payload)
     }
 
     private fun formatIsoOffset(timestamp: Long): String {
         val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
         formatter.timeZone = TimeZone.getDefault()
         return formatter.format(Date(timestamp))
+    }
+
+    private fun showLocalDetectedNotification(payload: JSONObject) {
+        val notificationKey = payload.optString("notification_key")
+        if (notificationKey.isBlank()) return
+        if (NotificationCaptureStore.wasNotificationNotified(this, notificationKey)) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            if (!granted) return
+        }
+
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                localChannelId,
+                localChannelName,
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = localChannelDescription
+            }
+            manager.createNotificationChannel(channel)
+        }
+
+        val appName = payload.optString("app_name").ifBlank { "Conta" }
+        val text = payload.optString("text").ifBlank { "Nova transação detectada" }
+        val title = "Nova transação detectada"
+        val body = "$text — $appName"
+
+        val launchIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            notificationKey.hashCode(),
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(this, localChannelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        manager.notify(notificationKey.hashCode(), notification)
+        NotificationCaptureStore.markNotificationNotified(this, notificationKey)
     }
 }
