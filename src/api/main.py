@@ -30,6 +30,8 @@ from src.api.schemas import (
     SaldoResponse,
     StatusResponse,
     DashboardSnapshotResponse,
+    NotificacaoTransacaoRequest,
+    NotificacaoTransacaoResponse,
     OrcamentoValoresResponse,
     SalvarOrcamentoRequest,
     TextoParaTransacaoResponse,
@@ -53,6 +55,7 @@ from src.api.services import (
 )
 from src.ai.services import (
     criar_pendencia_por_audio,
+    criar_pendencia_por_notificacao,
     criar_pendencia_por_texto,
     sugerir_transacao_por_audio,
     sugerir_transacao_por_texto,
@@ -354,6 +357,21 @@ async def post_ai_audio_transacao(
         await file.close()
         if caminho_temp and os.path.exists(caminho_temp):
             os.remove(caminho_temp)
+
+
+@app.post("/ai/notificacao/transacao", response_model=NotificacaoTransacaoResponse)
+def post_ai_notificacao_transacao(
+    payload: NotificacaoTransacaoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> NotificacaoTransacaoResponse:
+    resultado = criar_pendencia_por_notificacao(payload.model_dump(mode="json"))
+    return NotificacaoTransacaoResponse(
+        created=resultado.created,
+        duplicate=resultado.duplicate,
+        pending_transaction_id=resultado.pending_transaction_id,
+        confidence=resultado.confidence,
+        message=resultado.message,
+    )
 
 
 @app.post("/ia/pendencias/audio", response_model=PendingTransactionResponse)

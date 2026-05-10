@@ -264,7 +264,7 @@ class TransactionsRepository {
       categoriasDespesa: categoriasDto.despesa,
       categoriasReceita: categoriasDto.receita,
       categoriasInvestimento: categoriasDto.investimento,
-      contas: contas,
+      contas: contasFinal,
       contasInvestimento: contasInvestimentoPadrao,
       cartoesPagamento: cartoesPagamentoPadrao,
       cartoesPagamentoTransferencia: cartoesPagamentoTransferenciaPadrao,
@@ -283,7 +283,7 @@ class TransactionsRepository {
     if (json == null || json.isEmpty) {
       return TransactionsFilters.padraoMesAtual();
     }
-    final map = jsonDecode(json) as Map<String, dynamic>;
+    final map = Map<String, dynamic>.from(jsonDecode(json));
     final filtros = TransactionsFilters.fromMap(map);
     if (filtros.mesReferencia == null || filtros.mesReferencia!.trim().isEmpty) {
       return filtros.copyWith(mesReferencia: TransactionsFilters.mesReferenciaAtual());

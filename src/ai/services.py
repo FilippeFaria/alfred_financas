@@ -1,11 +1,33 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 
+from src.ingestion.notification.deduplicator import NotificationDeduplicator
+from src.ingestion.notification.normalizer import eh_notificacao_financeira, normalizar_notificacao
+from src.services.pending_transaction_service import criar_transacao_pendente
+
 from .parsers.audio_parser import extrair_transacao_por_audio
+from .parsers.notification_parser import (
+    extrair_valor,
+    inferir_conta,
+    inferir_nome_estabelecimento,
+    inferir_tipo_por_texto,
+    montar_texto_notificacao,
+    parse_posted_at_iso,
+)
 from .parsers.text_parser import extrair_transacao_por_texto
 from .schemas import EntradaAudio, EntradaTexto, SugestaoTransacaoResultado
 from .validators import validar_transacao_sugerida
+
+
+@dataclass
+class NotificacaoTransacaoResultado:
+    created: bool
+    duplicate: bool
+    pending_transaction_id: str | None = None
+    confidence: float | None = None
+    message: str = ""
 
 
 def sugerir_transacao_por_texto(texto: str, *, data_referencia: datetime | None = None) -> SugestaoTransacaoResultado:
@@ -36,8 +58,6 @@ def sugerir_transacao_por_audio(caminho_arquivo: str, *, data_referencia: dateti
 
 
 def criar_pendencia_por_texto(texto: str, *, data_referencia: datetime | None = None):
-    from src.services.pending_transaction_service import criar_transacao_pendente
-
     resultado = sugerir_transacao_por_texto(texto, data_referencia=data_referencia)
     payload = resultado.sugestao.model_dump(mode="json")
     return criar_transacao_pendente(
@@ -50,8 +70,6 @@ def criar_pendencia_por_texto(texto: str, *, data_referencia: datetime | None = 
 
 
 def criar_pendencia_por_audio(caminho_arquivo: str, *, data_referencia: datetime | None = None):
-    from src.services.pending_transaction_service import criar_transacao_pendente
-
     resultado = sugerir_transacao_por_audio(caminho_arquivo, data_referencia=data_referencia)
     payload = resultado.sugestao.model_dump(mode="json")
     return criar_transacao_pendente(
@@ -60,4 +78,106 @@ def criar_pendencia_por_audio(caminho_arquivo: str, *, data_referencia: datetime
         transcription=resultado.sugestao.transcricao,
         suggested_payload=payload,
         confidence=resultado.confianca,
+    )
+
+
+def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResultado:
+    notificacao = normalizar_notificacao(payload)
+    deduplicador = NotificationDeduplicator()
+
+    if not eh_notificacao_financeira(notificacao):
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=False,
+            message="Notificacao ignorada por nao conter indicio financeiro.",
+        )
+
+    tipo_heuristico = inferir_tipo_por_texto(notificacao)
+    conta_heuristica = inferir_conta(notificacao)
+    valor_heuristico = extrair_valor(notificacao.text)
+    nome_heuristico = inferir_nome_estabelecimento(notificacao.text)
+    data_postada_iso = parse_posted_at_iso(notificacao.posted_at)
+
+    texto_para_ia = montar_texto_notificacao(notificacao)
+    resultado = sugerir_transacao_por_texto(texto_para_ia)
+    sugestao_payload = resultado.sugestao.model_dump(mode="json")
+
+    if not sugestao_payload.get("tipo") and tipo_heuristico:
+        sugestao_payload["tipo"] = tipo_heuristico
+    if not sugestao_payload.get("conta") and conta_heuristica:
+        sugestao_payload["conta"] = conta_heuristica
+    if not sugestao_payload.get("nome") and nome_heuristico:
+        sugestao_payload["nome"] = nome_heuristico
+    if not sugestao_payload.get("data") and data_postada_iso:
+        sugestao_payload["data"] = data_postada_iso
+    if sugestao_payload.get("valor") in (None, "", 0):
+        sugestao_payload["valor"] = valor_heuristico
+
+    valor_final = sugestao_payload.get("valor")
+    nome_final = str(sugestao_payload.get("nome") or nome_heuristico or "").strip()
+
+    if sugestao_payload.get("valor") in (None, "", 0):
+        if notificacao.notification_key:
+            deduplicador.mark_processed(
+                notification_key=notificacao.notification_key,
+                package_name=notificacao.package_name,
+                valor=0.0,
+                nome_estabelecimento=nome_final,
+                posted_at_iso=data_postada_iso,
+            )
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=False,
+            message="Notificacao ignorada por nao conter valor identificavel.",
+        )
+
+    duplicate_check = deduplicador.check_duplicate(
+        notification_key=notificacao.notification_key,
+        package_name=notificacao.package_name,
+        valor=float(valor_final),
+        nome_estabelecimento=nome_final,
+        posted_at_iso=data_postada_iso,
+    )
+    if duplicate_check.is_duplicate:
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=True,
+            message=duplicate_check.reason or "Notificacao duplicada ignorada.",
+        )
+
+    sugestao_payload["source"] = "android_notification"
+    sugestao_payload["raw_text"] = notificacao.text
+    sugestao_payload["notificacao"] = {
+        "source": notificacao.source,
+        "package_name": notificacao.package_name,
+        "app_name": notificacao.app_name,
+        "title": notificacao.title or None,
+        "text": notificacao.text,
+        "sub_text": notificacao.sub_text,
+        "posted_at": notificacao.posted_at or None,
+        "notification_key": notificacao.notification_key or None,
+    }
+
+    pendencia = criar_transacao_pendente(
+        source="android_notification",
+        raw_text=notificacao.text,
+        transcription=None,
+        suggested_payload=sugestao_payload,
+        confidence=float(sugestao_payload.get("confianca") or resultado.confianca),
+    )
+
+    deduplicador.mark_processed(
+        notification_key=notificacao.notification_key,
+        package_name=notificacao.package_name,
+        valor=float(valor_final),
+        nome_estabelecimento=nome_final,
+        posted_at_iso=data_postada_iso,
+    )
+
+    return NotificacaoTransacaoResultado(
+        created=True,
+        duplicate=False,
+        pending_transaction_id=pendencia.id,
+        confidence=float(resultado.confianca),
+        message="Transacao pendente criada com sucesso",
     )

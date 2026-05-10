@@ -286,7 +286,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
 
   List<String> _contasDisponiveis(CadastroTransacaoOptions opcoes) {
     if (_tipo == 'Investimento') {
-      return [...opcoes.contas, ...opcoes.contasInvestimento].toSet().toList();
+      return {...opcoes.contas, ...opcoes.contasInvestimento}.toList();
     }
     return opcoes.contas.toSet().toList();
   }

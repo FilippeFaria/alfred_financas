@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/dto/ai_transacao_dto.dart';
+import '../../../core/network/dto/pending_transaction_dto.dart';
 import '../../../core/utils/formatters.dart';
 import '../data/insights_repository.dart';
 
@@ -19,7 +20,9 @@ class InsightsPage extends ConsumerStatefulWidget {
   ConsumerState<InsightsPage> createState() => _InsightsPageState();
 }
 
-class _InsightsPageState extends ConsumerState<InsightsPage> {
+class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBindingObserver {
+  static const MethodChannel _notificationChannel = MethodChannel('alfred_financas/notifications');
+
   final TextEditingController _textoController = TextEditingController();
   final AudioRecorder _audioRecorder = AudioRecorder();
 
@@ -28,6 +31,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   bool _ignorando = false;
   bool _gravandoAudio = false;
   bool _interpretandoAudio = false;
+  bool _notificationPermissionActive = false;
+  bool _loadingNotificationStatus = false;
+  String? _lastNotificationProcessedAt;
+  bool _processingNotifications = false;
+  bool _loadingPendenciasNotificacao = false;
+  List<PendingTransactionDto> _pendenciasNotificacao = const [];
 
   String? _audioFilePath;
   List<int>? _audioBytes;
@@ -36,13 +45,30 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   final List<int> _audioPcmBuffer = [];
   String? _transcricaoAudio;
   TextoParaTransacaoResponseDto? _resultado;
+  final Set<String> _processedNotificationKeys = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _sincronizarStatusNotificacoes(processQueue: true);
+    _carregarPendenciasNotificacao();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _textoController.dispose();
     _audioStreamSubscription?.cancel();
     _audioRecorder.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _sincronizarStatusNotificacoes(processQueue: true);
+    }
   }
 
   List<int> _pcm16MonoToWav({
@@ -98,6 +124,150 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   String _mensagemErro(Object error) {
     if (error is ApiException) return error.message;
     return 'Nao foi possivel concluir a operacao. Tente novamente.';
+  }
+
+  String _formatarUltimoProcessamento(String? value) {
+    if (value == null || value.trim().isEmpty) return '-';
+    try {
+      final parsed = DateTime.parse(value).toLocal();
+      final agora = DateTime.now();
+      final isHoje = parsed.year == agora.year && parsed.month == agora.month && parsed.day == agora.day;
+      final hh = parsed.hour.toString().padLeft(2, '0');
+      final mm = parsed.minute.toString().padLeft(2, '0');
+      if (isHoje) return 'hoje as $hh:$mm';
+      return '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')} as $hh:$mm';
+    } catch (_) {
+      return value;
+    }
+  }
+
+  String _formatarDataHoraDeteccao(DateTime? dataHora) {
+    if (dataHora == null) return '-';
+    final local = dataHora.toLocal();
+    final agora = DateTime.now();
+    final isHoje = local.year == agora.year && local.month == agora.month && local.day == agora.day;
+    final hh = local.hour.toString().padLeft(2, '0');
+    final mm = local.minute.toString().padLeft(2, '0');
+    if (isHoje) return 'hoje $hh:$mm';
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')} $hh:$mm';
+  }
+
+  Future<void> _carregarPendenciasNotificacao() async {
+    if (_loadingPendenciasNotificacao) return;
+    setState(() {
+      _loadingPendenciasNotificacao = true;
+    });
+    try {
+      final repo = ref.read(insightsRepositoryProvider);
+      final items = await repo.carregarPendenciasNotificacao();
+      if (!mounted) return;
+      setState(() {
+        _pendenciasNotificacao = items;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingPendenciasNotificacao = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshTudo() async {
+    await _sincronizarStatusNotificacoes(processQueue: true);
+    await _carregarPendenciasNotificacao();
+  }
+
+  Future<void> _abrirConfiguracaoNotificacoes() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      await _notificationChannel.invokeMethod('openNotificationAccessSettings');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nao foi possivel abrir as configuracoes de notificacao.')),
+      );
+    }
+  }
+
+  Future<void> _sincronizarStatusNotificacoes({required bool processQueue}) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    if (_loadingNotificationStatus) return;
+
+    setState(() {
+      _loadingNotificationStatus = true;
+    });
+
+    try {
+      final enabled = await _notificationChannel.invokeMethod<bool>('isNotificationAccessEnabled') ?? false;
+      final lastProcessed = await _notificationChannel.invokeMethod<String>('getLastNotificationProcessedAt');
+
+      if (!mounted) return;
+      setState(() {
+        _notificationPermissionActive = enabled;
+        _lastNotificationProcessedAt = lastProcessed;
+      });
+
+      if (enabled && processQueue) {
+        await _processarNotificacoesPendentes();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _notificationPermissionActive = false;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingNotificationStatus = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _processarNotificacoesPendentes() async {
+    if (_processingNotifications) return;
+    _processingNotifications = true;
+
+    try {
+      final raw = await _notificationChannel.invokeMethod<List<dynamic>>('consumePendingFinancialNotifications');
+      if (raw == null || raw.isEmpty) return;
+
+      final repo = ref.read(insightsRepositoryProvider);
+      var criadas = 0;
+      for (final item in raw) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final key = (map['notification_key'] ?? '').toString();
+        final text = (map['text'] ?? '').toString().trim();
+        if (key.isEmpty || text.isEmpty || _processedNotificationKeys.contains(key)) continue;
+
+        final appName = (map['app_name'] ?? '').toString().trim();
+        final title = (map['title'] ?? '').toString().trim();
+        final contexto = [
+          if (appName.isNotEmpty) 'App: $appName',
+          if (title.isNotEmpty) 'Titulo: $title',
+          'Texto: $text',
+        ].join(' | ');
+
+        try {
+          await repo.interpretarTransacaoPorTexto(contexto);
+          _processedNotificationKeys.add(key);
+          criadas += 1;
+        } catch (_) {
+          // Ignora falhas pontuais para nao interromper o lote.
+        }
+      }
+
+      if (!mounted || criadas == 0) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$criadas notificacoes processadas e enviadas para revisao.')),
+      );
+      await _sincronizarStatusNotificacoes(processQueue: false);
+      await _carregarPendenciasNotificacao();
+    } finally {
+      _processingNotifications = false;
+    }
   }
 
   Future<void> _interpretarTexto() async {
@@ -274,6 +444,43 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     }
   }
 
+  Future<void> _confirmarPendenciaNotificacao(
+    PendingTransactionDto pendencia, {
+    Map<String, dynamic>? payload,
+  }) async {
+    try {
+      final repo = ref.read(insightsRepositoryProvider);
+      await repo.confirmarTransacaoPendente(pendencia.id, payload: payload);
+      if (!mounted) return;
+      setState(() {
+        _pendenciasNotificacao = _pendenciasNotificacao.where((item) => item.id != pendencia.id).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transacao confirmada com sucesso.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+    }
+  }
+
+  Future<void> _ignorarPendenciaNotificacao(PendingTransactionDto pendencia) async {
+    try {
+      final repo = ref.read(insightsRepositoryProvider);
+      await repo.ignorarTransacaoPendente(pendencia.id);
+      if (!mounted) return;
+      setState(() {
+        _pendenciasNotificacao = _pendenciasNotificacao.where((item) => item.id != pendencia.id).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sugestao ignorada.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+    }
+  }
+
   Future<void> _confirmar({Map<String, dynamic>? payload}) async {
     final resultado = _resultado;
     if (resultado == null) return;
@@ -338,10 +545,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     }
   }
 
-  Future<void> _editarEConfirmar() async {
-    final resultado = _resultado;
-    if (resultado == null) return;
-    final sugestao = resultado.transacaoSugerida;
+  Future<void> _abrirEditorEConfirmar({
+    required TransacaoSugeridaDto sugestao,
+    required Future<void> Function(Map<String, dynamic> payload) onConfirmar,
+  }) async {
 
     final nomeController = TextEditingController(text: sugestao.nome ?? '');
     final dataController = TextEditingController(text: sugestao.data ?? '');
@@ -350,6 +557,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     );
     final repo = ref.read(insightsRepositoryProvider);
     final categorias = await repo.carregarCategorias();
+    if (!mounted) return;
 
     final tipos = <String>[
       'Despesa',
@@ -457,7 +665,17 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
       final valor = double.tryParse(valorController.text.replaceAll(',', '.').trim());
       if (valor != null) payload['valor'] = valor;
     }
-    await _confirmar(payload: payload);
+    await onConfirmar(payload);
+  }
+
+  Future<void> _editarEConfirmar() async {
+    final resultado = _resultado;
+    if (resultado == null) return;
+    final sugestao = resultado.transacaoSugerida;
+    await _abrirEditorEConfirmar(
+      sugestao: sugestao,
+      onConfirmar: (payload) => _confirmar(payload: payload),
+    );
   }
 
   Widget _buildSugestaoCard(TextoParaTransacaoResponseDto resultado) {
@@ -519,9 +737,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Alfred IA')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: RefreshIndicator(
+        onRefresh: _refreshTudo,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
           const Text('Digite uma transacao:', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           TextField(
@@ -581,7 +802,100 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
           ],
           const SizedBox(height: 16),
           if (_resultado != null) _buildSugestaoCard(_resultado!),
-        ],
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 12),
+          const Text('Transacoes detectadas automaticamente', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(
+            'Status: ${_notificationPermissionActive ? "Leitura de notificacoes ativa" : "Leitura de notificacoes inativa"}',
+          ),
+          const SizedBox(height: 4),
+          Text('Ultima notificacao processada: ${_formatarUltimoProcessamento(_lastNotificationProcessedAt)}'),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _loadingNotificationStatus ? null : _abrirConfiguracaoNotificacoes,
+            icon: const Icon(Icons.notifications_active_outlined),
+            label: const Text('Ativar leitura de notificacoes'),
+          ),
+            const SizedBox(height: 8),
+            const Text(
+              'Nenhuma transacao sera salva automaticamente. Todas as sugestoes passam por confirmacao, edicao ou ignorar.',
+              style: TextStyle(color: Colors.black54),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 12),
+            const Text('Pendencias detectadas por notificacao', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            if (_loadingPendenciasNotificacao)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_pendenciasNotificacao.isEmpty)
+              const Text('Nenhuma pendencia de notificacao no momento.', style: TextStyle(color: Colors.black54))
+            else
+              ..._pendenciasNotificacao.map(_buildPendenciaNotificacaoCard),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendenciaNotificacaoCard(PendingTransactionDto pendencia) {
+    final s = pendencia.transacaoSugerida;
+    final notificacao = pendencia.suggestedPayload['notificacao'];
+    final appName = notificacao is Map ? (notificacao['app_name']?.toString() ?? 'App') : 'App';
+    final nome = s?.nome?.trim().isNotEmpty == true ? s!.nome!.trim() : 'Transacao detectada';
+    final tipo = s?.tipo ?? '-';
+    final categoria = s?.categoria ?? '-';
+    final conta = s?.conta ?? '-';
+    final valor = s?.valor;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(nome),
+              subtitle: Text('$tipo - $categoria - $conta'),
+              trailing: Text(valor == null ? '-' : formatarMoeda(valor)),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Detectado por notificacao $appName - ${_formatarDataHoraDeteccao(pendencia.createdAt)}',
+              style: const TextStyle(color: Colors.black54),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton(
+                  onPressed: () => _confirmarPendenciaNotificacao(pendencia),
+                  child: const Text('Confirmar'),
+                ),
+                OutlinedButton(
+                  onPressed: s == null
+                      ? null
+                      : () => _abrirEditorEConfirmar(
+                            sugestao: s,
+                            onConfirmar: (payload) => _confirmarPendenciaNotificacao(pendencia, payload: payload),
+                          ),
+                  child: const Text('Editar'),
+                ),
+                TextButton(
+                  onPressed: () => _ignorarPendenciaNotificacao(pendencia),
+                  child: const Text('Ignorar'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

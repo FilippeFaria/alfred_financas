@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from telegram import Update
@@ -24,12 +25,27 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+LOGGER = logging.getLogger(__name__)
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.error('Ocorreu um erro no handler do Telegram', exc_info=context.error)
-    if isinstance(update, Update) and update.message:
-        await update.message.reply_text(
-            'Desculpe, ocorreu um erro interno. Tente novamente em alguns instantes.'
+    """Handler centralizado de erros com tratamento especial para Conflict 409."""
+    from telegram.error import Conflict
+    
+    if isinstance(context.error, Conflict):
+        LOGGER.warning(
+            "Conflict 409 detectado. Pode haver outra instancia do bot rodando. "
+            "Aguardando retry com backoff..."
         )
+        return
+    
+    LOGGER.error('Ocorreu um erro no handler do Telegram', exc_info=context.error)
+    if isinstance(update, Update) and update.message:
+        try:
+            await update.message.reply_text(
+                'Desculpe, ocorreu um erro interno. Tente novamente em alguns instantes.'
+            )
+        except Exception as e:
+            LOGGER.error(f"Falha ao enviar mensagem de erro: {e}")
 
 
 def main():
@@ -49,7 +65,7 @@ def main():
         )
 
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    logging.info(
+    LOGGER.info(
         "Bot inicializado. mode=%s alert_chats=%s report_chats=%s",
         TELEGRAM_BOT_MODE,
         len(TELEGRAM_ALERT_CHAT_IDS),
@@ -71,12 +87,12 @@ def main():
     application.add_error_handler(error_handler)
 
     if application.job_queue is None:
-        logging.warning(
+        LOGGER.warning(
             'JobQueue nao disponivel nesta instalacao do python-telegram-bot. '
             'Os alertas por horario nao vao funcionar ate instalar a extra "job-queue".'
         )
     else:
-        logging.info('JobQueue disponivel. Alertas agendados serao registrados normalmente.')
+        LOGGER.info('JobQueue disponivel. Alertas agendados serao registrados normalmente.')
 
     registrar_rotina_alertas(application)
     registrar_rotina_informe_diario(application)
@@ -96,7 +112,7 @@ def main():
 
         webhook_url = f"{TELEGRAM_WEBHOOK_URL.rstrip('/')}/{webhook_path}"
         porta = int(os.getenv("PORT", "10000"))
-        logging.info(
+        LOGGER.info(
             "Iniciando bot em modo webhook. porta=%s path=/%s webhook_url=%s",
             porta,
             webhook_path,
@@ -111,8 +127,44 @@ def main():
         )
         return
 
-    logging.info("Iniciando bot em modo polling.")
-    application.run_polling(drop_pending_updates=True)
+    LOGGER.info("Iniciando bot em modo polling com retry backoff automático.")
+    _run_polling_with_retry(application)
+
+
+def _run_polling_with_retry(application, max_retries: int = 5, initial_delay: float = 5.0) -> None:
+    """
+    Executa polling com retry logic e backoff exponencial.
+    Útil para casos onde há conflito 409 (outra instância fazendo getUpdates).
+    """
+    delay = initial_delay
+    
+    for tentativa in range(max_retries):
+        try:
+            LOGGER.info(f"Polling attempt {tentativa + 1}/{max_retries}")
+            application.run_polling(drop_pending_updates=True)
+            return
+        except KeyboardInterrupt:
+            LOGGER.info("Bot interrompido pelo usuário")
+            return
+        except Exception as e:
+            if "409" in str(e) or "Conflict" in str(e):
+                LOGGER.warning(
+                    f"Conflict 409 na tentativa {tentativa + 1}. "
+                    f"Aguardando {delay}s antes de retry... "
+                    f"(outra instância pode estar rodando)"
+                )
+                if tentativa < max_retries - 1:
+                    asyncio.run(asyncio.sleep(delay))
+                    delay = min(delay * 2, 60)  # Backoff exponencial, máximo 60s
+                else:
+                    LOGGER.error(
+                        f"Falha após {max_retries} tentativas. "
+                        "Verifique se há outra instância do bot rodando no Render."
+                    )
+                    raise
+            else:
+                LOGGER.error(f"Erro ao executar polling: {e}", exc_info=True)
+                raise
 
 if __name__ == '__main__':
     main()

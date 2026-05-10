@@ -259,3 +259,22 @@ class ConfirmarTransacaoPendenteRequest(BaseModel):
     tag: str | None = None
     desconsiderar: bool | None = None
     parcelas: int | None = Field(default=None, ge=1)
+
+
+class NotificacaoTransacaoRequest(BaseModel):
+    source: str = Field(default="android_notification", min_length=1)
+    package_name: str = Field(min_length=1)
+    app_name: str = Field(min_length=1)
+    title: str | None = None
+    text: str = Field(min_length=1)
+    sub_text: str | None = None
+    posted_at: str
+    notification_key: str = Field(min_length=1)
+
+
+class NotificacaoTransacaoResponse(BaseModel):
+    created: bool
+    duplicate: bool = False
+    pending_transaction_id: str | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    message: str

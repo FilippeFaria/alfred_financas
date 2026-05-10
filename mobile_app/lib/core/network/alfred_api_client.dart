@@ -7,6 +7,7 @@ import 'dto/analise_resumo_dto.dart';
 import 'dto/categorias_dto.dart';
 import 'dto/criar_transacao_dto.dart';
 import 'dto/dashboard_snapshot_dto.dart';
+import 'dto/pending_transaction_dto.dart';
 import 'dto/saldo_dto.dart';
 import 'dto/status_dto.dart';
 import 'dto/transacao_dto.dart';
@@ -327,6 +328,19 @@ class AlfredApiClient {
   Future<void> ignorarTransacaoPendente(String pendingId) async {
     try {
       await _dio.post('/transacoes/pendentes/$pendingId/ignorar');
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<List<PendingTransactionDto>> getPendenciasIa({String status = 'pending'}) async {
+    try {
+      final response = await _dio.get(
+        '/ia/pendencias',
+        queryParameters: {'status': status},
+      );
+      final list = _asList(response.data);
+      return list.map((item) => PendingTransactionDto.fromJson(_asMap(item))).toList();
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }
