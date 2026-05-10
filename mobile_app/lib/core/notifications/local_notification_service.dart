@@ -25,7 +25,6 @@ class LocalNotificationService {
   static const String channelDescription =
       'Notificacoes enviadas quando o Alfred identifica uma possivel transacao automaticamente';
   static const String _seenPendingIdsKey = 'seen_detected_pending_notification_ids';
-  static const double minConfidenceForNotification = 0.6;
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   final StreamController<LocalNotificationAction> _actionController = StreamController.broadcast();
@@ -68,10 +67,6 @@ class LocalNotificationService {
     double? valor,
     double? confidence,
   }) async {
-    if (confidence != null && confidence < minConfidenceForNotification) {
-      return;
-    }
-
     final enabled = await areNotificationsEnabled();
     if (!enabled) {
       final granted = await requestPermission();
