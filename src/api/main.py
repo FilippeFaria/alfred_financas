@@ -1,6 +1,11 @@
 """Aplicacao FastAPI para o backend do Alfred Financas."""
 
+import os
+from pathlib import Path
+import tempfile
+
 from fastapi import Depends, FastAPI, Query
+from fastapi import File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth import UserContext, auth_context_middleware, get_current_user_optional
@@ -11,6 +16,7 @@ from src.api.schemas import (
     CategoriaResponse,
     ConfirmarPendenciaRequest,
     ConfirmarPendenciaResponse,
+    ConfirmarTransacaoPendenteRequest,
     CriarPendenciaAudioRequest,
     CriarPendenciaTextoRequest,
     CriarTransacaoRequest,
@@ -18,6 +24,7 @@ from src.api.schemas import (
     ExcluirTransacaoResponse,
     AnaliseResumoRequest,
     AnaliseResumoResponse,
+    AudioParaTransacaoResponse,
     InsightsRequest,
     InsightResponse,
     SaldoResponse,
@@ -25,6 +32,8 @@ from src.api.schemas import (
     DashboardSnapshotResponse,
     OrcamentoValoresResponse,
     SalvarOrcamentoRequest,
+    TextoParaTransacaoResponse,
+    TransacaoSugeridaResponse,
     TransacaoResponse,
     TransacoesResponse,
 )
@@ -42,10 +51,16 @@ from src.api.services import (
     obter_orcamento_valores,
     salvar_orcamento_valores,
 )
-from src.ai.services import criar_pendencia_por_audio, criar_pendencia_por_texto
+from src.ai.services import (
+    criar_pendencia_por_audio,
+    criar_pendencia_por_texto,
+    sugerir_transacao_por_audio,
+    sugerir_transacao_por_texto,
+)
 from src.database.connection import init_db
 from src.services.pending_transaction_service import (
     confirmar_transacao_pendente,
+    criar_transacao_pendente,
     ignorar_transacao_pendente,
     listar_transacoes_pendentes,
 )
@@ -255,6 +270,92 @@ def post_ia_pendencia_texto(
         raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
 
 
+@app.post("/ai/texto/transacao", response_model=TextoParaTransacaoResponse)
+def post_ai_texto_transacao(
+    payload: CriarPendenciaTextoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> TextoParaTransacaoResponse:
+    texto = payload.texto.strip()
+    if not texto:
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="Texto nao pode ser vazio.",
+            status_code=400,
+        )
+
+    resultado = sugerir_transacao_por_texto(texto)
+    sugestao_payload = resultado.sugestao.model_dump(mode="json")
+    pendencia = criar_transacao_pendente(
+        source="texto",
+        raw_text=resultado.sugestao.descricao_original,
+        transcription=None,
+        suggested_payload=sugestao_payload,
+        confidence=resultado.confianca,
+    )
+
+    return TextoParaTransacaoResponse(
+        pending_transaction_id=pendencia.id,
+        transacao_sugerida=TransacaoSugeridaResponse(**sugestao_payload),
+    )
+
+
+@app.post("/ai/audio/transacao", response_model=AudioParaTransacaoResponse)
+async def post_ai_audio_transacao(
+    file: UploadFile = File(...),
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> AudioParaTransacaoResponse:
+    nome_arquivo = (file.filename or "").strip()
+    if not nome_arquivo:
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="Arquivo de audio nao informado.",
+            status_code=400,
+        )
+
+    sufixo = Path(nome_arquivo).suffix or ".tmp"
+    caminho_temp: str | None = None
+    try:
+        conteudo = await file.read()
+        if not conteudo:
+            raise ApiServiceError(
+                code="DADOS_INVALIDOS",
+                message="Arquivo de audio vazio.",
+                status_code=400,
+            )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=sufixo) as tmp:
+            tmp.write(conteudo)
+            caminho_temp = tmp.name
+
+        resultado = sugerir_transacao_por_audio(caminho_temp)
+        sugestao_payload = resultado.sugestao.model_dump(mode="json")
+        pendencia = criar_transacao_pendente(
+            source="audio",
+            raw_text=resultado.sugestao.descricao_original,
+            transcription=resultado.texto_transcrito,
+            suggested_payload=sugestao_payload,
+            confidence=resultado.confianca,
+        )
+
+        return AudioParaTransacaoResponse(
+            pending_transaction_id=pendencia.id,
+            transcricao=resultado.texto_transcrito or "",
+            transacao_sugerida=TransacaoSugeridaResponse(**sugestao_payload),
+        )
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+    except RuntimeError as exc:
+        raise ApiServiceError(
+            code="AUDIO_TRANSCRICAO_FALHOU",
+            message="Nao foi possivel processar o audio informado.",
+            status_code=503,
+        ) from exc
+    finally:
+        await file.close()
+        if caminho_temp and os.path.exists(caminho_temp):
+            os.remove(caminho_temp)
+
+
 @app.post("/ia/pendencias/audio", response_model=PendingTransactionResponse)
 def post_ia_pendencia_audio(
     payload: CriarPendenciaAudioRequest,
@@ -295,6 +396,42 @@ def post_ia_confirmar_pendencia(
             pendencia=PendingTransactionResponse(**pendencia.__dict__),
             transacao=TransacaoResponse(**transacao),
         )
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.post("/transacoes/pendentes/{pending_id}/confirmar", response_model=ConfirmarPendenciaResponse)
+def post_transacao_pendente_confirmar(
+    pending_id: str,
+    payload: ConfirmarTransacaoPendenteRequest | None = None,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> ConfirmarPendenciaResponse:
+    try:
+        payload_confirmado = None
+        if payload is not None:
+            payload_confirmado = payload.model_dump(exclude_none=True, mode="json")
+
+        pendencia, transacao = confirmar_transacao_pendente(
+            pending_id=pending_id,
+            payload_confirmado=payload_confirmado,
+            auto_confirmed=False,
+        )
+        return ConfirmarPendenciaResponse(
+            pendencia=PendingTransactionResponse(**pendencia.__dict__),
+            transacao=TransacaoResponse(**transacao),
+        )
+    except ValueError as exc:
+        raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.post("/transacoes/pendentes/{pending_id}/ignorar", response_model=PendingTransactionResponse)
+def post_transacao_pendente_ignorar(
+    pending_id: str,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> PendingTransactionResponse:
+    try:
+        pendencia = ignorar_transacao_pendente(pending_id=pending_id)
+        return PendingTransactionResponse(**pendencia.__dict__)
     except ValueError as exc:
         raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
 

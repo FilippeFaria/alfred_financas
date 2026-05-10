@@ -18,7 +18,7 @@ class EntradaAudio(BaseModel):
 
 class TransacaoSugerida(BaseModel):
     data: date | None = None
-    tipo: Literal["Despesa", "Receita", "Transferência", "Pagamento de Cartão"] | None = None
+    tipo: Literal["Despesa", "Receita", "Transferência", "Pagamento de Cartão", "Investimento"] | None = None
     categoria: str | None = None
     conta: str | None = None
     conta_destino: str | None = None

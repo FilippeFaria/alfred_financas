@@ -88,20 +88,38 @@ def gerar_json_estruturado(
     """Gera JSON estruturado com validacao opcional por schema Pydantic."""
     try:
         client = get_openai_client()
-        resposta = client.responses.create(
-            model=model or _text_model_default(),
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_input},
-            ],
-            response_format={"type": "json_object"},
-        )
+        model_name = model or _text_model_default()
+        if hasattr(client, "responses"):
+            resposta = client.responses.create(
+                model=model_name,
+                input=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input},
+                ],
+                response_format={"type": "json_object"},
+            )
+            output_text = (getattr(resposta, "output_text", "") or "").strip()
+        else:
+            # Compatibilidade com ambientes em que `responses` nao esta disponivel.
+            resposta = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input},
+                ],
+                response_format={"type": "json_object"},
+            )
+            output_text = (
+                resposta.choices[0].message.content
+                if getattr(resposta, "choices", None)
+                else ""
+            ) or ""
+            output_text = output_text.strip()
     except AIClientError:
         raise
     except Exception as exc:
         raise _safe_openai_error(exc) from exc
 
-    output_text = (getattr(resposta, "output_text", "") or "").strip()
     if not output_text:
         raise AIClientError(
             code="OPENAI_RESPOSTA_VAZIA",
@@ -171,3 +189,45 @@ def interpretar_transacao_texto(prompt_sistema: str, texto_usuario: str, *, mode
         schema=None,
         model=model,
     )
+
+
+def escolher_valor_categorico_com_llm(
+    *,
+    campo: str,
+    valor_bruto: str,
+    opcoes: list[str],
+    model: str | None = None,
+) -> str | None:
+    """Usa LLM para desempatar opcao categorica quando matching local for incerto."""
+    if not valor_bruto.strip() or not opcoes:
+        return None
+
+    from pydantic import BaseModel
+
+    class EscolhaCampoSchema(BaseModel):
+        escolha: str | None = None
+
+    opcoes_texto = "\n".join(f"- {opcao}" for opcao in opcoes[:30])
+    prompt = (
+        "Escolha exatamente uma opcao da lista para o campo informado. "
+        "Se nenhuma opcao servir, retorne escolha=null. "
+        "Nao invente valores fora da lista.\n\n"
+        f"Campo: {campo}\n"
+        f"Valor bruto: {valor_bruto}\n"
+        f"Opcoes:\n{opcoes_texto}"
+    )
+
+    try:
+        payload = gerar_json_estruturado(
+            system_prompt="Voce normaliza dados categoricos financeiros.",
+            user_input=prompt,
+            schema=EscolhaCampoSchema,
+            model=model,
+        )
+    except AIClientError:
+        return None
+
+    escolha = payload.get("escolha")
+    if isinstance(escolha, str) and escolha in opcoes:
+        return escolha
+    return None

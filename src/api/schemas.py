@@ -219,3 +219,43 @@ class ConfirmarPendenciaRequest(BaseModel):
 class ConfirmarPendenciaResponse(BaseModel):
     pendencia: PendingTransactionResponse
     transacao: TransacaoResponse
+
+
+class TransacaoSugeridaResponse(BaseModel):
+    data: str | None = None
+    tipo: str | None = None
+    categoria: str | None = None
+    conta: str | None = None
+    conta_destino: str | None = None
+    nome: str | None = None
+    valor: float | None = None
+    origem: str
+    descricao_original: str
+    transcricao: str | None = None
+    confianca: float = Field(ge=0.0, le=1.0)
+    campos_incertos: list[str] = Field(default_factory=list)
+    justificativa: str | None = None
+
+
+class TextoParaTransacaoResponse(BaseModel):
+    pending_transaction_id: str
+    transacao_sugerida: TransacaoSugeridaResponse
+
+
+class AudioParaTransacaoResponse(BaseModel):
+    pending_transaction_id: str
+    transcricao: str
+    transacao_sugerida: TransacaoSugeridaResponse
+
+
+class ConfirmarTransacaoPendenteRequest(BaseModel):
+    data: datetime | None = None
+    tipo: str | None = None
+    categoria: str | None = None
+    conta: str | None = None
+    nome: str | None = None
+    valor: float | None = None
+    obs: str | None = None
+    tag: str | None = None
+    desconsiderar: bool | None = None
+    parcelas: int | None = Field(default=None, ge=1)

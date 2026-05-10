@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 
 import 'api_exception.dart';
+import 'dto/ai_transacao_dto.dart';
 import 'dto/analise_resumo_dto.dart';
 import 'dto/categorias_dto.dart';
 import 'dto/criar_transacao_dto.dart';
@@ -241,6 +243,90 @@ class AlfredApiClient {
         data: {'items': items},
       );
       return _asMap(response.data);
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<TextoParaTransacaoResponseDto> postAiTextoTransacao(String texto) async {
+    try {
+      final response = await _dio.post(
+        '/ai/texto/transacao',
+        data: {'texto': texto},
+      );
+      return TextoParaTransacaoResponseDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<AudioParaTransacaoResponseDto> postAiAudioTransacao({
+    String? filePath,
+    List<int>? fileBytes,
+    String? fileName,
+  }) async {
+    try {
+      MultipartFile arquivoMultipart;
+
+      if (fileBytes != null && fileBytes.isNotEmpty) {
+        arquivoMultipart = MultipartFile.fromBytes(
+          fileBytes,
+          filename: (fileName == null || fileName.trim().isEmpty) ? 'audio.webm' : fileName.trim(),
+        );
+      } else if (filePath != null && filePath.trim().isNotEmpty) {
+        final caminho = filePath.trim();
+        if (caminho.startsWith('blob:') || caminho.startsWith('http://') || caminho.startsWith('https://')) {
+          final response = await http.get(Uri.parse(caminho));
+          if (response.statusCode < 200 || response.statusCode >= 300 || response.bodyBytes.isEmpty) {
+            throw ApiException(message: 'Nao foi possivel ler o audio gravado no navegador.');
+          }
+          arquivoMultipart = MultipartFile.fromBytes(
+            response.bodyBytes,
+            filename: (fileName == null || fileName.trim().isEmpty) ? 'audio.webm' : fileName.trim(),
+          );
+        } else {
+          final nomeArquivo = caminho.split(RegExp(r'[\\/]')).last;
+          arquivoMultipart = await MultipartFile.fromFile(
+            caminho,
+            filename: nomeArquivo.isEmpty ? 'audio.wav' : nomeArquivo,
+          );
+        }
+      } else {
+        throw ApiException(message: 'Arquivo de audio nao informado.');
+      }
+
+      final form = FormData.fromMap(
+        {
+          'file': arquivoMultipart,
+        },
+      );
+      final response = await _dio.post('/ai/audio/transacao', data: form);
+      return AudioParaTransacaoResponseDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<TransacaoDto> confirmarTransacaoPendente(
+    String pendingId, {
+    Map<String, dynamic>? payload,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/transacoes/pendentes/$pendingId/confirmar',
+        data: payload ?? <String, dynamic>{},
+      );
+      final body = _asMap(response.data);
+      final transacao = _asMap(body['transacao']);
+      return TransacaoDto.fromJson(transacao);
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<void> ignorarTransacaoPendente(String pendingId) async {
+    try {
+      await _dio.post('/transacoes/pendentes/$pendingId/ignorar');
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }

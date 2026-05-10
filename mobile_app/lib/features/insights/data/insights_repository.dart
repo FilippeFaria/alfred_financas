@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/alfred_api_client.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/dto/ai_transacao_dto.dart';
 import '../../../core/network/dto/analise_resumo_dto.dart';
 import '../../../core/network/dto/categorias_dto.dart';
+import '../../../core/network/dto/transacao_dto.dart';
 
 final insightsRepositoryProvider = Provider<InsightsRepository>((ref) {
   return InsightsRepository(ref.watch(alfredApiClientProvider));
@@ -28,6 +30,36 @@ class InsightsRepository {
         dayToDate: dayToDate,
       ),
     );
+  }
+
+  Future<TextoParaTransacaoResponseDto> interpretarTransacaoPorTexto(String texto) {
+    return _apiClient.postAiTextoTransacao(texto);
+  }
+
+  Future<AudioParaTransacaoResponseDto> interpretarTransacaoPorAudio({
+    String? filePath,
+    List<int>? fileBytes,
+    String? fileName,
+  }) {
+    return _apiClient.postAiAudioTransacao(
+      filePath: filePath,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+  }
+
+  Future<TransacaoDto> confirmarTransacaoPendente(
+    String pendingId, {
+    Map<String, dynamic>? payload,
+  }) {
+    return _apiClient.confirmarTransacaoPendente(
+      pendingId,
+      payload: payload,
+    );
+  }
+
+  Future<void> ignorarTransacaoPendente(String pendingId) {
+    return _apiClient.ignorarTransacaoPendente(pendingId);
   }
 }
 
