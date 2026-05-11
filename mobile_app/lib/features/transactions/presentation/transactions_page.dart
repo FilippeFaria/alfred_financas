@@ -244,6 +244,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   final _valorController = TextEditingController();
   final _obsController = TextEditingController();
   final _parcelasController = TextEditingController(text: '2');
+  late final Future<CadastroTransacaoOptions> _opcoesFuture;
   bool _desconsiderar = false;
   bool _isSaving = false;
   DateTime _data = DateTime.now();
@@ -259,6 +260,8 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   @override
   void initState() {
     super.initState();
+    final notifier = ref.read(transactionsNotifierProvider.notifier);
+    _opcoesFuture = notifier.carregarOpcoesCadastro();
     final tx = widget.transacaoInicial;
     if (tx == null) return;
     _nomeController.text = tx.nome;
@@ -512,11 +515,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
 
   @override
   Widget build(BuildContext context) {
-    final notifier = ref.read(transactionsNotifierProvider.notifier);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return FutureBuilder<CadastroTransacaoOptions>(
-      future: notifier.carregarOpcoesCadastro(),
+      future: _opcoesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const SizedBox(height: 280, child: Center(child: CircularProgressIndicator()));

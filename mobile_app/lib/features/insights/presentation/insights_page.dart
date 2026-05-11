@@ -362,78 +362,87 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   }
 
   Future<void> _toggleGravacaoAudio() async {
-    if (_gravandoAudio) {
-      final stopResult = await _audioRecorder.stop();
-      await _audioStreamSubscription?.cancel();
-      _audioStreamSubscription = null;
+    try {
+      if (_gravandoAudio) {
+        final stopResult = await _audioRecorder.stop();
+        await _audioStreamSubscription?.cancel();
+        _audioStreamSubscription = null;
 
-      String? path;
-      List<int>? bytes;
-      String? nomeArquivo;
+        String? path;
+        List<int>? bytes;
+        String? nomeArquivo;
+        if (kIsWeb) {
+          if (_audioPcmBuffer.isNotEmpty) {
+            bytes = _pcm16MonoToWav(
+              pcmBytes: List<int>.from(_audioPcmBuffer),
+              sampleRate: 16000,
+              numChannels: 1,
+            );
+            nomeArquivo = 'gravacao.wav';
+          }
+        } else {
+          path = stopResult;
+          nomeArquivo = path == null ? null : 'gravacao.webm';
+        }
+
+        if (!mounted) return;
+        setState(() {
+          _gravandoAudio = false;
+          _audioFilePath = path;
+          _audioBytes = bytes;
+          _audioFileName = nomeArquivo;
+        });
+        if (path != null || (bytes != null && bytes.isNotEmpty)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Audio gravado com sucesso.')),
+          );
+        }
+        return;
+      }
+
+      final permitido = await _audioRecorder.hasPermission();
+      if (!permitido) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permissao de microfone negada.')),
+        );
+        return;
+      }
+
       if (kIsWeb) {
-        if (_audioPcmBuffer.isNotEmpty) {
-          bytes = _pcm16MonoToWav(
-            pcmBytes: List<int>.from(_audioPcmBuffer),
+        _audioPcmBuffer.clear();
+        final stream = await _audioRecorder.startStream(
+          const RecordConfig(
+            encoder: AudioEncoder.pcm16bits,
             sampleRate: 16000,
             numChannels: 1,
-          );
-          nomeArquivo = 'gravacao.wav';
-        }
+          ),
+        );
+        _audioStreamSubscription = stream.listen((chunk) {
+          _audioPcmBuffer.addAll(chunk);
+        });
       } else {
-        path = stopResult;
-        nomeArquivo = path == null ? null : 'gravacao.webm';
+        await _audioRecorder.start(const RecordConfig());
       }
 
       if (!mounted) return;
       setState(() {
-        _gravandoAudio = false;
-        _audioFilePath = path;
-        _audioBytes = bytes;
-        _audioFileName = nomeArquivo;
+        _gravandoAudio = true;
+        _audioFilePath = null;
+        _audioBytes = null;
+        _audioFileName = null;
       });
-      if (path != null || (bytes != null && bytes.isNotEmpty)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audio gravado com sucesso.')),
-        );
-      }
-      return;
-    }
-
-    final permitido = await _audioRecorder.hasPermission();
-    if (!permitido) {
+    } catch (_) {
+      await _audioStreamSubscription?.cancel();
+      _audioStreamSubscription = null;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permissao de microfone negada.')),
-      );
-      return;
-    }
-
-    if (kIsWeb) {
-      _audioPcmBuffer.clear();
-      final stream = await _audioRecorder.startStream(
-        const RecordConfig(
-          encoder: AudioEncoder.pcm16bits,
-          sampleRate: 16000,
-          numChannels: 1,
-        ),
-      );
-      _audioStreamSubscription = stream.listen((chunk) {
-        _audioPcmBuffer.addAll(chunk);
+      setState(() {
+        _gravandoAudio = false;
       });
-    } else {
-      await _audioRecorder.start(
-        const RecordConfig(),
-        path: 'alfred_audio.webm',
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nao foi possivel iniciar a gravacao de audio.')),
       );
     }
-
-    if (!mounted) return;
-    setState(() {
-      _gravandoAudio = true;
-      _audioFilePath = null;
-      _audioBytes = null;
-      _audioFileName = null;
-    });
   }
 
   Future<void> _selecionarArquivoAudio() async {
