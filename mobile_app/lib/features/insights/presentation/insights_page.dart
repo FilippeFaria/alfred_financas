@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -422,7 +423,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           _audioPcmBuffer.addAll(chunk);
         });
       } else {
-        await _audioRecorder.start(const RecordConfig());
+        final caminhoAudio =
+            '${Directory.systemTemp.path}/alfred_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _audioRecorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: caminhoAudio,
+        );
       }
 
       if (!mounted) return;
