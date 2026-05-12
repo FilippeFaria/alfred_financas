@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../data/transaction_models.dart';
@@ -29,6 +30,8 @@ class TransactionsPage extends ConsumerStatefulWidget {
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   final ScrollController _scrollController = ScrollController();
+  static const Color _positivoColor = Color(0xFF0E7A6D);
+  static const Color _negativoColor = Color(0xFFB76E00);
 
   @override
   void initState() {
@@ -47,19 +50,20 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   Future<void> _abrirCadastro() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _CadastroTransacaoSheet(),
-    );
+    final salvou = await context.push<bool>('/transactions/form');
+    if (salvou == true && mounted) {
+      await ref.read(transactionsNotifierProvider.notifier).recarregar();
+    }
   }
 
   Future<void> _abrirEdicao(TransacaoItem item) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _CadastroTransacaoSheet(transacaoInicial: item),
+    final salvou = await context.push<bool>(
+      '/transactions/form',
+      extra: TransactionsFormArgs(transacaoInicial: item),
     );
+    if (salvou == true && mounted) {
+      await ref.read(transactionsNotifierProvider.notifier).recarregar();
+    }
   }
 
   Future<void> _confirmarExclusao(TransacaoItem item) async {
@@ -168,48 +172,67 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               _ResumoCard(total: state.total, exibindo: state.items.length),
               const SizedBox(height: 8),
               ...state.items.map(
-                (item) => Card(
-                  child: ListTile(
-                    title: Text(item.nome),
-                    subtitle: Text(
-                      '${item.tipo} | ${item.categoria} | ${item.conta} | ${formatarDataCurta(item.data)}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(formatarMoeda(item.valor)),
-                        PopupMenuButton<String>(
-                          onSelected: (value) async {
-                            if (value == 'desconsiderar') {
-                              await _alternarDesconsiderar(item);
-                            } else if (value == 'grande') {
-                              await _alternarGrandeTransacao(item);
-                            } else if (value == 'editar') {
-                              await _abrirEdicao(item);
-                            } else if (value == 'excluir') {
-                              await _confirmarExclusao(item);
-                            }
-                          },
-                          itemBuilder: (context) {
-                            final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
-                            return [
-                              PopupMenuItem<String>(
-                                value: 'desconsiderar',
-                                child: Text(item.desconsiderar ? 'Considerar novamente' : 'Desconsiderar'),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'grande',
-                                child: Text(marcada ? 'Remover grande transação' : 'Grande transação'),
-                              ),
-                              const PopupMenuItem<String>(value: 'editar', child: Text('Editar')),
-                              const PopupMenuItem<String>(value: 'excluir', child: Text('Excluir')),
-                            ];
-                          },
+                (item) {
+                  final isPositivo = item.valor >= 0;
+                  final cor = isPositivo ? _positivoColor : _negativoColor;
+                  final categoria = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
+
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: cor.withValues(alpha: 0.12),
+                        child: Icon(
+                          isPositivo ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: cor,
                         ),
-                      ],
+                      ),
+                      title: Text(item.nome),
+                      subtitle: Text(
+                        '$categoria • ${item.conta} • ${item.tipo} • ${formatarDataCurta(item.data)}',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formatarMoeda(item.valor),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: cor,
+                            ),
+                          ),
+                          PopupMenuButton<String>(
+                            onSelected: (value) async {
+                              if (value == 'desconsiderar') {
+                                await _alternarDesconsiderar(item);
+                              } else if (value == 'grande') {
+                                await _alternarGrandeTransacao(item);
+                              } else if (value == 'editar') {
+                                await _abrirEdicao(item);
+                              } else if (value == 'excluir') {
+                                await _confirmarExclusao(item);
+                              }
+                            },
+                            itemBuilder: (context) {
+                              final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
+                              return [
+                                PopupMenuItem<String>(
+                                  value: 'desconsiderar',
+                                  child: Text(item.desconsiderar ? 'Considerar novamente' : 'Desconsiderar'),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'grande',
+                                  child: Text(marcada ? 'Remover grande transação' : 'Grande transação'),
+                                ),
+                                const PopupMenuItem<String>(value: 'editar', child: Text('Editar')),
+                                const PopupMenuItem<String>(value: 'excluir', child: Text('Excluir')),
+                              ];
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               if (state.isLoadingMore)
                 const Padding(
@@ -229,16 +252,22 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 }
 
-class _CadastroTransacaoSheet extends ConsumerStatefulWidget {
-  const _CadastroTransacaoSheet({this.transacaoInicial});
+class TransactionsFormArgs {
+  const TransactionsFormArgs({this.transacaoInicial});
+
+  final TransacaoItem? transacaoInicial;
+}
+
+class TransactionsFormPage extends ConsumerStatefulWidget {
+  const TransactionsFormPage({super.key, this.transacaoInicial});
 
   final TransacaoItem? transacaoInicial;
 
   @override
-  ConsumerState<_CadastroTransacaoSheet> createState() => _CadastroTransacaoSheetState();
+  ConsumerState<TransactionsFormPage> createState() => _TransactionsFormPageState();
 }
 
-class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet> {
+class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _valorController = TextEditingController();
@@ -247,6 +276,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   late final Future<CadastroTransacaoOptions> _opcoesFuture;
   bool _desconsiderar = false;
   bool _isSaving = false;
+  bool _hasChanges = false;
   DateTime _data = DateTime.now();
   String _tipo = 'Despesa';
   String? _categoria;
@@ -257,11 +287,42 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   bool _parcelado = false;
   bool get _modoEdicao => widget.transacaoInicial != null;
 
+  void _marcarAlteracao() {
+    if (_hasChanges || _isSaving || !mounted) return;
+    setState(() => _hasChanges = true);
+  }
+
+  Future<bool> _confirmarDescarteSeNecessario() async {
+    if (!_hasChanges || _isSaving) return true;
+    final descartar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('Você tem alterações não salvas. Deseja descartar e sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Continuar editando'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    return descartar == true;
+  }
+
   @override
   void initState() {
     super.initState();
     final notifier = ref.read(transactionsNotifierProvider.notifier);
     _opcoesFuture = notifier.carregarOpcoesCadastro();
+    _nomeController.addListener(_marcarAlteracao);
+    _valorController.addListener(_marcarAlteracao);
+    _obsController.addListener(_marcarAlteracao);
+    _parcelasController.addListener(_marcarAlteracao);
     final tx = widget.transacaoInicial;
     if (tx == null) return;
     _nomeController.text = tx.nome;
@@ -341,7 +402,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
       lastDate: DateTime(2100, 12, 31),
     );
     if (picked != null) {
-      setState(() => _data = picked);
+      setState(() {
+        _data = picked;
+        _hasChanges = true;
+      });
     }
   }
 
@@ -496,9 +560,14 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_modoEdicao ? 'Transação atualizada com sucesso.' : 'Transação salva com sucesso.')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+            content: Text(_modoEdicao ? 'Transação atualizada com sucesso.' : 'Transação salva com sucesso.'),
+          ),
         );
-        Navigator.of(context).pop();
+        _hasChanges = false;
+        Navigator.of(context).pop(true);
       }
     } catch (error) {
       if (mounted) {
@@ -517,20 +586,31 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
-    return FutureBuilder<CadastroTransacaoOptions>(
-      future: _opcoesFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const SizedBox(height: 280, child: Center(child: CircularProgressIndicator()));
-        }
-        if (snapshot.hasError || !snapshot.hasData) {
-          return SizedBox(
-            height: 280,
-            child: Center(
-              child: Text('Falha ao carregar opções: ${snapshot.error}'),
-            ),
-          );
-        }
+    return WillPopScope(
+      onWillPop: _confirmarDescarteSeNecessario,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_modoEdicao ? 'Editar transação' : 'Nova transação'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              if (await _confirmarDescarteSeNecessario() && mounted) {
+                Navigator.of(context).pop(false);
+              }
+            },
+          ),
+        ),
+        body: FutureBuilder<CadastroTransacaoOptions>(
+          future: _opcoesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return Center(
+                child: Text('Falha ao carregar opções: ${snapshot.error}'),
+              );
+            }
         final opcoes = snapshot.data!;
         final categorias = _categoriasDisponiveis(opcoes);
         final contas = _contasDisponiveis(opcoes);
@@ -541,20 +621,15 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
         _tipoInvestimentoNome ??= 'Aplicação';
         _cartaoSelecionado ??= opcoes.cartoesPagamento.isNotEmpty ? opcoes.cartoesPagamento.first : null;
 
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _modoEdicao ? 'Editar transação' : 'Nova transação',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 12),
+            return Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   DropdownButtonFormField<String>(
                     initialValue: _tipo,
                     decoration: const InputDecoration(labelText: 'Tipo'),
@@ -569,6 +644,7 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                       if (value == null) return;
                       setState(() {
                         _tipo = value;
+                        _hasChanges = true;
                         if (_tipo != 'Despesa' && _tipo != 'Investimento' && _tipo != 'Transferência') {
                           _parcelado = false;
                           _desconsiderar = false;
@@ -604,7 +680,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                       items: opcoes.cartoesPagamento
                           .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                           .toList(),
-                      onChanged: (value) => setState(() => _cartaoSelecionado = value),
+                      onChanged: (value) => setState(() {
+                        _cartaoSelecionado = value;
+                        _hasChanges = true;
+                      }),
                     ),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -628,7 +707,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                         DropdownMenuItem(value: 'Aplicação', child: Text('Aplicação')),
                         DropdownMenuItem(value: 'Resgate', child: Text('Resgate')),
                       ],
-                      onChanged: (value) => setState(() => _tipoInvestimentoNome = value),
+                      onChanged: (value) => setState(() {
+                        _tipoInvestimentoNome = value;
+                        _hasChanges = true;
+                      }),
                     ),
                   if (_tipo != 'Pagamento de Cartão')
                     DropdownButtonFormField<String>(
@@ -637,7 +719,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                       items: categorias
                           .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                           .toList(),
-                      onChanged: (value) => setState(() => _categoria = value),
+                      onChanged: (value) => setState(() {
+                        _categoria = value;
+                        _hasChanges = true;
+                      }),
                     ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
@@ -648,7 +733,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                           : 'Conta',
                     ),
                     items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-                    onChanged: (value) => setState(() => _conta = value),
+                    onChanged: (value) => setState(() {
+                      _conta = value;
+                      _hasChanges = true;
+                    }),
                   ),
                   if (_tipo == 'Transferência' || _tipo == 'Investimento') ...[
                     const SizedBox(height: 8),
@@ -656,7 +744,10 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                       initialValue: contaDestinoAtual,
                       decoration: const InputDecoration(labelText: 'Conta destino'),
                       items: contasDestino.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-                      onChanged: (value) => setState(() => _contaDestino = value),
+                      onChanged: (value) => setState(() {
+                        _contaDestino = value;
+                        _hasChanges = true;
+                      }),
                     ),
                   ],
                   const SizedBox(height: 8),
@@ -674,12 +765,18 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                     const SizedBox(height: 8),
                     SwitchListTile(
                       value: _desconsiderar,
-                      onChanged: (value) => setState(() => _desconsiderar = value),
+                      onChanged: (value) => setState(() {
+                        _desconsiderar = value;
+                        _hasChanges = true;
+                      }),
                       title: const Text('Desconsiderar na análise'),
                     ),
                     SwitchListTile(
                       value: _parcelado,
-                      onChanged: (value) => setState(() => _parcelado = value),
+                      onChanged: (value) => setState(() {
+                        _parcelado = value;
+                        _hasChanges = true;
+                      }),
                       title: const Text('Compra parcelada'),
                     ),
                     if (_parcelado)
@@ -705,12 +802,14 @@ class _CadastroTransacaoSheetState extends ConsumerState<_CadastroTransacaoSheet
                       child: Text(_isSaving ? 'Salvando...' : 'Salvar'),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -783,12 +882,11 @@ class _FiltersCardState extends State<_FiltersCard> {
     final opcoes = widget.state.opcoes;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Filtros', style: TextStyle(fontWeight: FontWeight.w700)),
+      child: ExpansionTile(
+        title: const Text('Filtros', style: TextStyle(fontWeight: FontWeight.w700)),
+        initiallyExpanded: false,
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        children: [
             const SizedBox(height: 8),
             Row(
               children: [
@@ -910,7 +1008,6 @@ class _FiltersCardState extends State<_FiltersCard> {
             ),
           ],
         ),
-      ),
     );
   }
 }

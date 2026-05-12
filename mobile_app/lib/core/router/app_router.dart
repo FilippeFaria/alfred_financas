@@ -6,6 +6,7 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/insights/presentation/insights_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
+import '../../features/transactions/data/transaction_models.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -15,6 +16,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthPage(),
+      ),
+      GoRoute(
+        path: '/transactions/form',
+        builder: (context, state) {
+          final extra = state.extra;
+          TransacaoItem? transacaoInicial;
+          if (extra is TransactionsFormArgs) {
+            transacaoInicial = extra.transacaoInicial;
+          } else if (extra is TransacaoItem) {
+            transacaoInicial = extra;
+          }
+          return TransactionsFormPage(transacaoInicial: transacaoInicial);
+        },
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
