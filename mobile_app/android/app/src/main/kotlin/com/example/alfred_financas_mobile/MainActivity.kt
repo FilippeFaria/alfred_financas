@@ -25,8 +25,13 @@ class MainActivity : FlutterActivity() {
                         startActivity(intent)
                         result.success(true)
                     }
-                    "consumePendingFinancialNotifications" -> {
-                        val items: JSONArray = NotificationCaptureStore.consume(this)
+                    "setApiBaseUrl" -> {
+                        val apiBaseUrl = call.argument<String>("api_base_url").orEmpty()
+                        NotificationCaptureStore.setApiBaseUrl(this, apiBaseUrl)
+                        result.success(true)
+                    }
+                    "listPendingFinancialNotifications" -> {
+                        val items: JSONArray = NotificationCaptureStore.listPendingNotifications(this)
                         val list = mutableListOf<Map<String, Any?>>()
                         for (index in 0 until items.length()) {
                             val obj = items.getJSONObject(index)
@@ -43,6 +48,30 @@ class MainActivity : FlutterActivity() {
                             )
                         }
                         result.success(list)
+                    }
+                    "consumePendingFinancialNotifications" -> {
+                        val items: JSONArray = NotificationCaptureStore.listPendingNotifications(this)
+                        val list = mutableListOf<Map<String, Any?>>()
+                        for (index in 0 until items.length()) {
+                            val obj = items.getJSONObject(index)
+                            list.add(
+                                mapOf(
+                                    "package_name" to obj.optString("package_name"),
+                                    "app_name" to obj.optString("app_name"),
+                                    "title" to jsonValueToNullable(obj.opt("title")),
+                                    "text" to obj.optString("text"),
+                                    "sub_text" to jsonValueToNullable(obj.opt("sub_text")),
+                                    "posted_at" to obj.optString("posted_at"),
+                                    "notification_key" to obj.optString("notification_key"),
+                                )
+                            )
+                        }
+                        result.success(list)
+                    }
+                    "removePendingFinancialNotification" -> {
+                        val notificationKey = call.argument<String>("notification_key").orEmpty()
+                        NotificationCaptureStore.removePendingNotification(this, notificationKey)
+                        result.success(true)
                     }
                     "getLastNotificationProcessedAt" -> {
                         result.success(NotificationCaptureStore.getLastProcessedAt(this))

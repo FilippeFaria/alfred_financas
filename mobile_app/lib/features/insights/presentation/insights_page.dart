@@ -57,7 +57,6 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   final List<int> _audioPcmBuffer = [];
   String? _transcricaoAudio;
   TextoParaTransacaoResponseDto? _resultado;
-  final Set<String> _processedNotificationKeys = <String>{};
 
   double? _extrairValorDaNotificacao(String text) {
     final regex = RegExp(r'r\$\s*([0-9\.\,]+)', caseSensitive: false);
@@ -299,7 +298,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     _processingNotifications = true;
 
     try {
-      final raw = await _notificationChannel.invokeMethod<List<dynamic>>('consumePendingFinancialNotifications');
+      final raw = await _notificationChannel.invokeMethod<List<dynamic>>('listPendingFinancialNotifications');
       if (raw == null || raw.isEmpty) return;
 
       final repo = ref.read(insightsRepositoryProvider);
@@ -309,7 +308,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         final map = Map<String, dynamic>.from(item);
         final key = (map['notification_key'] ?? '').toString();
         final text = (map['text'] ?? '').toString().trim();
-        if (key.isEmpty || text.isEmpty || _processedNotificationKeys.contains(key)) continue;
+        if (key.isEmpty || text.isEmpty) continue;
 
         final appName = (map['app_name'] ?? '').toString().trim();
         final title = (map['title'] ?? '').toString().trim();
@@ -327,7 +326,14 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             postedAt: postedAt.isEmpty ? DateTime.now().toIso8601String() : postedAt,
             notificationKey: key,
           );
-          _processedNotificationKeys.add(key);
+          try {
+            await _notificationChannel.invokeMethod<void>(
+              'removePendingFinancialNotification',
+              {'notification_key': key},
+            );
+          } catch (_) {
+            // Se a limpeza local falhar, ainda assim mantemos a pendencia criada.
+          }
           if (response.created) {
             criadas += 1;
             final pendingId = response.pendingTransactionId;

@@ -9,6 +9,7 @@ private const val PREFS_NAME = "alfred_notification_listener"
 private const val KEY_QUEUE = "pending_notifications"
 private const val KEY_LAST_PROCESSED_AT = "last_processed_at"
 private const val KEY_NOTIFIED_KEYS = "notified_notification_keys"
+private const val KEY_API_BASE_URL = "api_base_url"
 private const val KEY_MAX_QUEUE_ITEMS = 40
 private const val KEY_MAX_NOTIFIED_KEYS = 400
 
@@ -30,11 +31,28 @@ object NotificationCaptureStore {
         pref.edit().putString(KEY_QUEUE, items.toString()).apply()
     }
 
-    fun consume(context: Context): JSONArray {
+    fun listPendingNotifications(context: Context): JSONArray {
         val pref = prefs(context)
         val current = pref.getString(KEY_QUEUE, null)
-        pref.edit().remove(KEY_QUEUE).apply()
         return if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+    }
+
+    fun removePendingNotification(context: Context, notificationKey: String) {
+        if (notificationKey.isBlank()) return
+        val pref = prefs(context)
+        val current = pref.getString(KEY_QUEUE, null)
+        if (current.isNullOrBlank()) return
+
+        val items = JSONArray(current)
+        val filtrados = JSONArray()
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            if (item.optString("notification_key") == notificationKey) {
+                continue
+            }
+            filtrados.put(item)
+        }
+        pref.edit().putString(KEY_QUEUE, filtrados.toString()).apply()
     }
 
     fun setLastProcessedAt(context: Context, isoDateTime: String) {
@@ -70,5 +88,13 @@ object NotificationCaptureStore {
         }
 
         pref.edit().putString(KEY_NOTIFIED_KEYS, items.toString()).apply()
+    }
+
+    fun setApiBaseUrl(context: Context, apiBaseUrl: String) {
+        prefs(context).edit().putString(KEY_API_BASE_URL, apiBaseUrl.trim()).apply()
+    }
+
+    fun getApiBaseUrl(context: Context): String? {
+        return prefs(context).getString(KEY_API_BASE_URL, null)?.trim()?.takeIf { it.isNotEmpty() }
     }
 }

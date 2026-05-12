@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/env/app_env.dart';
 import 'core/notifications/local_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -28,6 +29,7 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
   @override
   void initState() {
     super.initState();
+    _sincronizarApiBaseUrl();
     _abrirRotaPendenteAoIniciar();
     _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
       if (!mounted) return;
@@ -40,6 +42,17 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
         }
       }
     });
+  }
+
+  Future<void> _sincronizarApiBaseUrl() async {
+    try {
+      await _notificationChannel.invokeMethod<void>(
+        'setApiBaseUrl',
+        {'api_base_url': AppEnv.apiBaseUrl},
+      );
+    } catch (_) {
+      // Se a ponte nativa falhar, o fluxo normal ainda funciona quando a tela abre.
+    }
   }
 
   Future<void> _abrirRotaPendenteAoIniciar() async {
