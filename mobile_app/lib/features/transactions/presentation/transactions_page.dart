@@ -681,8 +681,6 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -735,7 +733,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             );
 
             return Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: SingleChildScrollView(
                 child: Form(
                   key: _formKey,
