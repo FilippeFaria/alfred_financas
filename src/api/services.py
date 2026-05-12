@@ -568,7 +568,12 @@ def gerar_insights_basicos(pergunta: str | None) -> dict:
 def _serie_totais_despesa(df: pd.DataFrame, anomes: list[int]) -> list[dict]:
     serie: list[dict] = []
     for anome in anomes:
-        total = df[(df["Tipo"] == "Despesa") & (df["anomes"] == str(anome))]["Valor"].abs().sum()
+        filtro = (
+            (df["Tipo"] == "Despesa")
+            & (df["anomes"] == str(anome))
+            & (df["desconsiderar"] == False)
+        )
+        total = df[filtro]["Valor"].abs().sum()
         serie.append({"anome": int(anome), "valor": float(total)})
     return serie
 
@@ -582,6 +587,7 @@ def _serie_categoria_despesa(df: pd.DataFrame, anomes: list[int], categoria: str
         filtro = (
             (df["Tipo"] == "Despesa")
             & (df["anomes"] == str(anome))
+            & (df["desconsiderar"] == False)
             & (df["Categoria"].fillna("Sem categoria").replace("", "Sem categoria") == categoria_limpa)
         )
         total = df[filtro]["Valor"].abs().sum()

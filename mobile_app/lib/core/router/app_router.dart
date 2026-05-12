@@ -29,7 +29,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/insights',
-            builder: (context, state) => const InsightsPage(),
+            builder: (context, state) => InsightsPage(
+              fromNotification: state.uri.queryParameters['from_notification'] == '1',
+              targetPendingId: state.uri.queryParameters['pending_id'],
+            ),
           ),
           GoRoute(
             path: '/settings',

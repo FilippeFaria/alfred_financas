@@ -13,7 +13,6 @@ from src.analytics.charts import (
     tendencia_mes,
     categorias_tempo,
     evolucao_categoria,
-    render_categorias_despesas,
     monthly_spending_by_category_pie,
 )
 
@@ -104,8 +103,6 @@ def render(df, path: str = '.'):
     )
     if data_escolhida:
         anome = int(data_escolhida)
-
-    render_categorias_despesas(df_temp, anome, path)
 
     col1, col2 = st.columns(2)
     with col2:

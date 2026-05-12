@@ -14,7 +14,6 @@ class DashboardPage extends ConsumerStatefulWidget {
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   String? _categoriaSelecionada;
-  bool _detalharCategorias = false;
   int _mesesHistorico = 6;
   DashboardSnapshot? _ultimoSnapshotVisivel;
   bool _salvandoOrcamento = false;
@@ -159,10 +158,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             data: data,
             filtros: filtros,
             categoriaSelecionada: _categoriaSelecionada,
-            detalharCategorias: _detalharCategorias,
             mesesHistorico: _mesesHistorico,
-            onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value),
-            onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
+            onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
             onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
             onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
             onEditarOrcamento: () => _abrirEditorOrcamento(data),
@@ -173,10 +170,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data: _ultimoSnapshotVisivel!,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                detalharCategorias: _detalharCategorias,
                 mesesHistorico: _mesesHistorico,
-                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value),
-                onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
+                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
                 onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
                 onEditarOrcamento: () => _abrirEditorOrcamento(_ultimoSnapshotVisivel!),
@@ -196,10 +191,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data: cache,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                detalharCategorias: _detalharCategorias,
                 mesesHistorico: _mesesHistorico,
-                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value),
-                onDetalharCategoriasChanged: (value) => setState(() => _detalharCategorias = value),
+                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
                 onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
                 onEditarOrcamento: () => _abrirEditorOrcamento(cache),
@@ -243,10 +236,8 @@ class _DashboardBody extends StatelessWidget {
     required this.data,
     required this.filtros,
     required this.categoriaSelecionada,
-    required this.detalharCategorias,
     required this.mesesHistorico,
     required this.onCategoriaChanged,
-    required this.onDetalharCategoriasChanged,
     required this.onMesesHistoricoChanged,
     required this.onAtualizarFiltros,
     required this.onEditarOrcamento,
@@ -256,10 +247,8 @@ class _DashboardBody extends StatelessWidget {
   final DashboardSnapshot data;
   final DashboardFilters filtros;
   final String? categoriaSelecionada;
-  final bool detalharCategorias;
   final int mesesHistorico;
   final ValueChanged<String?> onCategoriaChanged;
-  final ValueChanged<bool> onDetalharCategoriasChanged;
   final ValueChanged<int> onMesesHistoricoChanged;
   final ValueChanged<DashboardFilters> onAtualizarFiltros;
   final VoidCallback onEditarOrcamento;
@@ -277,16 +266,18 @@ class _DashboardBody extends StatelessWidget {
               percentualOrcamento: item.percentualOrcamento,
             ))
         .toList();
-    final categoriasDisponiveis = data.categoriasDestaque.map((item) => item.nome).toList();
-    final categoriaEfetiva = categoriasDisponiveis.contains(categoriaSelecionada)
-        ? categoriaSelecionada
-        : (categoriasDisponiveis.isNotEmpty ? categoriasDisponiveis.first : null);
+    final categoriasDisponiveis = <String>[
+      'Todas',
+      ...data.categoriasDestaque.map((item) => item.nome),
+    ].toSet().toList();
+    final categoriaEfetiva = categoriaSelecionada ?? 'Todas';
     final evolucaoCategoria = data.serieCategoria
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
         .toList();
     final tendenciaMeses = data.serieMensal
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
         .toList();
+    final evolucaoEfetiva = categoriaEfetiva == 'Todas' ? tendenciaMeses : evolucaoCategoria;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -323,34 +314,31 @@ class _DashboardBody extends StatelessWidget {
                 SizedBox(
                   width: cardWidth,
                   child: _MetricCard(
-                    title: 'Gasto mês anterior',
-                    label: data.metricas.labelPrev,
+                    title: 'Gasto no mês anterior',
+                    label: _formatarLabelPeriodo(data.metricas.labelPrev),
                     value: formatarMoeda(data.metricas.gastoAnterior),
-                    delta: _formatarDelta(data.metricas.deltaAnterior),
-                    icon: Icons.arrow_back_outlined,
-                    accentColor: const Color(0xFF8B5E00),
+                    delta: _formatarDelta(data.metricas.deltaAnterior, referencia: 'mês anterior'),
+                    semanticState: _metricStateForDelta(data.metricas.deltaAnterior),
                   ),
                 ),
                 SizedBox(
                   width: cardWidth,
                   child: _MetricCard(
-                    title: 'Gasto mês atual',
-                    label: data.metricas.labelCurr,
+                    title: 'Gasto no mês atual',
+                    label: _formatarLabelPeriodo(data.metricas.labelCurr),
                     value: formatarMoeda(data.metricas.gastoAtual),
-                    delta: _formatarDelta(data.metricas.deltaAtual),
-                    icon: Icons.trending_down_outlined,
-                    accentColor: const Color(0xFF0E7A6D),
+                    delta: _formatarDelta(data.metricas.deltaAtual, referencia: 'mês anterior'),
+                    semanticState: _metricStateForDelta(data.metricas.deltaAtual),
                   ),
                 ),
                 SizedBox(
                   width: cardWidth,
                   child: _MetricCard(
-                    title: 'Média últimos 3 meses',
-                    label: data.metricas.label3m,
+                    title: 'Média dos últimos 3 meses',
+                    label: _formatarLabelPeriodo(data.metricas.label3m),
                     value: formatarMoeda(data.metricas.gasto3mMedia),
-                    delta: _formatarDelta(data.metricas.delta3m),
-                    icon: Icons.insights_outlined,
-                    accentColor: const Color(0xFF3142A4),
+                    delta: _formatarDelta(data.metricas.delta3m, referencia: '3 meses anteriores'),
+                    semanticState: _metricStateForDelta(data.metricas.delta3m),
                   ),
                 ),
               ],
@@ -365,55 +353,17 @@ class _DashboardBody extends StatelessWidget {
         const SizedBox(height: 12),
         _DistribuicaoCategoriaCard(
           categorias: categoriasMes,
-          detalharCategorias: detalharCategorias,
-          onDetalharCategoriasChanged: onDetalharCategoriasChanged,
         ),
         const SizedBox(height: 12),
         _EvolucaoCategoriaCard(
           categoria: categoriaEfetiva,
           categoriasDisponiveis: categoriasDisponiveis,
           mesesVisiveis: mesesVisiveis,
-          evolucao: evolucaoCategoria,
+          evolucao: evolucaoEfetiva,
           onCategoriaChanged: onCategoriaChanged,
-          onMesesHistoricoChanged: onMesesHistoricoChanged,
-          mesesHistorico: mesesHistorico,
         ),
         const SizedBox(height: 12),
         _TendenciaMensalCard(mesesVisiveis: mesesVisiveis, serie: tendenciaMeses),
-        const SizedBox(height: 12),
-        const _SectionTitle(
-          title: 'Categorias em destaque',
-          subtitle: 'As categorias que mais concentraram despesas no recorte escolhido.',
-        ),
-        const SizedBox(height: 8),
-        if (data.categoriasDestaque.isEmpty)
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.label_off_outlined),
-              title: Text('Sem categorias para destacar'),
-              subtitle: Text('Assim que houver dados recentes, os destaques aparecem aqui.'),
-            ),
-          )
-        else
-          ...data.categoriasDestaque.map(
-            (categoria) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF0E7A6D).withValues(alpha: 0.12),
-                    child: const Icon(Icons.label_outline, color: Color(0xFF0E7A6D)),
-                  ),
-                  title: Text(categoria.nome),
-                  subtitle: const Text('Volume total'),
-                  trailing: Text(
-                    formatarMoeda(categoria.valor),
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ),
-          ),
         const SizedBox(height: 12),
         const _SectionTitle(
           title: 'Últimos lançamentos',
@@ -657,20 +607,65 @@ class _ResumoOrcamentoCard extends StatelessWidget {
   }
 }
 
-class _DistribuicaoCategoriaCard extends StatelessWidget {
+class _DistribuicaoCategoriaCard extends StatefulWidget {
   const _DistribuicaoCategoriaCard({
     required this.categorias,
-    required this.detalharCategorias,
-    required this.onDetalharCategoriasChanged,
   });
 
   final List<_CategoriaTotal> categorias;
-  final bool detalharCategorias;
-  final ValueChanged<bool> onDetalharCategoriasChanged;
+
+  @override
+  State<_DistribuicaoCategoriaCard> createState() => _DistribuicaoCategoriaCardState();
+}
+
+class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> {
+  bool _mostrarTodas = false;
+  bool _modoPercentualOrcamento = false;
+
+  Widget _buildCategoriaItem(BuildContext context, _CategoriaTotal item, double maxValor) {
+    final percentualOrcamento = item.percentualOrcamento ?? 0.0;
+    final usarPercentual = _modoPercentualOrcamento == true;
+    final double valorBarra = usarPercentual
+        ? (percentualOrcamento / 100).clamp(0, 1).toDouble()
+        : (maxValor <= 0 ? 0.0 : (item.valor / maxValor).clamp(0, 1).toDouble());
+    final valorDestaque = usarPercentual
+        ? '${percentualOrcamento.toStringAsFixed(1).replaceAll('.', ',')}%'
+        : formatarMoeda(item.valor);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(item.nome)),
+              Text(valorDestaque, style: const TextStyle(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: valorBarra,
+            minHeight: 10,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            item.percentualOrcamento == null
+                ? 'Sem orçamento definido'
+                : '${item.percentualOrcamento!.toStringAsFixed(1).replaceAll('.', ',')}% do orçamento da categoria',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final itens = detalharCategorias ? categorias : categorias.take(5).toList();
+    final categorias = widget.categorias;
+    final itensRestantes = categorias.length > 5 ? categorias.skip(5).toList() : const <_CategoriaTotal>[];
+    final itensVisiveis = _mostrarTodas ? categorias : categorias.take(5).toList();
     final maxValor = categorias.isEmpty ? 0.0 : categorias.first.valor;
 
     return Card(
@@ -692,14 +687,18 @@ class _DistribuicaoCategoriaCard extends StatelessWidget {
                   ),
                 ),
                 Switch(
-                  value: detalharCategorias,
-                  onChanged: onDetalharCategoriasChanged,
+                  value: _modoPercentualOrcamento == true,
+                  onChanged: (value) => setState(() => _modoPercentualOrcamento = value),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
-              detalharCategorias ? 'Detalhando todas as categorias' : 'Mostrando as principais categorias',
+              _modoPercentualOrcamento
+                  ? 'Barras em base 100 pelo percentual de uso do orçamento.'
+                  : (itensRestantes.isEmpty
+                      ? 'Mostrando as principais categorias'
+                      : 'Mostrando as principais categorias. Expanda para ver as demais.'),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -709,36 +708,33 @@ class _DistribuicaoCategoriaCard extends StatelessWidget {
                 title: Text('Sem despesas para exibir'),
                 subtitle: Text('A distribuição aparece assim que o filtro encontrar dados.'),
               )
-            else
-              ...itens.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: Text(item.nome)),
-                          Text(formatarMoeda(item.valor), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      LinearProgressIndicator(
-                        value: maxValor <= 0 ? 0 : (item.valor / maxValor).clamp(0, 1).toDouble(),
-                        minHeight: 10,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.percentualOrcamento == null
-                            ? 'Sem orçamento definido'
-                            : '${item.percentualOrcamento!.toStringAsFixed(1).replaceAll('.', ',')}% do orçamento da categoria',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+            else ...[
+              ...itensVisiveis.map((item) => _buildCategoriaItem(context, item, maxValor)),
+              if (itensRestantes.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _mostrarTodas = !_mostrarTodas),
+                    icon: Icon(
+                      _mostrarTodas ? Icons.expand_less : Icons.expand_more,
+                      size: 16,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey.shade600,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: const Size(0, 30),
+                    ),
+                    label: Text(
+                      _mostrarTodas ? 'Mostrar menos categorias' : 'Mostrar todas as categorias',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                   ),
                 ),
-              ),
+            ],
           ],
         ),
       ),
@@ -753,8 +749,6 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
     required this.mesesVisiveis,
     required this.evolucao,
     required this.onCategoriaChanged,
-    required this.onMesesHistoricoChanged,
-    required this.mesesHistorico,
   });
 
   final String? categoria;
@@ -762,8 +756,6 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
   final List<int> mesesVisiveis;
   final List<_SerieMensal> evolucao;
   final ValueChanged<String?> onCategoriaChanged;
-  final ValueChanged<int> onMesesHistoricoChanged;
-  final int mesesHistorico;
 
   @override
   Widget build(BuildContext context) {
@@ -799,43 +791,20 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
               onChanged: onCategoriaChanged,
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Meses no gráfico: $mesesHistorico',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-                Text(
-                  '$mesesHistorico',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            Slider(
-              value: mesesHistorico.clamp(3, 12).toDouble(),
-              min: 3,
-              max: 12,
-              divisions: 9,
-              label: '$mesesHistorico meses',
-              onChanged: (value) => onMesesHistoricoChanged(value.round().clamp(3, 12).toInt()),
-            ),
-            const SizedBox(height: 4),
             Text(
               'Período do gráfico: ${mesesVisiveis.length} meses',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
-            if (categoria == null || evolucao.isEmpty)
+            if (evolucao.isEmpty)
               const ListTile(
                 leading: Icon(Icons.insights_outlined),
-                title: Text('Escolha uma categoria para ver a evolução'),
+                title: Text('Sem dados para exibir evolução'),
                 subtitle: Text('O gráfico usa o recorte do mês selecionado e o histórico visível.'),
               )
             else
               SizedBox(
-                height: 180,
+                height: 190,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: evolucao
@@ -846,25 +815,42 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Text(
-                                  formatarMoeda(item.valor),
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    formatarMoeda(item.valor),
+                                    maxLines: 1,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF0E7A6D),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Container(
                                   height: maxValor <= 0
                                       ? 8
-                                      : (120 * (item.valor / maxValor)).clamp(8, 120).toDouble(),
+                                      : (108 * (item.valor / maxValor)).clamp(8, 108).toDouble(),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF0E7A6D),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  _formatarAnome(item.anome),
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _formatarAnome(item.anome),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
                                 ),
                               ],
                             ),
@@ -959,59 +945,74 @@ class _MetricCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.delta,
-    required this.icon,
-    required this.accentColor,
+    required this.semanticState,
   });
 
   final String title;
   final String label;
   final String value;
   final String? delta;
-  final IconData icon;
-  final Color accentColor;
+  final _MetricSemanticState semanticState;
 
   @override
   Widget build(BuildContext context) {
-    final deltaColor = delta == null
-        ? Colors.grey.shade700
-        : delta!.startsWith('-')
-            ? const Color(0xFF0E7A6D)
-            : const Color(0xFFB76E00);
+    final theme = Theme.of(context);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              backgroundColor: accentColor.withValues(alpha: 0.12),
-              child: Icon(icon, color: accentColor),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: semanticState.background,
+                  child: Icon(semanticState.icon, color: semanticState.foreground, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 2),
+            const SizedBox(height: 10),
             Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+              value,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            if (delta != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                delta!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: deltaColor,
-                      fontWeight: FontWeight.w700,
-                    ),
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
+            const SizedBox(height: 10),
+            if (delta != null)
+              Row(
+                children: [
+                  Icon(semanticState.icon, size: 18, color: semanticState.foreground),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      delta!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: semanticState.foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -1214,17 +1215,102 @@ class _SkeletonBox extends StatelessWidget {
   }
 }
 
-String _formatarDelta(double? delta) {
+String _formatarDelta(double? delta, {required String referencia}) {
   if (delta == null) {
     return 'Sem comparativo';
   }
-  final sinal = delta >= 0 ? '+' : '-';
-  return '$sinal${formatarPercentual(delta.abs() * 100)}';
+  final percentual = formatarPercentual(delta.abs() * 100);
+  if (delta < 0) {
+    return '$percentual menor que o $referencia';
+  }
+  return '$percentual maior que o $referencia';
 }
 
 String _formatarAnome(int anome) {
   final texto = anome.toString().padLeft(6, '0');
-  return '${texto.substring(4, 6)}/${texto.substring(0, 4)}';
+  return '${_abreviarMes(int.parse(texto.substring(4, 6)))}/${texto.substring(0, 4)}';
+}
+
+String _formatarLabelPeriodo(String label) {
+  if (label.contains(' - ')) {
+    final partes = label.split(' - ');
+    if (partes.length == 2) {
+      final inicio = partes.first.trim().split('/');
+      final fim = partes.last.trim().split('/');
+      if (inicio.length == 2 && fim.length == 2) {
+        return '${_abreviarMes(int.tryParse(inicio[0]) ?? 1)}–${_abreviarMes(int.tryParse(fim[0]) ?? 1)}/${fim[1]}';
+      }
+    }
+  }
+  final match = RegExp(r'^(\d{2})/(\d{4})$').firstMatch(label.trim());
+  if (match != null) {
+    return '${_abreviarMes(int.parse(match.group(1)!))}/${match.group(2)}';
+  }
+  return label;
+}
+
+String _abreviarMes(int mes) {
+  const meses = <int, String>{
+    1: 'Jan',
+    2: 'Fev',
+    3: 'Mar',
+    4: 'Abr',
+    5: 'Mai',
+    6: 'Jun',
+    7: 'Jul',
+    8: 'Ago',
+    9: 'Set',
+    10: 'Out',
+    11: 'Nov',
+    12: 'Dez',
+  };
+  return meses[mes] ?? 'M$mes';
+}
+
+_MetricSemanticState _metricStateForDelta(double? delta) {
+  if (delta == null) {
+    return _MetricSemanticState.neutral();
+  }
+  if (delta < 0) {
+    return _MetricSemanticState.success();
+  }
+  return _MetricSemanticState.alert();
+}
+
+class _MetricSemanticState {
+  const _MetricSemanticState({
+    required this.foreground,
+    required this.background,
+    required this.icon,
+  });
+
+  factory _MetricSemanticState.success() {
+    return const _MetricSemanticState(
+      foreground: Color(0xFF0E7A6D),
+      background: Color(0xFFE7F8F5),
+      icon: Icons.arrow_downward_rounded,
+    );
+  }
+
+  factory _MetricSemanticState.alert() {
+    return const _MetricSemanticState(
+      foreground: Color(0xFFC62828),
+      background: Color(0xFFFFE7E7),
+      icon: Icons.arrow_upward_rounded,
+    );
+  }
+
+  factory _MetricSemanticState.neutral() {
+    return const _MetricSemanticState(
+      foreground: Color(0xFF475569),
+      background: Color(0xFFF1F5F9),
+      icon: Icons.remove_rounded,
+    );
+  }
+
+  final Color foreground;
+  final Color background;
+  final IconData icon;
 }
 
 class _CategoriaTotal {

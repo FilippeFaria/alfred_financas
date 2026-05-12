@@ -120,7 +120,7 @@ class AlfredNotificationListenerService : NotificationListenerService() {
 
         val launchIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("open_route", "/insights")
+            putExtra("open_route", "/insights?from_notification=1")
         }
         val pendingIntent = PendingIntent.getActivity(
             this,

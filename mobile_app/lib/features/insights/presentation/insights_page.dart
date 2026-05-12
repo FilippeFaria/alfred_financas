@@ -17,7 +17,14 @@ import '../../../core/utils/formatters.dart';
 import '../data/insights_repository.dart';
 
 class InsightsPage extends ConsumerStatefulWidget {
-  const InsightsPage({super.key});
+  const InsightsPage({
+    super.key,
+    this.fromNotification = false,
+    this.targetPendingId,
+  });
+
+  final bool fromNotification;
+  final String? targetPendingId;
 
   @override
   ConsumerState<InsightsPage> createState() => _InsightsPageState();
@@ -75,6 +82,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     _sincronizarStatusNotificacoes(processQueue: true);
     _carregarPendenciasNotificacao();
     _precarregarCategorias();
+    if (widget.fromNotification) {
+      unawaited(_forcarSincronizacaoAoAbrirPorNotificacao());
+    }
   }
 
   @override
@@ -198,6 +208,25 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   Future<void> _refreshTudo() async {
     await _sincronizarStatusNotificacoes(processQueue: true);
     await _carregarPendenciasNotificacao();
+  }
+
+  Future<void> _forcarSincronizacaoAoAbrirPorNotificacao() async {
+    final alvo = widget.targetPendingId?.trim();
+    for (var tentativa = 0; tentativa < 6; tentativa++) {
+      if (!mounted) return;
+      await _sincronizarStatusNotificacoes(processQueue: true);
+      await _carregarPendenciasNotificacao();
+
+      if (!mounted) return;
+      if (alvo != null && alvo.isNotEmpty) {
+        final encontrado = _pendenciasNotificacao.any((item) => item.id == alvo);
+        if (encontrado) {
+          return;
+        }
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+    }
   }
 
   Future<void> _precarregarCategorias() async {

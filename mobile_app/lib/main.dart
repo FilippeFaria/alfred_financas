@@ -32,7 +32,12 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
     _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
       if (!mounted) return;
       if (action.type == 'detected_transaction') {
-        ref.read(appRouterProvider).go('/insights');
+        final pendingId = action.pendingTransactionId?.trim();
+        if (pendingId != null && pendingId.isNotEmpty) {
+          ref.read(appRouterProvider).go('/insights?from_notification=1&pending_id=$pendingId');
+        } else {
+          ref.read(appRouterProvider).go('/insights?from_notification=1');
+        }
       }
     });
   }

@@ -2,14 +2,15 @@
 
 ## Visão Geral do Projeto
 
-**alfred_financas** é uma aplicação Streamlit para gerenciamento de fluxo de caixa pessoal com análise de despesas e patrimônio. Todos os dados são sincronizados com Google Sheets para persistência centralizada.
+**alfred_financas** é um projeto centrado no app mobile em Flutter para gerenciamento de fluxo de caixa pessoal, análises de despesas e patrimônio. A interface Streamlit existe como um cliente legado e não deve ser alterada a não ser que o usuário solicite explicitamente.
 
-- **Execução**: `streamlit run app.py`
-- **Linguagem**: Python 3.x
-- **Framework principal**: Streamlit
+- **Execução do app móvel**: `cd mobile_app && flutter run`
+- **Linguagem principal do backend**: Python 3.x
+- **Frontend principal**: Flutter mobile (`mobile_app/`)
+- **Interface legacy**: Streamlit (`app.py` / `paginas/`)
 - **Stack de IA**: OpenAI API + pipeline próprio (`src/ingestion` + `src/ai`) para sugestão de transações pendentes
 
-O repositório também contém um app mobile em Flutter dentro de `mobile_app/`, que consome a API FastAPI do Alfred.
+O repositório mantém ainda um app Streamlit legado e uma API FastAPI para integração com o app móvel.
 
 ---
 
