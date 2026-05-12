@@ -221,6 +221,7 @@ def adicionar_receita(df, path="."):
                 obs=dados["obs"],
                 tag=", ".join(dados["tag"]) if isinstance(dados["tag"], list) else dados["tag"],
                 desconsiderar=dados["desconsiderar"],
+                ignorar_duplicata=True,
             ):
                 preparar_confirmacao_salvamento()
 
@@ -331,6 +332,7 @@ def adicionar_despesa(df, last_account, path="."):
                 tag=", ".join(dados["tag"]) if isinstance(dados["tag"], list) else dados["tag"],
                 parcelas=dados["parcelas"],
                 desconsiderar=dados["desconsiderar"],
+                ignorar_duplicata=True,
             ):
                 preparar_confirmacao_salvamento()
 
@@ -461,6 +463,7 @@ def adicionar_transferencia(df, opcao, path="."):
                 obs=dados["obs"],
                 tag=dados["tag"],
                 desconsiderar=False,
+                ignorar_duplicata=True,
                 recarregar_df=False,
             )
             if not salvou_debito:
@@ -476,6 +479,7 @@ def adicionar_transferencia(df, opcao, path="."):
                 obs=dados["obs"],
                 tag=dados["tag"],
                 desconsiderar=False,
+                ignorar_duplicata=True,
                 recarregar_df=True,
             )
             if salvou_credito:
@@ -600,7 +604,7 @@ def adicionar_pagamento_cartao(df, path="."):
 
         return pd.DataFrame()
 
-    def salvar_lancamentos(lancamentos):
+    def salvar_lancamentos(lancamentos, *, ignorar_duplicata: bool = False):
         try:
             for lancamento in lancamentos:
                 api_criar_transacao(
@@ -613,6 +617,7 @@ def adicionar_pagamento_cartao(df, path="."):
                     obs=lancamento["obs"],
                     tag=lancamento["tag"],
                     desconsiderar=lancamento["desconsiderar"],
+                    ignorar_duplicata=ignorar_duplicata,
                 )
             recarregar_df_api()
             preparar_confirmacao_salvamento()
@@ -678,7 +683,7 @@ def adicionar_pagamento_cartao(df, path="."):
                 dados["ids_por_cartao"],
                 dados["data"],
             )
-            salvar_lancamentos(lancamentos_confirmados)
+            salvar_lancamentos(lancamentos_confirmados, ignorar_duplicata=True)
 
         def ignorar_pagamento_cartao_callback():
             st.session_state.duplicata_pagamento_cartao_encontrada = False

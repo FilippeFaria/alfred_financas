@@ -291,7 +291,10 @@ class TransactionsRepository {
     return filtros;
   }
 
-  Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {
+  Future<void> cadastrarTransacao(
+    CadastroTransacaoInput input, {
+    bool ignorarDuplicata = false,
+  }) async {
     await _apiClient.postTransacao(
       CriarTransacaoRequestDto(
         nome: input.nome,
@@ -304,6 +307,7 @@ class TransactionsRepository {
         tag: input.tag,
         desconsiderar: input.desconsiderar,
         parcelas: input.parcelas,
+        ignorarDuplicata: ignorarDuplicata,
       ),
     );
   }
@@ -529,8 +533,14 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     return _opcoesCadastroFuture!;
   }
 
-  Future<void> cadastrarTransacao(CadastroTransacaoInput input) async {
-    await _repository.cadastrarTransacao(input);
+  Future<void> cadastrarTransacao(
+    CadastroTransacaoInput input, {
+    bool ignorarDuplicata = false,
+  }) async {
+    await _repository.cadastrarTransacao(
+      input,
+      ignorarDuplicata: ignorarDuplicata,
+    );
     _precarregarOpcoesCadastro(forcar: true);
     await recarregar();
   }

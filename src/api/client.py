@@ -116,6 +116,7 @@ class AlfredApiClient:
         tag: str | None = None,
         desconsiderar: bool = False,
         parcelas: int | None = None,
+        ignorar_duplicata: bool = False,
     ) -> dict[str, Any]:
         payload = {
             "nome": nome,
@@ -128,6 +129,7 @@ class AlfredApiClient:
             "tag": tag,
             "desconsiderar": desconsiderar,
             "parcelas": parcelas,
+            "ignorar_duplicata": ignorar_duplicata,
         }
         return self._request("POST", "/transacoes", json_payload=payload)
 
@@ -200,6 +202,7 @@ def criar_transacao(
     tag: str | None = None,
     desconsiderar: bool = False,
     parcelas: int | None = None,
+    ignorar_duplicata: bool = False,
 ) -> dict[str, Any]:
     return obter_client_api().criar_transacao(
         nome=nome,
@@ -212,6 +215,7 @@ def criar_transacao(
         tag=tag,
         desconsiderar=desconsiderar,
         parcelas=parcelas,
+        ignorar_duplicata=ignorar_duplicata,
     )
 
 

@@ -145,6 +145,7 @@ def post_transacoes(
         tag=payload.tag,
         desconsiderar=payload.desconsiderar,
         parcelas=payload.parcelas,
+        ignorar_duplicata=payload.ignorar_duplicata,
     )
 
 

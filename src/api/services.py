@@ -314,7 +314,20 @@ def _validar_categoria_por_tipo(tipo: str, categoria: str) -> None:
         raise ApiServiceError(code="DADOS_INVALIDOS", message=f"Categoria '{categoria}' invalida para tipo '{tipo}'.", status_code=400)
 
 
-def criar_transacao(*, nome: str, tipo: str, valor: float, categoria: str, conta: str, data: datetime, obs: str = "", tag: str | None = None, desconsiderar: bool = False, parcelas: int | None = None) -> dict:
+def criar_transacao(
+    *,
+    nome: str,
+    tipo: str,
+    valor: float,
+    categoria: str,
+    conta: str,
+    data: datetime,
+    obs: str = "",
+    tag: str | None = None,
+    desconsiderar: bool = False,
+    parcelas: int | None = None,
+    ignorar_duplicata: bool = False,
+) -> dict:
     _validar_categoria_por_tipo(tipo, categoria)
     if tipo == "Despesa" and valor > 0:
         raise ApiServiceError(code="DADOS_INVALIDOS", message="Despesa deve possuir valor negativo.", status_code=400)
@@ -333,9 +346,28 @@ def criar_transacao(*, nome: str, tipo: str, valor: float, categoria: str, conta
             cat = category_repo.get_or_create(user_id=user.id, nome=categoria, tipo=tipo)
             legacy_id = tx_repo.get_next_legacy_id(user_id=user.id)
             total_parcelas = int(parcelas) if parcelas and parcelas > 1 else 1
+            valor_decimal = Decimal(str(valor))
             item = None
             for i in range(total_parcelas):
                 data_item = (pd.Timestamp(data) + pd.DateOffset(months=i)).to_pydatetime()
+                if not ignorar_duplicata and tx_repo.exists_duplicate(
+                    user_id=user.id,
+                    account_id=account.id,
+                    valor=valor_decimal,
+                    data=data_item,
+                ):
+                    raise ApiServiceError(
+                        code="DUPLICATA_TRANSACAO",
+                        message="Transacao duplicada detectada para valor, conta e data.",
+                        status_code=409,
+                        details={
+                            "nome": nome,
+                            "tipo": tipo,
+                            "valor": valor,
+                            "conta": conta,
+                            "data": data_item.isoformat(),
+                        },
+                    )
                 parcela_item = (i + 1) if total_parcelas > 1 else None
                 data_origem_item = data if total_parcelas > 1 else None
                 item = tx_repo.create(
@@ -345,7 +377,7 @@ def criar_transacao(*, nome: str, tipo: str, valor: float, categoria: str, conta
                     legacy_id=legacy_id,
                     nome=nome,
                     tipo=tipo,
-                    valor=Decimal(str(valor)),
+                    valor=valor_decimal,
                     data=data_item,
                     observacao=obs or None,
                     tag=tag,
@@ -358,6 +390,8 @@ def criar_transacao(*, nome: str, tipo: str, valor: float, categoria: str, conta
                 raise ApiServiceError(code="DADOS_INVALIDOS", message="Nenhuma transacao criada.", status_code=400)
             db.refresh(item)
             resultado = _map_tx_to_api_dict(item)
+    except ApiServiceError:
+        raise
     except Exception as exc:
         LOGGER.exception("Falha ao persistir transacao no PostgreSQL")
         _log_error("postgres_write_error", error_type=type(exc).__name__, error=str(exc))

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/network/api_exception.dart';
 import '../../../core/utils/formatters.dart';
 import '../data/transaction_models.dart';
 import '../data/transactions_repository.dart';
@@ -500,7 +501,10 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
     return const ['Outros'];
   }
 
-  Future<void> _salvar(CadastroTransacaoOptions opcoes) async {
+  Future<void> _salvar(
+    CadastroTransacaoOptions opcoes, {
+    bool ignorarDuplicata = false,
+  }) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -542,6 +546,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             data: _data,
             obs: _obsController.text.trim(),
           ),
+          ignorarDuplicata: ignorarDuplicata,
         );
         await notifier.cadastrarTransacao(
           CadastroTransacaoInput(
@@ -553,6 +558,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             data: _data,
             obs: _obsController.text.trim(),
           ),
+          ignorarDuplicata: ignorarDuplicata,
         );
       } else if (_tipo == 'Pagamento de Cartão') {
         if (_cartaoSelecionado == null) {
@@ -570,6 +576,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             data: _data,
             obs: _obsController.text.trim(),
           ),
+          ignorarDuplicata: ignorarDuplicata,
         );
           await notifier.cadastrarTransacao(
             CadastroTransacaoInput(
@@ -581,6 +588,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             data: _data,
             obs: _obsController.text.trim(),
           ),
+            ignorarDuplicata: ignorarDuplicata,
         );
         } else {
           await notifier.cadastrarTransacao(
@@ -594,6 +602,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
             obs: _obsController.text.trim(),
             desconsiderar: true,
           ),
+            ignorarDuplicata: ignorarDuplicata,
           );
         }
       } else {
@@ -615,7 +624,10 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
         if (_modoEdicao) {
           await notifier.editarTransacao(widget.transacaoInicial!.id, input);
         } else {
-          await notifier.cadastrarTransacao(input);
+          await notifier.cadastrarTransacao(
+            input,
+            ignorarDuplicata: ignorarDuplicata,
+          );
         }
       }
 
@@ -631,6 +643,29 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
         Navigator.of(context).pop(true);
       }
     } catch (error) {
+      if (!ignorarDuplicata && error is ApiException && error.code == 'DUPLICATA_TRANSACAO') {
+        final confirmar = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Transação duplicada'),
+            content: const Text('Já existe uma transação com mesmo valor, conta e data. Deseja adicionar mesmo assim?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Adicionar mesmo assim'),
+              ),
+            ],
+          ),
+        );
+        if (confirmar == true && mounted) {
+          await _salvar(opcoes, ignorarDuplicata: true);
+        }
+        return;
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Não foi possível salvar: $error')),

@@ -179,6 +179,26 @@ class TransactionRepository:
         )
         return int(atual or 0) + 1
 
+    def exists_duplicate(
+        self,
+        *,
+        user_id: UUID,
+        account_id: UUID,
+        valor: Decimal,
+        data: datetime,
+    ) -> bool:
+        return (
+            self.db.query(Transaction.id)
+            .filter(
+                Transaction.user_id == user_id,
+                Transaction.account_id == account_id,
+                Transaction.valor == valor,
+                Transaction.data == data,
+            )
+            .first()
+            is not None
+        )
+
 
 class UserRepository:
     def __init__(self, db: Session) -> None:

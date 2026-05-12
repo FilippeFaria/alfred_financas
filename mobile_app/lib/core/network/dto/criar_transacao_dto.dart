@@ -10,6 +10,7 @@ class CriarTransacaoRequestDto {
     this.tag,
     this.desconsiderar = false,
     this.parcelas,
+    this.ignorarDuplicata = false,
   });
 
   final String nome;
@@ -22,6 +23,7 @@ class CriarTransacaoRequestDto {
   final String? tag;
   final bool desconsiderar;
   final int? parcelas;
+  final bool ignorarDuplicata;
 
   Map<String, dynamic> toJson() {
     return {
@@ -35,6 +37,7 @@ class CriarTransacaoRequestDto {
       'tag': tag,
       'desconsiderar': desconsiderar,
       'parcelas': parcelas,
+      'ignorar_duplicata': ignorarDuplicata,
     };
   }
 }

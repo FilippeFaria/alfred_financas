@@ -42,6 +42,7 @@ class CriarTransacaoRequest(BaseModel):
     tag: Optional[str] = None
     desconsiderar: bool = False
     parcelas: Optional[int] = Field(default=None, ge=1)
+    ignorar_duplicata: bool = False
 
 
 class TransacoesResponse(BaseModel):
