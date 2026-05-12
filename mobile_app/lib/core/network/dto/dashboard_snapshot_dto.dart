@@ -75,6 +75,7 @@ class DashboardSnapshotDto {
     required this.categoriasDestaque,
     required this.ultimosLancamentos,
     required this.serieMensal,
+    required this.serieReceitasMensal,
     required this.serieCategoria,
   });
 
@@ -90,6 +91,7 @@ class DashboardSnapshotDto {
   final List<DashboardCategoriaDestaqueDto> categoriasDestaque;
   final List<DashboardUltimoLancamentoDto> ultimosLancamentos;
   final List<DashboardSerieMensalDto> serieMensal;
+  final List<DashboardSerieMensalDto> serieReceitasMensal;
   final List<DashboardSerieMensalDto> serieCategoria;
 
   factory DashboardSnapshotDto.fromJson(Map<String, dynamic> json) {
@@ -116,6 +118,9 @@ class DashboardSnapshotDto {
           .map((item) => DashboardUltimoLancamentoDto.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList(),
       serieMensal: (json['serie_mensal'] as List? ?? <dynamic>[])
+          .map((item) => DashboardSerieMensalDto.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList(),
+      serieReceitasMensal: (json['serie_receitas_mensal'] as List? ?? <dynamic>[])
           .map((item) => DashboardSerieMensalDto.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList(),
       serieCategoria: (json['serie_categoria'] as List? ?? <dynamic>[])

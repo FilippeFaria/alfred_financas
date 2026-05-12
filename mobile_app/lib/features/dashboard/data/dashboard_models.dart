@@ -104,6 +104,7 @@ class DashboardSnapshot {
     required this.ultimosLancamentos,
     required this.saldos,
     required this.serieMensal,
+    required this.serieReceitasMensal,
     required this.serieCategoria,
   });
 
@@ -119,6 +120,7 @@ class DashboardSnapshot {
   final List<LancamentoResumo> ultimosLancamentos;
   final List<SaldoConta> saldos;
   final List<SerieMensalResumo> serieMensal;
+  final List<SerieMensalResumo> serieReceitasMensal;
   final List<SerieMensalResumo> serieCategoria;
 }
 

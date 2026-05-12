@@ -174,6 +174,7 @@ class DashboardSnapshotResponse(BaseModel):
     categorias_destaque: list[CategoriaDestaqueResponse]
     ultimos_lancamentos: list[UltimoLancamentoResponse]
     serie_mensal: list[SerieMensalResponse]
+    serie_receitas_mensal: list[SerieMensalResponse]
     serie_categoria: list[SerieMensalResponse]
 
 

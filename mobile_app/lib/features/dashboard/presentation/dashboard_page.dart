@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +16,6 @@ class DashboardPage extends ConsumerStatefulWidget {
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   String? _categoriaSelecionada;
-  int _mesesHistorico = 6;
   DashboardSnapshot? _ultimoSnapshotVisivel;
   bool _salvandoOrcamento = false;
 
@@ -24,12 +25,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final providerArgs = (
       filtros: filtros,
       categoria: _categoriaSelecionada,
-      mesesHistorico: _mesesHistorico,
+      mesesHistorico: 6,
     );
     await repository.carregarResumo(
       filtros: filtros,
       categoria: _categoriaSelecionada,
-      mesesHistorico: _mesesHistorico,
+      mesesHistorico: 6,
       forceRefresh: true,
     );
     ref.invalidate(dashboardSnapshotProvider(providerArgs));
@@ -141,7 +142,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final providerArgs = (
       filtros: filtros,
       categoria: _categoriaSelecionada,
-      mesesHistorico: _mesesHistorico,
+      mesesHistorico: 6,
     );
     final snapshotAsync = ref.watch(dashboardSnapshotProvider(providerArgs));
     final repository = ref.watch(dashboardRepositoryProvider);
@@ -158,9 +159,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             data: data,
             filtros: filtros,
             categoriaSelecionada: _categoriaSelecionada,
-            mesesHistorico: _mesesHistorico,
             onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-            onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
             onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
             onEditarOrcamento: () => _abrirEditorOrcamento(data),
           ),
@@ -170,9 +169,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data: _ultimoSnapshotVisivel!,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                mesesHistorico: _mesesHistorico,
                 onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-                onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
                 onEditarOrcamento: () => _abrirEditorOrcamento(_ultimoSnapshotVisivel!),
                 avisoOffline: 'Atualizando filtros...',
@@ -184,16 +181,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             final cache = repository.getCache(
               filtros,
               categoria: _categoriaSelecionada,
-              mesesHistorico: _mesesHistorico,
+              mesesHistorico: 6,
             );
             if (cache != null) {
               return _DashboardBody(
                 data: cache,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                mesesHistorico: _mesesHistorico,
                 onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-                onMesesHistoricoChanged: (value) => setState(() => _mesesHistorico = value),
                 onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
                 onEditarOrcamento: () => _abrirEditorOrcamento(cache),
                 avisoOffline: 'Exibindo último cache local. Não foi possível atualizar agora.',
@@ -236,9 +231,7 @@ class _DashboardBody extends StatelessWidget {
     required this.data,
     required this.filtros,
     required this.categoriaSelecionada,
-    required this.mesesHistorico,
     required this.onCategoriaChanged,
-    required this.onMesesHistoricoChanged,
     required this.onAtualizarFiltros,
     required this.onEditarOrcamento,
     this.avisoOffline,
@@ -247,9 +240,7 @@ class _DashboardBody extends StatelessWidget {
   final DashboardSnapshot data;
   final DashboardFilters filtros;
   final String? categoriaSelecionada;
-  final int mesesHistorico;
   final ValueChanged<String?> onCategoriaChanged;
-  final ValueChanged<int> onMesesHistoricoChanged;
   final ValueChanged<DashboardFilters> onAtualizarFiltros;
   final VoidCallback onEditarOrcamento;
   final String? avisoOffline;
@@ -363,7 +354,13 @@ class _DashboardBody extends StatelessWidget {
           onCategoriaChanged: onCategoriaChanged,
         ),
         const SizedBox(height: 12),
-        _TendenciaMensalCard(mesesVisiveis: mesesVisiveis, serie: tendenciaMeses),
+        _TendenciaMensalCard(
+          mesesVisiveis: mesesVisiveis,
+          despesas: tendenciaMeses,
+          receitas: data.serieReceitasMensal
+              .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
+              .toList(),
+        ),
         const SizedBox(height: 12),
         const _SectionTitle(
           title: 'Últimos lançamentos',
@@ -870,15 +867,34 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
 class _TendenciaMensalCard extends StatelessWidget {
   const _TendenciaMensalCard({
     required this.mesesVisiveis,
-    required this.serie,
+    required this.despesas,
+    required this.receitas,
   });
 
   final List<int> mesesVisiveis;
-  final List<_SerieMensal> serie;
+  final List<_SerieMensal> despesas;
+  final List<_SerieMensal> receitas;
 
   @override
   Widget build(BuildContext context) {
-    final maxValor = serie.isEmpty ? 0.0 : serie.map((e) => e.valor).reduce((a, b) => a > b ? a : b);
+    final theme = Theme.of(context);
+    final meses = mesesVisiveis.isNotEmpty
+        ? mesesVisiveis
+        : <int>{
+            ...despesas.map((item) => item.anome),
+            ...receitas.map((item) => item.anome),
+          }.toList()
+          ..sort();
+    final despesasPorMes = {
+      for (final item in despesas) item.anome: item.valor,
+    };
+    final receitasPorMes = {
+      for (final item in receitas) item.anome: item.valor,
+    };
+    final maxValor = [
+      ...despesas.map((item) => item.valor),
+      ...receitas.map((item) => item.valor),
+    ].fold<double>(0.0, (acc, value) => value > acc ? value : acc);
 
     return Card(
       child: Padding(
@@ -892,49 +908,187 @@ class _TendenciaMensalCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Tendência mensal',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
-              'Período: ${mesesVisiveis.length} meses',
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Período: ${meses.length} meses',
+              style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 8),
-            if (serie.isEmpty)
+            const SizedBox(height: 10),
+            const Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _TrendLegendChip(label: 'Despesas', color: Color(0xFFB76E00)),
+                _TrendLegendChip(label: 'Receitas', color: Color(0xFF0E7A6D)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (meses.isEmpty || (despesas.isEmpty && receitas.isEmpty))
               const ListTile(
                 leading: Icon(Icons.timeline_outlined),
                 title: Text('Sem dados no período escolhido'),
               )
             else
-              ...serie.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: Text(_formatarAnome(item.anome))),
-                          Text(formatarMoeda(item.valor), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final contentWidth = math.max(constraints.maxWidth, meses.length * 72.0);
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: contentWidth,
+                      height: 208,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: meses.map((anome) {
+                          final valorDespesa = despesasPorMes[anome] ?? 0.0;
+                          final valorReceita = receitasPorMes[anome] ?? 0.0;
+                          return SizedBox(
+                            width: 72,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Expanded(
+                                          child: _MonthlyBar(
+                                            label: formatarMoeda(valorDespesa),
+                                            value: valorDespesa,
+                                            maxValue: maxValor,
+                                            color: const Color(0xFFB76E00),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: _MonthlyBar(
+                                            label: formatarMoeda(valorReceita),
+                                            value: valorReceita,
+                                            maxValue: maxValor,
+                                            color: const Color(0xFF0E7A6D),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      _formatarAnome(anome),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
-                      const SizedBox(height: 4),
-                      LinearProgressIndicator(
-                        value: maxValor <= 0 ? 0 : (item.valor / maxValor).clamp(0, 1).toDouble(),
-                        minHeight: 10,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrendLegendChip extends StatelessWidget {
+  const _TrendLegendChip({
+    required this.label,
+    required this.color,
+  });
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyBar extends StatelessWidget {
+  const _MonthlyBar({
+    required this.label,
+    required this.value,
+    required this.maxValue,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final double maxValue;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = maxValue <= 0 ? 8.0 : (122 * (value / maxValue)).clamp(8.0, 122.0).toDouble();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: 14,
+            height: height,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

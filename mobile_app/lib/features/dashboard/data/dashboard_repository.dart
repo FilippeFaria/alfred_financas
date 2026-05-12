@@ -172,6 +172,7 @@ class DashboardRepository {
           .toList(),
       saldos: saldoJson,
       serieMensal: dto.serieMensal.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
+      serieReceitasMensal: dto.serieReceitasMensal.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
       serieCategoria: dto.serieCategoria.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
     );
 

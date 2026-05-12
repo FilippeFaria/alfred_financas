@@ -612,6 +612,19 @@ def _serie_totais_despesa(df: pd.DataFrame, anomes: list[int]) -> list[dict]:
     return serie
 
 
+def _serie_totais_receita(df: pd.DataFrame, anomes: list[int]) -> list[dict]:
+    serie: list[dict] = []
+    for anome in anomes:
+        filtro = (
+            (df["Tipo"] == "Receita")
+            & (df["anomes"] == str(anome))
+            & (df["desconsiderar"] == False)
+        )
+        total = df[filtro]["Valor"].abs().sum()
+        serie.append({"anome": int(anome), "valor": float(total)})
+    return serie
+
+
 def _serie_categoria_despesa(df: pd.DataFrame, anomes: list[int], categoria: str | None) -> list[dict]:
     if not categoria:
         return []
@@ -668,6 +681,7 @@ def obter_dashboard_snapshot_mobile(
             "categorias_destaque": [],
             "ultimos_lancamentos": [],
             "serie_mensal": [],
+            "serie_receitas_mensal": [],
             "serie_categoria": [],
         }
 
@@ -766,6 +780,7 @@ def obter_dashboard_snapshot_mobile(
         meses_visiveis = meses_visiveis[-limite_historico:]
 
     serie_mensal = _serie_totais_despesa(df_temp, meses_visiveis)
+    serie_receitas_mensal = _serie_totais_receita(df_temp, meses_visiveis)
     serie_categoria = _serie_categoria_despesa(df_temp, meses_visiveis, categoria)
 
     return {
@@ -791,5 +806,6 @@ def obter_dashboard_snapshot_mobile(
         "categorias_destaque": categorias_destaque,
         "ultimos_lancamentos": ultimos_lancamentos,
         "serie_mensal": serie_mensal,
+        "serie_receitas_mensal": serie_receitas_mensal,
         "serie_categoria": serie_categoria,
     }

@@ -644,6 +644,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
       }
     } catch (error) {
       if (!ignorarDuplicata && error is ApiException && error.code == 'DUPLICATA_TRANSACAO') {
+        if (!mounted) return;
         final confirmar = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
