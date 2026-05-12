@@ -937,63 +937,48 @@ class _TendenciaMensalCard extends StatelessWidget {
             else
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final contentWidth = math.max(constraints.maxWidth, meses.length * 72.0);
+                  final contentWidth = math.max(constraints.maxWidth, meses.length * 80.0);
+                  final serieDespesas = meses.map((anome) => despesasPorMes[anome] ?? 0.0).toList();
+                  final serieReceitas = meses.map((anome) => receitasPorMes[anome] ?? 0.0).toList();
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: contentWidth,
-                      height: 208,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: meses.map((anome) {
-                          final valorDespesa = despesasPorMes[anome] ?? 0.0;
-                          final valorReceita = receitasPorMes[anome] ?? 0.0;
-                          return SizedBox(
-                            width: 72,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Expanded(
-                                          child: _MonthlyBar(
-                                            label: formatarMoeda(valorDespesa),
-                                            value: valorDespesa,
-                                            maxValue: maxValor,
-                                            color: const Color(0xFFB76E00),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: _MonthlyBar(
-                                            label: formatarMoeda(valorReceita),
-                                            value: valorReceita,
-                                            maxValue: maxValor,
-                                            color: const Color(0xFF0E7A6D),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      _formatarAnome(anome),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                                  ),
-                                ],
+                      height: 224,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            height: 164,
+                            child: CustomPaint(
+                              painter: _TrendLinesPainter(
+                                despesas: serieDespesas,
+                                receitas: serieReceitas,
+                                maxValue: maxValor,
+                                despesaColor: const Color(0xFFB76E00),
+                                receitaColor: const Color(0xFF0E7A6D),
                               ),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: meses
+                                .map(
+                                  (anome) => Expanded(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        _formatarAnome(anome),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -1048,48 +1033,130 @@ class _TrendLegendChip extends StatelessWidget {
   }
 }
 
-class _MonthlyBar extends StatelessWidget {
-  const _MonthlyBar({
-    required this.label,
-    required this.value,
+class _TrendLinesPainter extends CustomPainter {
+  _TrendLinesPainter({
+    required this.despesas,
+    required this.receitas,
     required this.maxValue,
-    required this.color,
+    required this.despesaColor,
+    required this.receitaColor,
   });
 
-  final String label;
-  final double value;
+  final List<double> despesas;
+  final List<double> receitas;
   final double maxValue;
-  final Color color;
+  final Color despesaColor;
+  final Color receitaColor;
 
   @override
-  Widget build(BuildContext context) {
-    final height = maxValue <= 0 ? 8.0 : (122 * (value / maxValue)).clamp(8.0, 122.0).toDouble();
+  void paint(Canvas canvas, Size size) {
+    if (despesas.isEmpty || receitas.isEmpty) return;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            label,
-            maxLines: 1,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            width: 14,
-            height: height,
-            decoration: BoxDecoration(
+    const leftPadding = 12.0;
+    const rightPadding = 12.0;
+    const topPadding = 12.0;
+    const bottomPadding = 12.0;
+    final plotWidth = size.width - leftPadding - rightPadding;
+    final plotHeight = size.height - topPadding - bottomPadding;
+    final seriesLength = math.max(despesas.length, receitas.length);
+    if (seriesLength <= 0 || plotWidth <= 0 || plotHeight <= 0) return;
+
+    final safeMax = maxValue > 0 ? maxValue : 1.0;
+    final stepX = seriesLength == 1 ? 0.0 : plotWidth / (seriesLength - 1);
+    final baseY = size.height - bottomPadding;
+
+    final gridPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.08)
+      ..strokeWidth = 1;
+    for (var i = 0; i <= 3; i++) {
+      final y = topPadding + (plotHeight * (i / 3));
+      canvas.drawLine(Offset(leftPadding, y), Offset(size.width - rightPadding, y), gridPaint);
+    }
+
+    void drawSeries(List<double> values, Color color) {
+      final points = <Offset>[];
+      for (var i = 0; i < values.length; i++) {
+        final x = leftPadding + (stepX * i);
+        final normalized = (values[i] / safeMax).clamp(0.0, 1.0);
+        final y = baseY - (normalized * plotHeight);
+        points.add(Offset(x, y));
+      }
+
+      if (points.isEmpty) return;
+
+      final linePaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+
+      if (points.length > 1) {
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (var i = 1; i < points.length; i++) {
+          path.lineTo(points[i].dx, points[i].dy);
+        }
+        canvas.drawPath(path, linePaint);
+      }
+
+      final pointPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+      for (final point in points) {
+        canvas.drawCircle(point, 3.5, pointPaint);
+      }
+
+      for (var i = 0; i < points.length; i++) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: _formatCompact(values[i]),
+            style: TextStyle(
               color: color,
-              borderRadius: BorderRadius.circular(999),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-      ],
-    );
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        final dx = points[i].dx - (textPainter.width / 2);
+        final dy = (points[i].dy - textPainter.height - 6).clamp(0.0, size.height);
+        textPainter.paint(canvas, Offset(dx, dy));
+      }
+    }
+
+    drawSeries(despesas, despesaColor);
+    drawSeries(receitas, receitaColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendLinesPainter oldDelegate) {
+    return oldDelegate.maxValue != maxValue ||
+        oldDelegate.despesaColor != despesaColor ||
+        oldDelegate.receitaColor != receitaColor ||
+        oldDelegate.despesas.length != despesas.length ||
+        oldDelegate.receitas.length != receitas.length ||
+        !_sameValues(oldDelegate.despesas, despesas) ||
+        !_sameValues(oldDelegate.receitas, receitas);
+  }
+
+  bool _sameValues(List<double> a, List<double> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  String _formatCompact(double value) {
+    final absValue = value.abs();
+    if (absValue >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1).replaceAll('.', ',')}M';
+    }
+    if (absValue >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1).replaceAll('.', ',')}k';
+    }
+    return value.toStringAsFixed(0).replaceAll('.', ',');
   }
 }
 
