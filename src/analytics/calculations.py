@@ -38,7 +38,8 @@ COLOR_MAP = {
 def tratar_df(df: pd.DataFrame) -> pd.DataFrame:
     """Preprocessa o DataFrame adicionando coluna anomes."""
     # Dados já normalizados em '%d/%m/%Y %H:%M' por carregar_dados()
-    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M')
+    # O snapshot mobile nao deve quebrar por uma linha com data invalida; essas linhas sao ignoradas no recorte temporal.
+    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M', errors='coerce')
     df['anomes'] = [
         f"{e.year}{e.month:02d}" for e in df['Data']
     ]
