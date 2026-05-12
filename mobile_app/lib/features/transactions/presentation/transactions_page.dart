@@ -277,6 +277,22 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
   bool _desconsiderar = false;
   bool _isSaving = false;
   bool _hasChanges = false;
+  bool _snapshotInicialCapturado = false;
+  String _snapshotNome = '';
+  String _snapshotValor = '';
+  String _snapshotObs = '';
+  String _snapshotTipo = 'Despesa';
+  String? _snapshotCategoria;
+  String? _snapshotConta;
+  String? _snapshotContaDestino;
+  String? _snapshotCartaoSelecionado;
+  String? _snapshotTipoInvestimentoNome;
+  bool _snapshotDesconsiderar = false;
+  bool _snapshotParcelado = false;
+  String _snapshotData = '';
+  String? _categoriaEfetivaAtual;
+  String? _contaEfetivaAtual;
+  String? _contaDestinoEfetivaAtual;
   DateTime _data = DateTime.now();
   String _tipo = 'Despesa';
   String? _categoria;
@@ -287,13 +303,56 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
   bool _parcelado = false;
   bool get _modoEdicao => widget.transacaoInicial != null;
 
+  String _formatarDataDiaMesAno(DateTime data) {
+    final dia = data.day.toString().padLeft(2, '0');
+    final mes = data.month.toString().padLeft(2, '0');
+    return '$dia/$mes/${data.year}';
+  }
+
   void _marcarAlteracao() {
     if (_hasChanges || _isSaving || !mounted) return;
     setState(() => _hasChanges = true);
   }
 
+  void _capturarSnapshotInicial({
+    required String categoriaAtual,
+    required String contaAtual,
+    required String contaDestinoAtual,
+  }) {
+    if (_snapshotInicialCapturado) return;
+    _snapshotNome = _nomeController.text;
+    _snapshotValor = _valorController.text;
+    _snapshotObs = _obsController.text;
+    _snapshotTipo = _tipo;
+    _snapshotCategoria = _categoria ?? categoriaAtual;
+    _snapshotConta = _conta ?? contaAtual;
+    _snapshotContaDestino = _contaDestino ?? contaDestinoAtual;
+    _snapshotCartaoSelecionado = _cartaoSelecionado;
+    _snapshotTipoInvestimentoNome = _tipoInvestimentoNome;
+    _snapshotDesconsiderar = _desconsiderar;
+    _snapshotParcelado = _parcelado;
+    _snapshotData = _data.toIso8601String();
+    _snapshotInicialCapturado = true;
+  }
+
+  bool _temAlteracoesRelevantes() {
+    if (!_snapshotInicialCapturado) return false;
+    return _nomeController.text != _snapshotNome ||
+        _valorController.text != _snapshotValor ||
+        _obsController.text != _snapshotObs ||
+        _tipo != _snapshotTipo ||
+        _categoriaEfetivaAtual != _snapshotCategoria ||
+        _contaEfetivaAtual != _snapshotConta ||
+        _contaDestinoEfetivaAtual != _snapshotContaDestino ||
+        _cartaoSelecionado != _snapshotCartaoSelecionado ||
+        _tipoInvestimentoNome != _snapshotTipoInvestimentoNome ||
+        _desconsiderar != _snapshotDesconsiderar ||
+        _parcelado != _snapshotParcelado ||
+        _data.toIso8601String() != _snapshotData;
+  }
+
   Future<bool> _confirmarDescarteSeNecessario() async {
-    if (!_hasChanges || _isSaving) return true;
+    if (_isSaving || !_temAlteracoesRelevantes()) return true;
     final descartar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -319,20 +378,22 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
     super.initState();
     final notifier = ref.read(transactionsNotifierProvider.notifier);
     _opcoesFuture = notifier.carregarOpcoesCadastro();
+    final tx = widget.transacaoInicial;
+    if (tx != null) {
+      _nomeController.text = tx.nome;
+      _valorController.text = tx.valor.abs().toStringAsFixed(2);
+      _obsController.text = tx.obs;
+      _tipo = tx.tipo;
+      _categoria = tx.categoria;
+      _conta = tx.conta;
+      _desconsiderar = tx.desconsiderar;
+      _data = _parseDataBr(tx.data) ?? DateTime.now();
+    }
+
     _nomeController.addListener(_marcarAlteracao);
     _valorController.addListener(_marcarAlteracao);
     _obsController.addListener(_marcarAlteracao);
     _parcelasController.addListener(_marcarAlteracao);
-    final tx = widget.transacaoInicial;
-    if (tx == null) return;
-    _nomeController.text = tx.nome;
-    _valorController.text = tx.valor.abs().toStringAsFixed(2);
-    _obsController.text = tx.obs;
-    _tipo = tx.tipo;
-    _categoria = tx.categoria;
-    _conta = tx.conta;
-    _desconsiderar = tx.desconsiderar;
-    _data = _parseDataBr(tx.data) ?? DateTime.now();
   }
 
   @override
@@ -586,15 +647,23 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
-    return WillPopScope(
-      onWillPop: _confirmarDescarteSeNecessario,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmarDescarteSeNecessario().then((deveSair) {
+          if (deveSair && context.mounted) {
+            Navigator.of(context).pop(false);
+          }
+        });
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(_modoEdicao ? 'Editar transação' : 'Nova transação'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () async {
-              if (await _confirmarDescarteSeNecessario() && mounted) {
+              if (await _confirmarDescarteSeNecessario() && context.mounted) {
                 Navigator.of(context).pop(false);
               }
             },
@@ -611,15 +680,23 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
                 child: Text('Falha ao carregar opções: ${snapshot.error}'),
               );
             }
-        final opcoes = snapshot.data!;
-        final categorias = _categoriasDisponiveis(opcoes);
-        final contas = _contasDisponiveis(opcoes);
-        final contasDestino = _contasDestinoDisponiveis(opcoes);
-        final categoriaAtual = _categoriaSelecionadaAtual(opcoes);
-        final contaAtual = _contaSelecionadaAtual(opcoes);
-        final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
-        _tipoInvestimentoNome ??= 'Aplicação';
-        _cartaoSelecionado ??= opcoes.cartoesPagamento.isNotEmpty ? opcoes.cartoesPagamento.first : null;
+            final opcoes = snapshot.data!;
+            final categorias = _categoriasDisponiveis(opcoes);
+            final contas = _contasDisponiveis(opcoes);
+            final contasDestino = _contasDestinoDisponiveis(opcoes);
+            final categoriaAtual = _categoriaSelecionadaAtual(opcoes);
+            final contaAtual = _contaSelecionadaAtual(opcoes);
+            final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
+            _categoriaEfetivaAtual = categoriaAtual;
+            _contaEfetivaAtual = contaAtual;
+            _contaDestinoEfetivaAtual = contaDestinoAtual;
+            _tipoInvestimentoNome ??= 'Aplicação';
+            _cartaoSelecionado ??= opcoes.cartoesPagamento.isNotEmpty ? opcoes.cartoesPagamento.first : null;
+            _capturarSnapshotInicial(
+              categoriaAtual: categoriaAtual ?? '',
+              contaAtual: contaAtual ?? '',
+              contaDestinoAtual: contaDestinoAtual ?? '',
+            );
 
             return Padding(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
@@ -754,7 +831,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
                   OutlinedButton.icon(
                     onPressed: _selecionarData,
                     icon: const Icon(Icons.calendar_today_outlined),
-                    label: Text('Data: ${_data.toIso8601String().substring(0, 10)}'),
+                    label: Text('Data: ${_formatarDataDiaMesAno(_data)}'),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(

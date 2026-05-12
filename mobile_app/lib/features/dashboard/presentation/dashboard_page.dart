@@ -266,10 +266,10 @@ class _DashboardBody extends StatelessWidget {
               percentualOrcamento: item.percentualOrcamento,
             ))
         .toList();
-    final categoriasDisponiveis = <String>[
+    final categoriasDisponiveis = {
       'Todas',
       ...data.categoriasDestaque.map((item) => item.nome),
-    ].toSet().toList();
+    }.toList();
     final categoriaEfetiva = categoriaSelecionada ?? 'Todas';
     final evolucaoCategoria = data.serieCategoria
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
