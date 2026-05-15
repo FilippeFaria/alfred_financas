@@ -365,6 +365,7 @@ class AlfredApiClient {
     String? subText,
     required String postedAt,
     required String notificationKey,
+    bool ignorarDuplicata = false,
   }) async {
     try {
       final response = await _dio.post(
@@ -378,6 +379,7 @@ class AlfredApiClient {
           'sub_text': subText,
           'posted_at': postedAt,
           'notification_key': notificationKey,
+          'ignorar_duplicata': ignorarDuplicata,
         },
       );
       return NotificacaoTransacaoResponseDto.fromJson(_asMap(response.data));

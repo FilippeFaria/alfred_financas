@@ -77,6 +77,7 @@ class InsightsRepository {
     String? subText,
     required String postedAt,
     required String notificationKey,
+    bool ignorarDuplicata = false,
   }) {
     return _apiClient.postAiNotificacaoTransacao(
       packageName: packageName,
@@ -86,6 +87,7 @@ class InsightsRepository {
       subText: subText,
       postedAt: postedAt,
       notificationKey: notificationKey,
+      ignorarDuplicata: ignorarDuplicata,
     );
   }
 }

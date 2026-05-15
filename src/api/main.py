@@ -384,6 +384,12 @@ def post_ai_notificacao_transacao(
         duplicate=resultado.duplicate,
         pending_transaction_id=resultado.pending_transaction_id,
         confidence=resultado.confidence,
+        duplicate_reason=resultado.duplicate_reason,
+        transacao_sugerida=(
+            TransacaoSugeridaResponse(**resultado.transacao_sugerida)
+            if resultado.transacao_sugerida is not None
+            else None
+        ),
         message=resultado.message,
     )
 

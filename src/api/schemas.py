@@ -277,6 +277,7 @@ class NotificacaoTransacaoRequest(BaseModel):
     sub_text: str | None = None
     posted_at: str
     notification_key: str = Field(min_length=1)
+    ignorar_duplicata: bool = False
 
 
 class NotificacaoTransacaoResponse(BaseModel):
@@ -284,4 +285,6 @@ class NotificacaoTransacaoResponse(BaseModel):
     duplicate: bool = False
     pending_transaction_id: str | None = None
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    duplicate_reason: str | None = None
+    transacao_sugerida: TransacaoSugeridaResponse | None = None
     message: str

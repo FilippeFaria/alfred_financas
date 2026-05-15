@@ -28,6 +28,8 @@ class NotificacaoTransacaoResultado:
     pending_transaction_id: str | None = None
     confidence: float | None = None
     message: str = ""
+    duplicate_reason: str | None = None
+    transacao_sugerida: dict | None = None
 
 
 def sugerir_transacao_por_texto(texto: str, *, data_referencia: datetime | None = None) -> SugestaoTransacaoResultado:
@@ -84,6 +86,7 @@ def criar_pendencia_por_audio(caminho_arquivo: str, *, data_referencia: datetime
 def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResultado:
     notificacao = normalizar_notificacao(payload)
     deduplicador = NotificationDeduplicator()
+    ignorar_duplicata = bool(payload.get("ignorar_duplicata", False))
 
     if not eh_notificacao_financeira(notificacao):
         return NotificacaoTransacaoResultado(
@@ -138,11 +141,13 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         nome_estabelecimento=nome_final,
         posted_at_iso=data_postada_iso,
     )
-    if duplicate_check.is_duplicate:
+    if duplicate_check.is_duplicate and not ignorar_duplicata:
         return NotificacaoTransacaoResultado(
             created=False,
             duplicate=True,
             message=duplicate_check.reason or "Notificacao duplicada ignorada.",
+            duplicate_reason=duplicate_check.reason,
+            transacao_sugerida=sugestao_payload,
         )
 
     sugestao_payload["source"] = "android_notification"
@@ -179,5 +184,11 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         duplicate=False,
         pending_transaction_id=pendencia.id,
         confidence=float(resultado.confianca),
-        message="Transacao pendente criada com sucesso",
+        message=(
+            "Transacao pendente criada com sucesso"
+            if not duplicate_check.is_duplicate
+            else "Transacao pendente criada mesmo com alerta de duplicidade."
+        ),
+        duplicate_reason=duplicate_check.reason if duplicate_check.is_duplicate else None,
+        transacao_sugerida=sugestao_payload,
     )
