@@ -87,6 +87,7 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
     notificacao = normalizar_notificacao(payload)
     deduplicador = NotificationDeduplicator()
     ignorar_duplicata = bool(payload.get("ignorar_duplicata", False))
+    data_criacao_pendencia_iso = datetime.now().isoformat(timespec="seconds")
 
     if not eh_notificacao_financeira(notificacao):
         return NotificacaoTransacaoResultado(
@@ -115,6 +116,9 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         sugestao_payload["data"] = data_postada_iso
     if sugestao_payload.get("valor") in (None, "", 0):
         sugestao_payload["valor"] = valor_heuristico
+
+    # Em capturas por notificacao, a transacao usa o horario de criacao da pendencia.
+    sugestao_payload["data"] = data_criacao_pendencia_iso
 
     valor_final = sugestao_payload.get("valor")
     nome_final = str(sugestao_payload.get("nome") or nome_heuristico or "").strip()
