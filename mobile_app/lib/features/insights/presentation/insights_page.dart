@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../core/notifications/local_notification_service.dart';
@@ -574,8 +575,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           _audioPcmBuffer.addAll(chunk);
         });
       } else {
+        final tempDir = await getTemporaryDirectory();
+        final caminhoAudio =
+            '${tempDir.path}/alfred_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         await _audioRecorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: caminhoAudio,
         );
       }
 
