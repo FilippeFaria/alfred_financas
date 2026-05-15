@@ -151,9 +151,18 @@ class TransactionRepository:
     def get_by_legacy_id(self, *, user_id: UUID, legacy_id: int) -> list[Transaction]:
         return (
             self.db.query(Transaction)
+            .options(joinedload(Transaction.account), joinedload(Transaction.category))
             .filter(Transaction.user_id == user_id, Transaction.legacy_id == legacy_id)
             .order_by(Transaction.data.asc())
             .all()
+        )
+
+    def get_by_row_id(self, *, user_id: UUID, row_id: UUID) -> Transaction | None:
+        return (
+            self.db.query(Transaction)
+            .options(joinedload(Transaction.account), joinedload(Transaction.category))
+            .filter(Transaction.user_id == user_id, Transaction.id == row_id)
+            .one_or_none()
         )
 
     def update_flags_by_legacy_id(

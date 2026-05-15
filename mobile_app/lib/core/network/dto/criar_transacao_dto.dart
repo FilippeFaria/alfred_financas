@@ -11,6 +11,9 @@ class CriarTransacaoRequestDto {
     this.desconsiderar = false,
     this.parcelas,
     this.ignorarDuplicata = false,
+    this.contaDestino,
+    this.linhaId,
+    this.atualizarApenasLinha = false,
   });
 
   final String nome;
@@ -24,6 +27,9 @@ class CriarTransacaoRequestDto {
   final bool desconsiderar;
   final int? parcelas;
   final bool ignorarDuplicata;
+  final String? contaDestino;
+  final String? linhaId;
+  final bool atualizarApenasLinha;
 
   Map<String, dynamic> toJson() {
     return {
@@ -38,6 +44,9 @@ class CriarTransacaoRequestDto {
       'desconsiderar': desconsiderar,
       'parcelas': parcelas,
       'ignorar_duplicata': ignorarDuplicata,
+      'conta_destino': contaDestino,
+      'linha_id': linhaId,
+      'atualizar_apenas_linha': atualizarApenasLinha,
     };
   }
 }

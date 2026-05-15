@@ -44,6 +44,7 @@ from src.api.services import (
     atualizar_transacao_por_id,
     criar_transacao,
     excluir_transacao_por_id,
+    listar_transacoes_por_id,
     gerar_insights_basicos,
     listar_categorias,
     listar_transacoes_paginado,
@@ -140,6 +141,7 @@ def post_transacoes(
         valor=payload.valor,
         categoria=payload.categoria,
         conta=payload.conta,
+        conta_destino=payload.conta_destino,
         data=payload.data,
         obs=payload.obs,
         tag=payload.tag,
@@ -157,6 +159,14 @@ def delete_transacao(
     return excluir_transacao_por_id(transacao_id)
 
 
+@app.get("/transacoes/{transacao_id}/itens", response_model=list[TransacaoResponse])
+def get_transacao_itens(
+    transacao_id: int,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> list[TransacaoResponse]:
+    return [TransacaoResponse(**item) for item in listar_transacoes_por_id(transacao_id)]
+
+
 @app.put("/transacoes/{transacao_id}", response_model=TransacaoResponse)
 def put_transacao(
     transacao_id: int,
@@ -170,6 +180,9 @@ def put_transacao(
         valor=payload.valor,
         categoria=payload.categoria,
         conta=payload.conta,
+        conta_destino=payload.conta_destino,
+        linha_id=payload.linha_id,
+        atualizar_apenas_linha=payload.atualizar_apenas_linha,
         data=payload.data,
         obs=payload.obs,
         tag=payload.tag,

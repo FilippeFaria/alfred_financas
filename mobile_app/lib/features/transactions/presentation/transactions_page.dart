@@ -58,9 +58,29 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   Future<void> _abrirEdicao(TransacaoItem item) async {
+    TransacaoItem? par;
+    try {
+      par = ref.read(transactionsNotifierProvider).items.firstWhere(
+            (e) => e.id == item.id && e.rowId != item.rowId,
+          );
+    } catch (_) {
+      par = null;
+    }
+    if (par == null && item.tipo == 'Transferência') {
+      try {
+        final itens = await ref.read(transactionsRepositoryProvider).obterTransacaoItens(item.id);
+        par = itens.firstWhere((e) => e.rowId != item.rowId);
+      } catch (_) {
+        par = null;
+      }
+    }
+    if (!mounted) return;
     final salvou = await context.push<bool>(
       '/transactions/form',
-      extra: TransactionsFormArgs(transacaoInicial: item),
+      extra: TransactionsFormArgs(
+        transacaoInicial: item,
+        transacaoComplementar: par,
+      ),
     );
     if (salvou == true && mounted) {
       await ref.read(transactionsNotifierProvider.notifier).recarregar();
@@ -254,15 +274,17 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 }
 
 class TransactionsFormArgs {
-  const TransactionsFormArgs({this.transacaoInicial});
+  const TransactionsFormArgs({this.transacaoInicial, this.transacaoComplementar});
 
   final TransacaoItem? transacaoInicial;
+  final TransacaoItem? transacaoComplementar;
 }
 
 class TransactionsFormPage extends ConsumerStatefulWidget {
-  const TransactionsFormPage({super.key, this.transacaoInicial});
+  const TransactionsFormPage({super.key, this.transacaoInicial, this.transacaoComplementar});
 
   final TransacaoItem? transacaoInicial;
+  final TransacaoItem? transacaoComplementar;
 
   @override
   ConsumerState<TransactionsFormPage> createState() => _TransactionsFormPageState();
@@ -303,6 +325,7 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
   String? _tipoInvestimentoNome;
   bool _parcelado = false;
   bool get _modoEdicao => widget.transacaoInicial != null;
+  bool get _eTransferencia => _tipo == 'Transferência';
 
   String _formatarDataDiaMesAno(DateTime data) {
     final dia = data.day.toString().padLeft(2, '0');
@@ -352,6 +375,73 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
         _data.toIso8601String() != _snapshotData;
   }
 
+  bool _alterouApenasContaTransferencia() {
+    if (!_modoEdicao || !_eTransferencia) {
+      return false;
+    }
+    if (!_temParTransferenciaCompleto()) {
+      return false;
+    }
+    final mudouConta = _contaEfetivaAtual != _snapshotConta;
+    final mudouContaDestino = _contaDestinoEfetivaAtual != _snapshotContaDestino;
+    final outrosCamposIgual =
+        _nomeController.text == _snapshotNome &&
+        _valorController.text == _snapshotValor &&
+        _obsController.text == _snapshotObs &&
+        _tipo == _snapshotTipo &&
+        _categoriaEfetivaAtual == _snapshotCategoria &&
+        _desconsiderar == _snapshotDesconsiderar &&
+        _parcelado == _snapshotParcelado &&
+        _data.toIso8601String() == _snapshotData &&
+        _cartaoSelecionado == _snapshotCartaoSelecionado &&
+        _tipoInvestimentoNome == _snapshotTipoInvestimentoNome;
+    return outrosCamposIgual && (mudouConta ^ mudouContaDestino);
+  }
+
+  List<TransacaoItem> _itensTransferenciaEdicao() {
+    return <TransacaoItem>[
+      if (widget.transacaoInicial != null) widget.transacaoInicial!,
+      if (widget.transacaoComplementar != null) widget.transacaoComplementar!,
+    ];
+  }
+
+  bool _temParTransferenciaCompleto() {
+    final itens = _itensTransferenciaEdicao();
+    return itens.any((item) => item.valor < 0) &&
+        itens.any((item) => item.valor >= 0);
+  }
+
+  TransacaoItem? _linhaDebitoTransferencia() {
+    final itens = _itensTransferenciaEdicao();
+    if (itens.isEmpty) return null;
+    return itens.firstWhere(
+      (item) => item.valor < 0,
+      orElse: () => itens.first,
+    );
+  }
+
+  TransacaoItem? _linhaCreditoTransferencia() {
+    final itens = _itensTransferenciaEdicao();
+    if (itens.isEmpty) return null;
+    return itens.firstWhere(
+      (item) => item.valor >= 0,
+      orElse: () => itens.first,
+    );
+  }
+
+  TransacaoItem? _linhaEditadaTransferencia() {
+    if (!_alterouApenasContaTransferencia()) {
+      return null;
+    }
+    if (_contaEfetivaAtual != _snapshotConta) {
+      return _linhaDebitoTransferencia();
+    }
+    if (_contaDestinoEfetivaAtual != _snapshotContaDestino) {
+      return _linhaCreditoTransferencia();
+    }
+    return null;
+  }
+
   Future<bool> _confirmarDescarteSeNecessario() async {
     if (_isSaving || !_temAlteracoesRelevantes()) return true;
     final descartar = await showDialog<bool>(
@@ -386,9 +476,19 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
       _obsController.text = tx.obs;
       _tipo = tx.tipo;
       _categoria = tx.categoria;
-      _conta = tx.conta;
       _desconsiderar = tx.desconsiderar;
       _data = _parseDataBr(tx.data) ?? DateTime.now();
+      if (tx.tipo == 'Transferência') {
+        if (tx.valor < 0) {
+          _conta = tx.conta;
+          _contaDestino = widget.transacaoComplementar?.conta ?? tx.conta;
+        } else {
+          _conta = widget.transacaoComplementar?.conta ?? tx.conta;
+          _contaDestino = tx.conta;
+        }
+      } else {
+        _conta = tx.conta;
+      }
     }
 
     _nomeController.addListener(_marcarAlteracao);
@@ -524,18 +624,94 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
       final contaAtual = _contaSelecionadaAtual(opcoes);
       final contaDestinoAtual = _contaDestinoSelecionadaAtual(opcoes);
 
-      if (_modoEdicao && (_tipo == 'Transferência' || _tipo == 'Investimento' || _tipo == 'Pagamento de Cartão')) {
+      if (_modoEdicao && (_tipo == 'Investimento' || _tipo == 'Pagamento de Cartão')) {
         throw Exception('Edição para este tipo ainda não está disponível. Exclua e recrie.');
       }
 
-      if (_tipo == 'Transferência' || _tipo == 'Investimento') {
+      if (_tipo == 'Transferência') {
+        if (contaAtual == null || contaDestinoAtual == null || contaDestinoAtual == contaAtual) {
+          throw Exception('Selecione conta origem e destino diferentes.');
+        }
+
+        final contaOrigem = contaAtual;
+        final contaDestino = contaDestinoAtual;
+        const nome = 'Transferência';
+        const categoria = 'Transferência';
+
+        if (_modoEdicao && _alterouApenasContaTransferencia()) {
+          final linhaEditada = _linhaEditadaTransferencia();
+          if (linhaEditada != null && linhaEditada.rowId != null) {
+            await notifier.editarTransacao(
+              widget.transacaoInicial!.id,
+              CadastroTransacaoInput(
+                nome: nome,
+                tipo: _tipo,
+                valor: linhaEditada.valor < 0 ? -valorBruto : valorBruto,
+                categoria: categoria,
+                conta: linhaEditada.valor < 0 ? contaOrigem : contaDestino,
+                contaDestino: contaDestino,
+                linhaId: linhaEditada.rowId,
+                atualizarApenasLinha: true,
+                data: _data,
+                obs: _obsController.text.trim(),
+              ),
+            );
+          } else {
+            await notifier.editarTransacao(
+              widget.transacaoInicial!.id,
+              CadastroTransacaoInput(
+                nome: nome,
+                tipo: _tipo,
+                valor: valorBruto,
+                categoria: categoria,
+                conta: contaOrigem,
+                contaDestino: contaDestino,
+                linhaId: widget.transacaoInicial?.rowId,
+                atualizarApenasLinha: false,
+                data: _data,
+                obs: _obsController.text.trim(),
+              ),
+            );
+          }
+        } else if (_modoEdicao) {
+          await notifier.editarTransacao(
+            widget.transacaoInicial!.id,
+            CadastroTransacaoInput(
+              nome: nome,
+              tipo: _tipo,
+              valor: valorBruto,
+              categoria: categoria,
+              conta: contaOrigem,
+              contaDestino: contaDestino,
+              linhaId: widget.transacaoInicial?.rowId,
+              atualizarApenasLinha: false,
+              data: _data,
+              obs: _obsController.text.trim(),
+            ),
+          );
+        } else {
+          await notifier.cadastrarTransacao(
+            CadastroTransacaoInput(
+              nome: nome,
+              tipo: _tipo,
+              valor: valorBruto,
+              categoria: categoria,
+              conta: contaOrigem,
+              contaDestino: contaDestino,
+              data: _data,
+              obs: _obsController.text.trim(),
+            ),
+            ignorarDuplicata: ignorarDuplicata,
+          );
+        }
+      } else if (_tipo == 'Investimento') {
         if (contaAtual == null || contaDestinoAtual == null || contaDestinoAtual == contaAtual) {
           throw Exception('Selecione conta origem e destino diferentes.');
         }
         final contaOrigem = contaAtual;
         final contaDestino = contaDestinoAtual;
-        final nome = _tipo == 'Investimento' ? (_tipoInvestimentoNome ?? 'Aplicação') : 'Transferência';
-        final categoria = _tipo == 'Transferência' ? 'Transferência' : (categoriaAtual ?? '');
+        final nome = _tipoInvestimentoNome ?? 'Aplicação';
+        final categoria = categoriaAtual ?? '';
         await notifier.cadastrarTransacao(
           CadastroTransacaoInput(
             nome: nome,
@@ -566,42 +742,31 @@ class _TransactionsFormPageState extends ConsumerState<TransactionsFormPage> {
         }
         final cartao = _cartaoSelecionado!;
         if (opcoes.cartoesPagamentoTransferencia.contains(cartao)) {
-        await notifier.cadastrarTransacao(
-          CadastroTransacaoInput(
-            nome: 'Pagamento $cartao',
-            tipo: 'Transferência',
-            valor: -valorBruto,
-            categoria: 'Transferência',
-            conta: contaAtual ?? 'Itaú CC',
-            data: _data,
-            obs: _obsController.text.trim(),
-          ),
-          ignorarDuplicata: ignorarDuplicata,
-        );
           await notifier.cadastrarTransacao(
             CadastroTransacaoInput(
               nome: 'Pagamento $cartao',
-            tipo: 'Transferência',
-            valor: valorBruto,
-            categoria: 'Transferência',
-            conta: cartao,
-            data: _data,
-            obs: _obsController.text.trim(),
-          ),
+              tipo: 'Transferência',
+              valor: valorBruto,
+              categoria: 'Transferência',
+              conta: contaAtual ?? 'Itaú CC',
+              contaDestino: cartao,
+              data: _data,
+              obs: _obsController.text.trim(),
+            ),
             ignorarDuplicata: ignorarDuplicata,
-        );
+          );
         } else {
           await notifier.cadastrarTransacao(
             CadastroTransacaoInput(
-            nome: 'Pagamento $cartao',
-            tipo: 'Despesa',
-            valor: -valorBruto,
-            categoria: 'Outros',
-            conta: contaAtual ?? 'Itaú CC',
-            data: _data,
-            obs: _obsController.text.trim(),
-            desconsiderar: true,
-          ),
+              nome: 'Pagamento $cartao',
+              tipo: 'Despesa',
+              valor: -valorBruto,
+              categoria: 'Outros',
+              conta: contaAtual ?? 'Itaú CC',
+              data: _data,
+              obs: _obsController.text.trim(),
+              desconsiderar: true,
+            ),
             ignorarDuplicata: ignorarDuplicata,
           );
         }

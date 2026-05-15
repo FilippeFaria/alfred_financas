@@ -8,6 +8,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/network/dto/categorias_dto.dart';
 import '../../../core/network/dto/criar_transacao_dto.dart';
 import '../../../core/network/dto/transacao_dto.dart';
+import '../../dashboard/data/dashboard_repository.dart';
 import 'transaction_models.dart';
 
 const _filtrosKey = 'transactions_filters_v2';
@@ -161,6 +162,9 @@ class CadastroTransacaoInput {
     this.tag,
     this.desconsiderar = false,
     this.parcelas,
+    this.contaDestino,
+    this.linhaId,
+    this.atualizarApenasLinha = false,
   });
 
   final String nome;
@@ -173,6 +177,9 @@ class CadastroTransacaoInput {
   final String? tag;
   final bool desconsiderar;
   final int? parcelas;
+  final String? contaDestino;
+  final String? linhaId;
+  final bool atualizarApenasLinha;
 }
 
 class TransactionsRepository {
@@ -308,6 +315,7 @@ class TransactionsRepository {
         desconsiderar: input.desconsiderar,
         parcelas: input.parcelas,
         ignorarDuplicata: ignorarDuplicata,
+        contaDestino: input.contaDestino,
       ),
     );
   }
@@ -326,6 +334,9 @@ class TransactionsRepository {
         tag: input.tag,
         desconsiderar: input.desconsiderar,
         parcelas: input.parcelas,
+        contaDestino: input.contaDestino,
+        linhaId: input.linhaId,
+        atualizarApenasLinha: input.atualizarApenasLinha,
       ),
     );
   }
@@ -346,9 +357,15 @@ class TransactionsRepository {
     );
   }
 
+  Future<List<TransacaoItem>> obterTransacaoItens(int id) async {
+    final itens = await _apiClient.getTransacaoItens(id);
+    return itens.map(_mapDtoToItem).toList();
+  }
+
   TransacaoItem _mapDtoToItem(TransacaoDto item) {
     return TransacaoItem(
       id: item.id,
+      rowId: item.rowId,
       nome: item.nome,
       tipo: item.tipo,
       valor: item.valor,
@@ -450,10 +467,11 @@ class TransactionsState {
 }
 
 class TransactionsNotifier extends StateNotifier<TransactionsState> {
-  TransactionsNotifier(this._repository) : super(TransactionsState());
+  TransactionsNotifier(this._repository, this._ref) : super(TransactionsState());
 
   static const int _limite = 30;
   final TransactionsRepository _repository;
+  final Ref _ref;
   CadastroTransacaoOptions? _opcoesCadastroCache;
   Future<CadastroTransacaoOptions>? _opcoesCadastroFuture;
 
@@ -542,16 +560,19 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       ignorarDuplicata: ignorarDuplicata,
     );
     _precarregarOpcoesCadastro(forcar: true);
+    _invalidarCachesGlobais();
     await recarregar();
   }
 
   Future<void> editarTransacao(int id, CadastroTransacaoInput input) async {
     await _repository.editarTransacao(id, input);
+    _invalidarCachesGlobais();
     await recarregar();
   }
 
   Future<void> excluirTransacao(int id) async {
     await _repository.excluirTransacao(id);
+    _invalidarCachesGlobais();
     await recarregar();
   }
 
@@ -565,7 +586,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       desconsiderar: desconsiderar,
       grandeTransacao: grandeTransacao,
     );
+    _invalidarCachesGlobais();
     await recarregar();
+  }
+
+  void _invalidarCachesGlobais() {
+    _ref.read(dashboardRepositoryProvider).clearCache();
+    _ref.invalidate(dashboardSnapshotProvider);
   }
 
   void _precarregarOpcoesCadastro({bool forcar = false}) {
@@ -583,7 +610,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
 final transactionsNotifierProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  return TransactionsNotifier(ref.watch(transactionsRepositoryProvider));
+  return TransactionsNotifier(ref.watch(transactionsRepositoryProvider), ref);
 });
 
 

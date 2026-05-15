@@ -22,12 +22,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extra = state.extra;
           TransacaoItem? transacaoInicial;
+          TransacaoItem? transacaoComplementar;
           if (extra is TransactionsFormArgs) {
             transacaoInicial = extra.transacaoInicial;
+            transacaoComplementar = extra.transacaoComplementar;
           } else if (extra is TransacaoItem) {
             transacaoInicial = extra;
           }
-          return TransactionsFormPage(transacaoInicial: transacaoInicial);
+          return TransactionsFormPage(
+            transacaoInicial: transacaoInicial,
+            transacaoComplementar: transacaoComplementar,
+          );
         },
       ),
       ShellRoute(

@@ -8,6 +8,8 @@ import json
 import logging
 import os
 from pathlib import Path
+import unicodedata
+from uuid import UUID
 
 import pandas as pd
 
@@ -51,10 +53,16 @@ def _uuid_to_legacy_int(value) -> int:
     return int(value.int % 2_000_000_000)
 
 
+def _normalizar_tipo(tipo: str) -> str:
+    base = unicodedata.normalize("NFKD", str(tipo or "").strip().lower())
+    return "".join(ch for ch in base if not unicodedata.combining(ch))
+
+
 def _map_tx_to_api_dict(tx) -> dict:
     legacy_id = tx.legacy_id if tx.legacy_id is not None else _uuid_to_legacy_int(tx.id)
     return {
         "id": int(legacy_id),
+        "row_id": str(tx.id),
         "nome": tx.nome,
         "tipo": tx.tipo,
         "valor": float(tx.valor),
@@ -220,6 +228,7 @@ def mapear_linha_para_transacao(linha: dict) -> dict:
     data_formatada = data_normalizada.strftime(DATE_FORMAT) if pd.notna(data_normalizada) else ""
     return {
         "id": int(linha.get("id", 0)),
+        "row_id": str(linha.get("row_id")) if linha.get("row_id") is not None else None,
         "nome": str(linha.get("Nome", "")),
         "tipo": str(linha.get("Tipo", "")),
         "valor": float(linha.get("Valor", 0.0)),
@@ -321,6 +330,7 @@ def criar_transacao(
     valor: float,
     categoria: str,
     conta: str,
+    conta_destino: str | None = None,
     data: datetime,
     obs: str = "",
     tag: str | None = None,
@@ -333,6 +343,13 @@ def criar_transacao(
         raise ApiServiceError(code="DADOS_INVALIDOS", message="Despesa deve possuir valor negativo.", status_code=400)
     if tipo in {"Receita", "Investimento"} and valor < 0:
         raise ApiServiceError(code="DADOS_INVALIDOS", message=f"{tipo} deve possuir valor positivo.", status_code=400)
+    tipo_normalizado = _normalizar_tipo(tipo)
+    if tipo_normalizado == "transferencia" and not (conta_destino and conta_destino.strip()):
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="conta_destino obrigatoria para cadastrar transferencia.",
+            status_code=400,
+        )
 
     try:
         with SessionLocal() as db:
@@ -340,6 +357,7 @@ def criar_transacao(
             account_repo = AccountRepository(db)
             category_repo = CategoryRepository(db)
             tx_repo = TransactionRepository(db)
+            item = None
 
             user = user_repo.get_or_create_default()
             account = account_repo.get_or_create(user_id=user.id, nome=conta)
@@ -347,8 +365,95 @@ def criar_transacao(
             legacy_id = tx_repo.get_next_legacy_id(user_id=user.id)
             total_parcelas = int(parcelas) if parcelas and parcelas > 1 else 1
             valor_decimal = Decimal(str(valor))
-            item = None
+            itens_criados = []
+
+            if tipo_normalizado == "transferencia":
+                conta_destino_nome = conta_destino.strip()
+                if conta_destino_nome == conta:
+                    raise ApiServiceError(
+                        code="DADOS_INVALIDOS",
+                        message="Conta origem e destino devem ser diferentes para transferencia.",
+                        status_code=400,
+                    )
+                if total_parcelas > 1:
+                    raise ApiServiceError(
+                        code="DADOS_INVALIDOS",
+                        message="Transferencia parcelada nao e suportada.",
+                        status_code=400,
+                    )
+                valor_transferencia = abs(valor_decimal)
+                if valor_transferencia <= 0:
+                    raise ApiServiceError(
+                        code="DADOS_INVALIDOS",
+                        message="Transferencia deve possuir valor maior que zero.",
+                        status_code=400,
+                    )
+
+                account_destino = account_repo.get_or_create(user_id=user.id, nome=conta_destino_nome)
+                data_item = pd.Timestamp(data).to_pydatetime()
+                if not ignorar_duplicata:
+                    duplicata_origem = tx_repo.exists_duplicate(
+                        user_id=user.id,
+                        account_id=account.id,
+                        valor=-valor_transferencia,
+                        data=data_item,
+                    )
+                    duplicata_destino = tx_repo.exists_duplicate(
+                        user_id=user.id,
+                        account_id=account_destino.id,
+                        valor=valor_transferencia,
+                        data=data_item,
+                    )
+                    if duplicata_origem or duplicata_destino:
+                        raise ApiServiceError(
+                            code="DUPLICATA_TRANSACAO",
+                            message="Transferencia duplicada detectada para valor, contas e data.",
+                            status_code=409,
+                            details={
+                                "nome": nome,
+                                "tipo": tipo,
+                                "valor": float(valor_transferencia),
+                                "conta": conta,
+                                "conta_destino": conta_destino_nome,
+                                "data": data_item.isoformat(),
+                            },
+                        )
+
+                item_debito = tx_repo.create(
+                    user_id=user.id,
+                    account_id=account.id,
+                    category_id=cat.id,
+                    legacy_id=legacy_id,
+                    nome=nome,
+                    tipo=tipo,
+                    valor=-valor_transferencia,
+                    data=data_item,
+                    observacao=obs or None,
+                    tag=tag,
+                    desconsiderar=desconsiderar,
+                    parcela=None,
+                    data_origem=None,
+                )
+                item_credito = tx_repo.create(
+                    user_id=user.id,
+                    account_id=account_destino.id,
+                    category_id=cat.id,
+                    legacy_id=legacy_id,
+                    nome=nome,
+                    tipo=tipo,
+                    valor=valor_transferencia,
+                    data=data_item,
+                    observacao=obs or None,
+                    tag=tag,
+                    desconsiderar=desconsiderar,
+                    parcela=None,
+                    data_origem=None,
+                )
+                itens_criados = [item_debito, item_credito]
+
             for i in range(total_parcelas):
+                if itens_criados:
+                    break
                 data_item = (pd.Timestamp(data) + pd.DateOffset(months=i)).to_pydatetime()
                 if not ignorar_duplicata and tx_repo.exists_duplicate(
                     user_id=user.id,
@@ -385,11 +490,14 @@ def criar_transacao(
                     parcela=parcela_item,
                     data_origem=data_origem_item,
                 )
+                itens_criados.append(item)
             db.commit()
-            if item is None:
+            if not itens_criados:
                 raise ApiServiceError(code="DADOS_INVALIDOS", message="Nenhuma transacao criada.", status_code=400)
-            db.refresh(item)
-            resultado = _map_tx_to_api_dict(item)
+            for item_criado in itens_criados:
+                db.refresh(item_criado)
+            resultados = [_map_tx_to_api_dict(item_criado) for item_criado in itens_criados]
+            resultado = resultados[-1]
     except ApiServiceError:
         raise
     except Exception as exc:
@@ -405,21 +513,24 @@ def criar_transacao(
     if DUAL_WRITE_ENABLED:
         try:
             df = carregar_transacoes_df_sheets()
-            novo = pd.DataFrame([{
-                "id": resultado["id"],
-                "Nome": resultado["nome"],
-                "Tipo": resultado["tipo"],
-                "Valor": resultado["valor"],
-                "Categoria": resultado["categoria"],
-                "Conta": resultado["conta"],
-                "Data": resultado["data"],
-                "Obs": resultado["obs"],
-                "TAG": resultado["tag"],
-                "desconsiderar": resultado["desconsiderar"],
-                "Parcela": resultado["parcela"],
-                "Data origem": resultado["data_origem"] or "",
-                "Data Criacao": resultado["data_criacao"] or "",
-            }])
+            novo = pd.DataFrame([
+                {
+                    "id": item["id"],
+                    "Nome": item["nome"],
+                    "Tipo": item["tipo"],
+                    "Valor": item["valor"],
+                    "Categoria": item["categoria"],
+                    "Conta": item["conta"],
+                    "Data": item["data"],
+                    "Obs": item["obs"],
+                    "TAG": item["tag"],
+                    "desconsiderar": item["desconsiderar"],
+                    "Parcela": item["parcela"],
+                    "Data origem": item["data_origem"] or "",
+                    "Data Criacao": item["data_criacao"] or "",
+                }
+                for item in resultados
+            ])
             df_final = pd.concat([df, novo], ignore_index=True) if not df.empty else novo
             sheet = get_sheet(str(ROOT_PATH))
             write_sheet(sheet, _normalizar_datas(df_final))
@@ -440,6 +551,17 @@ def excluir_transacao_por_id(transacao_id: int) -> dict:
         raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao excluir transacao.", status_code=503) from exc
 
 
+def listar_transacoes_por_id(transacao_id: int) -> list[dict]:
+    try:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            itens = TransactionRepository(db).get_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+            return [_map_tx_to_api_dict(item) for item in itens]
+    except Exception as exc:
+        _log_error("postgres_read_error", error_type=type(exc).__name__, error=str(exc))
+        raise ApiServiceError(code="FALHA_POSTGRES", message="Falha ao ler transacao.", status_code=503) from exc
+
+
 def atualizar_transacao_por_id(
     transacao_id: int,
     *,
@@ -448,6 +570,9 @@ def atualizar_transacao_por_id(
     valor: float,
     categoria: str,
     conta: str,
+    conta_destino: str | None = None,
+    linha_id: str | None = None,
+    atualizar_apenas_linha: bool = False,
     data: datetime,
     obs: str = "",
     tag: str | None = None,
@@ -468,31 +593,159 @@ def atualizar_transacao_por_id(
             tx_repo = TransactionRepository(db)
 
             user = user_repo.get_or_create_default()
-            tx_repo.delete_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+            if linha_id and atualizar_apenas_linha:
+                try:
+                    row_uuid = UUID(str(linha_id))
+                except Exception as exc:
+                    _log_error(
+                        "transfer_update_fallback_full_pair",
+                        transacao_id=transacao_id,
+                        linha_id=linha_id,
+                        error_type=type(exc).__name__,
+                        error=str(exc),
+                    )
+                    row_uuid = None
 
-            account = account_repo.get_or_create(user_id=user.id, nome=conta)
-            cat = category_repo.get_or_create(user_id=user.id, nome=categoria, tipo=tipo)
-            total_parcelas = int(parcelas) if parcelas and parcelas > 1 else 1
-            item = None
-            for i in range(total_parcelas):
-                data_item = (pd.Timestamp(data) + pd.DateOffset(months=i)).to_pydatetime()
-                parcela_item = (i + 1) if total_parcelas > 1 else None
-                data_origem_item = data if total_parcelas > 1 else None
-                item = tx_repo.create(
-                    user_id=user.id,
-                    account_id=account.id,
-                    category_id=cat.id,
-                    legacy_id=transacao_id,
-                    nome=nome,
-                    tipo=tipo,
-                    valor=Decimal(str(valor)),
-                    data=data_item,
-                    observacao=obs or None,
-                    tag=tag,
-                    desconsiderar=desconsiderar,
-                    parcela=parcela_item,
-                    data_origem=data_origem_item,
-                )
+                if row_uuid is None:
+                    linha_id = None
+                    atualizar_apenas_linha = False
+                else:
+                    item = tx_repo.get_by_row_id(user_id=user.id, row_id=row_uuid)
+                    if item is None or (item.legacy_id is not None and item.legacy_id != transacao_id):
+                        _log_error(
+                            "transfer_update_fallback_full_pair",
+                            transacao_id=transacao_id,
+                            linha_id=linha_id,
+                            motivo="row_not_found_or_legacy_mismatch",
+                        )
+                        linha_id = None
+                        atualizar_apenas_linha = False
+                if atualizar_apenas_linha:
+                    account = account_repo.get_or_create(user_id=user.id, nome=conta)
+                    cat = category_repo.get_or_create(user_id=user.id, nome=categoria, tipo=tipo)
+                    item.nome = nome
+                    item.tipo = tipo
+                    item.valor = Decimal(str(valor))
+                    item.category_id = cat.id
+                    item.account_id = account.id
+                    item.data = data
+                    item.observacao = obs or None
+                    item.tag = tag
+                    item.desconsiderar = desconsiderar
+                    if parcelas and parcelas > 1:
+                        item.parcela = 1
+                        item.data_origem = data
+                    else:
+                        item.parcela = None
+                        item.data_origem = None
+            if not atualizar_apenas_linha:
+                itens_atuais = tx_repo.get_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+                if not itens_atuais:
+                    raise ApiServiceError(
+                        code="TRANSACAO_NAO_ENCONTRADA",
+                        message="Transacao nao encontrada para atualizacao.",
+                        status_code=404,
+                    )
+
+                account = account_repo.get_or_create(user_id=user.id, nome=conta)
+                cat = category_repo.get_or_create(user_id=user.id, nome=categoria, tipo=tipo)
+                total_parcelas = int(parcelas) if parcelas and parcelas > 1 else 1
+                tipo_normalizado = _normalizar_tipo(tipo)
+                eh_tipo_duplo = tipo_normalizado in {"transferencia", "investimento"}
+
+                if eh_tipo_duplo:
+                    if conta_destino is not None and conta_destino.strip():
+                        conta_destino_item = account_repo.get_or_create(user_id=user.id, nome=conta_destino.strip())
+                    elif len(itens_atuais) > 1:
+                        conta_destino_item = next((tx.account for tx in itens_atuais if tx.valor >= 0), itens_atuais[-1].account)
+                    else:
+                        raise ApiServiceError(
+                            code="DADOS_INVALIDOS",
+                            message="conta_destino obrigatoria para atualizar transferencia.",
+                            status_code=400,
+                        )
+
+                    valor_base = abs(Decimal(str(valor)))
+
+                    if len(itens_atuais) >= 2:
+                        item_debito = next((tx for tx in itens_atuais if tx.valor < 0), None)
+                        item_credito = next((tx for tx in itens_atuais if tx.valor >= 0), None)
+                        if item_debito is None or item_credito is None:
+                            itens_ordenados = sorted(itens_atuais, key=lambda tx: (tx.valor >= 0, str(tx.id)))
+                            item_debito = itens_ordenados[0]
+                            item_credito = itens_ordenados[-1]
+
+                        item = item_debito
+                        for tx in itens_atuais:
+                            tx.nome = nome
+                            tx.tipo = tipo
+                            tx.category_id = cat.id
+                            tx.data = data
+                            tx.observacao = obs or None
+                            tx.tag = tag
+                            tx.desconsiderar = desconsiderar
+                            tx.parcela = None
+                            tx.data_origem = None
+
+                        item_debito.account_id = account.id
+                        item_debito.valor = -valor_base
+                        item_credito.account_id = conta_destino_item.id
+                        item_credito.valor = valor_base
+                    else:
+                        tx_repo.delete_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+                        item_debito = tx_repo.create(
+                            user_id=user.id,
+                            account_id=account.id,
+                            category_id=cat.id,
+                            legacy_id=transacao_id,
+                            nome=nome,
+                            tipo=tipo,
+                            valor=-valor_base,
+                            data=data,
+                            observacao=obs or None,
+                            tag=tag,
+                            desconsiderar=desconsiderar,
+                            parcela=None,
+                            data_origem=None,
+                        )
+                        tx_repo.create(
+                            user_id=user.id,
+                            account_id=conta_destino_item.id,
+                            category_id=cat.id,
+                            legacy_id=transacao_id,
+                            nome=nome,
+                            tipo=tipo,
+                            valor=valor_base,
+                            data=data,
+                            observacao=obs or None,
+                            tag=tag,
+                            desconsiderar=desconsiderar,
+                            parcela=None,
+                            data_origem=None,
+                        )
+                        item = item_debito
+                else:
+                    tx_repo.delete_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
+                    item = None
+                    for i in range(total_parcelas):
+                        data_item = (pd.Timestamp(data) + pd.DateOffset(months=i)).to_pydatetime()
+                        parcela_item = (i + 1) if total_parcelas > 1 else None
+                        data_origem_item = data if total_parcelas > 1 else None
+                        item = tx_repo.create(
+                            user_id=user.id,
+                            account_id=account.id,
+                            category_id=cat.id,
+                            legacy_id=transacao_id,
+                            nome=nome,
+                            tipo=tipo,
+                            valor=Decimal(str(valor)),
+                            data=data_item,
+                            observacao=obs or None,
+                            tag=tag,
+                            desconsiderar=desconsiderar,
+                            parcela=parcela_item,
+                            data_origem=data_origem_item,
+                        )
             db.commit()
             if item is None:
                 raise ApiServiceError(code="DADOS_INVALIDOS", message="Nenhuma transacao atualizada.", status_code=400)

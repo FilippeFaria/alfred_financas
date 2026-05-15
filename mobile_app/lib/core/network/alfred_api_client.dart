@@ -334,6 +334,16 @@ class AlfredApiClient {
     }
   }
 
+  Future<List<TransacaoDto>> getTransacaoItens(int id) async {
+    try {
+      final response = await _dio.get('/transacoes/$id/itens');
+      final list = _asList(response.data);
+      return list.map((item) => TransacaoDto.fromJson(_asMap(item))).toList();
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
   Future<List<PendingTransactionDto>> getPendenciasIa({String status = 'pending'}) async {
     try {
       final response = await _dio.get(

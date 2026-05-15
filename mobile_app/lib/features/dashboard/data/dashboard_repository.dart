@@ -60,6 +60,10 @@ class DashboardRepository {
   final AlfredApiClient _apiClient;
   final Map<String, DashboardSnapshot> _cache = {};
 
+  void clearCache() {
+    _cache.clear();
+  }
+
   String _cacheKey(DashboardFilters filtros, String? categoria, int mesesHistorico) {
     return [
       filtros.anomeReferencia?.toString() ?? 'latest',

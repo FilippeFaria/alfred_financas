@@ -17,6 +17,7 @@ class SaldoResponse(SaldoContaResponse):
 
 class TransacaoResponse(BaseModel):
     id: int
+    row_id: Optional[str] = None
     nome: str
     tipo: str
     valor: float
@@ -37,6 +38,7 @@ class CriarTransacaoRequest(BaseModel):
     valor: float
     categoria: str = Field(min_length=1)
     conta: str = Field(min_length=1)
+    conta_destino: Optional[str] = None
     data: datetime
     obs: str = ""
     tag: Optional[str] = None
@@ -65,6 +67,9 @@ class AtualizarTransacaoRequest(BaseModel):
     valor: float
     categoria: str = Field(min_length=1)
     conta: str = Field(min_length=1)
+    conta_destino: Optional[str] = None
+    linha_id: Optional[str] = None
+    atualizar_apenas_linha: bool = False
     data: datetime
     obs: str = ""
     tag: Optional[str] = None

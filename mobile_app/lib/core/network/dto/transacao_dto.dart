@@ -1,6 +1,7 @@
 class TransacaoDto {
   TransacaoDto({
     required this.id,
+    this.rowId,
     required this.nome,
     required this.tipo,
     required this.valor,
@@ -13,6 +14,7 @@ class TransacaoDto {
   });
 
   final int id;
+  final String? rowId;
   final String nome;
   final String tipo;
   final double valor;
@@ -26,6 +28,7 @@ class TransacaoDto {
   factory TransacaoDto.fromJson(Map<String, dynamic> json) {
     return TransacaoDto(
       id: (json['id'] as num?)?.toInt() ?? 0,
+      rowId: json['row_id']?.toString(),
       nome: (json['nome'] ?? '').toString(),
       tipo: (json['tipo'] ?? '').toString(),
       valor: (json['valor'] as num?)?.toDouble() ?? 0,

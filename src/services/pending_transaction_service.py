@@ -143,6 +143,7 @@ def confirmar_transacao_pendente(
             valor=float(payload_base["valor"]),
             categoria=str(payload_base["categoria"]),
             conta=str(payload_base["conta"]),
+            conta_destino=payload_base.get("conta_destino"),
             data=_parse_data_transacao(payload_base["data"]),
             obs=str(payload_base.get("obs") or ""),
             tag=payload_base.get("tag"),

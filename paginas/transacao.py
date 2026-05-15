@@ -397,6 +397,24 @@ def adicionar_transferencia(df, opcao, path="."):
             }
             return
 
+        if tipo == "Transferência":
+            salvou_transferencia = salvar_transacao_api(
+                nome=nome,
+                tipo=tipo,
+                valor=valor,
+                categoria=categoria,
+                conta=conta_origem,
+                conta_destino=conta_destino,
+                data=datetime.combine(data, datetime.min.time()),
+                obs=obs,
+                tag=tag,
+                desconsiderar=False,
+                recarregar_df=True,
+            )
+            if salvou_transferencia:
+                preparar_confirmacao_salvamento()
+            return
+
         salvou_debito = salvar_transacao_api(
             nome=nome,
             tipo=tipo,
@@ -453,6 +471,25 @@ def adicionar_transferencia(df, opcao, path="."):
 
         def confirmar_transferencia_callback():
             dados = st.session_state.dados_transferencia_form
+            if dados["tipo"] == "Transferência":
+                salvou_transferencia = salvar_transacao_api(
+                    nome=dados["nome"],
+                    tipo=dados["tipo"],
+                    valor=dados["valor"],
+                    categoria=dados["categoria"],
+                    conta=dados["conta_origem"],
+                    conta_destino=dados["conta_destino"],
+                    data=datetime.combine(dados["data"], datetime.min.time()),
+                    obs=dados["obs"],
+                    tag=dados["tag"],
+                    desconsiderar=False,
+                    ignorar_duplicata=True,
+                    recarregar_df=True,
+                )
+                if salvou_transferencia:
+                    preparar_confirmacao_salvamento()
+                return
+
             salvou_debito = salvar_transacao_api(
                 nome=dados["nome"],
                 tipo=dados["tipo"],
@@ -540,34 +577,22 @@ def adicionar_pagamento_cartao(df, path="."):
             transacao_id = ids_por_cartao[cartao]
 
             if cartao in CARTOES_PAGAMENTO_TRANSFERENCIA:
-                lancamentos.extend([
-                    {
-                        "id": transacao_id,
-                        "nome": nome,
-                        "tipo": "Transferência",
-                        "valor": -valor,
-                        "categoria": "Transferência",
-                        "conta": conta_origem,
-                        "data": data_lancamento,
-                        "obs": "",
-                        "tag": "",
-                        "desconsiderar": False,
-                        "adicionar_transferencia": True,
-                    },
+                lancamentos.append(
                     {
                         "id": transacao_id,
                         "nome": nome,
                         "tipo": "Transferência",
                         "valor": valor,
                         "categoria": "Transferência",
-                        "conta": cartao,
+                        "conta": conta_origem,
+                        "conta_destino": cartao,
                         "data": data_lancamento,
                         "obs": "",
                         "tag": "",
                         "desconsiderar": False,
                         "adicionar_transferencia": True,
                     },
-                ])
+                )
             elif cartao in CARTOES_PAGAMENTO_DESPESA:
                 lancamentos.append(
                     {
@@ -590,12 +615,27 @@ def adicionar_pagamento_cartao(df, path="."):
     def obter_duplicatas_pagamento(lancamentos):
         duplicatas_encontradas = []
         for lancamento in lancamentos:
-            duplicatas = verificar_duplicata(
-                df,
-                lancamento["valor"],
-                lancamento["conta"],
-                lancamento["data"],
-            )
+            if lancamento.get("conta_destino"):
+                duplicatas_origem = verificar_duplicata(
+                    df,
+                    -abs(lancamento["valor"]),
+                    lancamento["conta"],
+                    lancamento["data"],
+                )
+                duplicatas_destino = verificar_duplicata(
+                    df,
+                    abs(lancamento["valor"]),
+                    lancamento["conta_destino"],
+                    lancamento["data"],
+                )
+                duplicatas = pd.concat([duplicatas_origem, duplicatas_destino])
+            else:
+                duplicatas = verificar_duplicata(
+                    df,
+                    lancamento["valor"],
+                    lancamento["conta"],
+                    lancamento["data"],
+                )
             if not duplicatas.empty:
                 duplicatas_encontradas.append(duplicatas)
 
@@ -613,6 +653,7 @@ def adicionar_pagamento_cartao(df, path="."):
                     valor=lancamento["valor"],
                     categoria=lancamento["categoria"],
                     conta=lancamento["conta"],
+                    conta_destino=lancamento.get("conta_destino"),
                     data=lancamento["data"],
                     obs=lancamento["obs"],
                     tag=lancamento["tag"],
