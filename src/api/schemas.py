@@ -166,6 +166,12 @@ class UltimoLancamentoResponse(BaseModel):
     data: str
 
 
+class SerieEvolucaoDespesaMesResponse(BaseModel):
+    anome: int
+    dia_mes: int
+    cumulativo: float
+
+
 class DashboardSnapshotResponse(BaseModel):
     status: str
     anome_referencia: int
@@ -181,6 +187,7 @@ class DashboardSnapshotResponse(BaseModel):
     serie_mensal: list[SerieMensalResponse]
     serie_receitas_mensal: list[SerieMensalResponse]
     serie_categoria: list[SerieMensalResponse]
+    serie_evolucao_despesas_mes: list[SerieEvolucaoDespesaMesResponse]
 
 
 class OrcamentoCategoriaItem(BaseModel):

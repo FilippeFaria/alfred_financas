@@ -18,6 +18,26 @@ class DashboardSerieMensalDto {
   }
 }
 
+class DashboardEvolucaoDespesaDiaDto {
+  DashboardEvolucaoDespesaDiaDto({
+    required this.anome,
+    required this.diaMes,
+    required this.cumulativo,
+  });
+
+  final int anome;
+  final int diaMes;
+  final double cumulativo;
+
+  factory DashboardEvolucaoDespesaDiaDto.fromJson(Map<String, dynamic> json) {
+    return DashboardEvolucaoDespesaDiaDto(
+      anome: (json['anome'] as num?)?.toInt() ?? 0,
+      diaMes: (json['dia_mes'] as num?)?.toInt() ?? 0,
+      cumulativo: (json['cumulativo'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
 class DashboardCategoriaDestaqueDto {
   DashboardCategoriaDestaqueDto({
     required this.nome,
@@ -77,6 +97,7 @@ class DashboardSnapshotDto {
     required this.serieMensal,
     required this.serieReceitasMensal,
     required this.serieCategoria,
+    required this.serieEvolucaoDespesasMes,
   });
 
   final String status;
@@ -93,6 +114,7 @@ class DashboardSnapshotDto {
   final List<DashboardSerieMensalDto> serieMensal;
   final List<DashboardSerieMensalDto> serieReceitasMensal;
   final List<DashboardSerieMensalDto> serieCategoria;
+  final List<DashboardEvolucaoDespesaDiaDto> serieEvolucaoDespesasMes;
 
   factory DashboardSnapshotDto.fromJson(Map<String, dynamic> json) {
     return DashboardSnapshotDto(
@@ -125,6 +147,9 @@ class DashboardSnapshotDto {
           .toList(),
       serieCategoria: (json['serie_categoria'] as List? ?? <dynamic>[])
           .map((item) => DashboardSerieMensalDto.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList(),
+      serieEvolucaoDespesasMes: (json['serie_evolucao_despesas_mes'] as List? ?? <dynamic>[])
+          .map((item) => DashboardEvolucaoDespesaDiaDto.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList(),
     );
   }

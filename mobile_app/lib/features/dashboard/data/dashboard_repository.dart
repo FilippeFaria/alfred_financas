@@ -178,6 +178,15 @@ class DashboardRepository {
       serieMensal: dto.serieMensal.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
       serieReceitasMensal: dto.serieReceitasMensal.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
       serieCategoria: dto.serieCategoria.map((item) => SerieMensalResumo(anome: item.anome, valor: item.valor)).toList(),
+      serieEvolucaoDespesasMes: dto.serieEvolucaoDespesasMes
+          .map(
+            (item) => EvolucaoDespesaDiaResumo(
+              anome: item.anome,
+              diaMes: item.diaMes,
+              cumulativo: item.cumulativo,
+            ),
+          )
+          .toList(),
     );
 
     _cache[key] = snapshot;

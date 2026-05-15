@@ -907,6 +907,59 @@ def _serie_categoria_despesa(df: pd.DataFrame, anomes: list[int], categoria: str
     return serie
 
 
+def _serie_evolucao_despesas_mes(df: pd.DataFrame, *, anome_referencia: int) -> list[dict]:
+    if df.empty or "anomes" not in df.columns:
+        return []
+
+    dados = df.copy()
+    dados["anomes"] = pd.to_numeric(dados["anomes"], errors="coerce")
+    dados = dados.dropna(subset=["anomes"])
+    if dados.empty:
+        return []
+    dados["anomes"] = dados["anomes"].astype(int)
+
+    todos_anomes = sorted(dados["anomes"].unique().tolist())
+    anomes_filtrados = [x for x in todos_anomes if x <= int(anome_referencia)]
+    if not anomes_filtrados:
+        return []
+
+    anome_efetivo = max(anomes_filtrados)
+    idx = todos_anomes.index(anome_efetivo)
+    anomes_inicio = todos_anomes[idx - 4] if idx >= 4 else todos_anomes[0]
+
+    despesas = dados[
+        (dados["desconsiderar"] == False)
+        & (dados["Tipo"] == "Despesa")
+        & (dados["anomes"] >= anomes_inicio)
+        & (dados["anomes"] <= anome_efetivo)
+    ].copy()
+    if despesas.empty:
+        return []
+
+    despesas["_data"] = pd.to_datetime(despesas["Data"], format=DATE_FORMAT, errors="coerce")
+    despesas = despesas.dropna(subset=["_data"])
+    if despesas.empty:
+        return []
+
+    despesas["dia_mes"] = despesas["_data"].dt.day
+    evolucao = (
+        despesas.groupby(["anomes", "dia_mes"], as_index=False)["Valor"]
+        .sum()
+        .assign(Valor=lambda frame: frame["Valor"].abs())
+        .sort_values(["anomes", "dia_mes"])
+    )
+    evolucao["cumulativo"] = evolucao.groupby("anomes")["Valor"].cumsum()
+
+    return [
+        {
+            "anome": int(row["anomes"]),
+            "dia_mes": int(row["dia_mes"]),
+            "cumulativo": float(row["cumulativo"]),
+        }
+        for _, row in evolucao.iterrows()
+    ]
+
+
 def obter_dashboard_snapshot_mobile(
     *,
     desconsiderar: bool = True,
@@ -948,6 +1001,7 @@ def obter_dashboard_snapshot_mobile(
             "serie_mensal": [],
             "serie_receitas_mensal": [],
             "serie_categoria": [],
+            "serie_evolucao_despesas_mes": [],
         }
 
     df = pd.DataFrame(
@@ -1047,6 +1101,7 @@ def obter_dashboard_snapshot_mobile(
     serie_mensal = _serie_totais_despesa(df_temp, meses_visiveis)
     serie_receitas_mensal = _serie_totais_receita(df_temp, meses_visiveis)
     serie_categoria = _serie_categoria_despesa(df_temp, meses_visiveis, categoria)
+    serie_evolucao_despesas_mes = _serie_evolucao_despesas_mes(df_temp, anome_referencia=int(anome_base))
 
     return {
         "status": status,
@@ -1073,4 +1128,5 @@ def obter_dashboard_snapshot_mobile(
         "serie_mensal": serie_mensal,
         "serie_receitas_mensal": serie_receitas_mensal,
         "serie_categoria": serie_categoria,
+        "serie_evolucao_despesas_mes": serie_evolucao_despesas_mes,
     }

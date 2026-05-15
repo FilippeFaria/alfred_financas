@@ -106,6 +106,7 @@ class DashboardSnapshot {
     required this.serieMensal,
     required this.serieReceitasMensal,
     required this.serieCategoria,
+    required this.serieEvolucaoDespesasMes,
   });
 
   final String status;
@@ -122,6 +123,7 @@ class DashboardSnapshot {
   final List<SerieMensalResumo> serieMensal;
   final List<SerieMensalResumo> serieReceitasMensal;
   final List<SerieMensalResumo> serieCategoria;
+  final List<EvolucaoDespesaDiaResumo> serieEvolucaoDespesasMes;
 }
 
 class CategoriaDestaque {
@@ -158,4 +160,16 @@ class SerieMensalResumo {
 
   final int anome;
   final double valor;
+}
+
+class EvolucaoDespesaDiaResumo {
+  EvolucaoDespesaDiaResumo({
+    required this.anome,
+    required this.diaMes,
+    required this.cumulativo,
+  });
+
+  final int anome;
+  final int diaMes;
+  final double cumulativo;
 }

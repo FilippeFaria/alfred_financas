@@ -268,6 +268,15 @@ class _DashboardBody extends StatelessWidget {
     final tendenciaMeses = data.serieMensal
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
         .toList();
+    final evolucaoDespesasMes = data.serieEvolucaoDespesasMes
+        .map(
+          (item) => _EvolucaoDespesaDia(
+            anome: item.anome,
+            diaMes: item.diaMes,
+            cumulativo: item.cumulativo,
+          ),
+        )
+        .toList();
     final evolucaoEfetiva = categoriaEfetiva == 'Todas' ? tendenciaMeses : evolucaoCategoria;
 
     return ListView(
@@ -344,6 +353,11 @@ class _DashboardBody extends StatelessWidget {
         const SizedBox(height: 12),
         _DistribuicaoCategoriaCard(
           categorias: categoriasMes,
+        ),
+        const SizedBox(height: 12),
+        _EvolucaoDespesasMesCard(
+          evolucao: evolucaoDespesasMes,
+          aplicarFiltroDiaDoMes: filtros.dayToDate,
         ),
         const SizedBox(height: 12),
         _EvolucaoCategoriaCard(
@@ -737,6 +751,535 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
       ),
     );
   }
+}
+
+class _EvolucaoDespesasMesCard extends StatefulWidget {
+  const _EvolucaoDespesasMesCard({
+    required this.evolucao,
+    required this.aplicarFiltroDiaDoMes,
+  });
+
+  final List<_EvolucaoDespesaDia> evolucao;
+  final bool aplicarFiltroDiaDoMes;
+
+  @override
+  State<_EvolucaoDespesasMesCard> createState() => _EvolucaoDespesasMesCardState();
+}
+
+class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
+  _PontoEvolucaoSelecionado? _selecionado;
+
+  @override
+  void didUpdateWidget(covariant _EvolucaoDespesasMesCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_selecionado == null) {
+      return;
+    }
+    final aindaExiste = widget.evolucao.any(
+      (item) =>
+          item.anome == _selecionado!.anome &&
+          item.diaMes == _selecionado!.diaMes &&
+          item.cumulativo == _selecionado!.cumulativo,
+    );
+    if (!aindaExiste) {
+      _selecionado = null;
+    }
+  }
+
+  void _atualizarSelecaoPorPosicao(
+    Offset localPosition,
+    List<_ProjectedEvolucaoPoint> projectedPoints,
+  ) {
+    final hit = _findNearestPoint(
+      localPosition,
+      projectedPoints,
+      maxDistance: 18,
+    );
+    final proximo = hit == null
+        ? null
+        : _PontoEvolucaoSelecionado(
+            anome: hit.anome,
+            diaMes: hit.diaMes,
+            cumulativo: hit.cumulativo,
+            color: hit.color,
+          );
+    if (proximo == _selecionado) {
+      return;
+    }
+    setState(() => _selecionado = proximo);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final seriesMap = <int, List<_EvolucaoDespesaDia>>{};
+    for (final item in widget.evolucao) {
+      seriesMap.putIfAbsent(item.anome, () => <_EvolucaoDespesaDia>[]).add(item);
+    }
+
+    final series = seriesMap.entries
+        .map(
+          (entry) => _SerieEvolucaoMes(
+            anome: entry.key,
+            pontos: (entry.value..sort((a, b) => a.diaMes.compareTo(b.diaMes))),
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.anome.compareTo(b.anome));
+    final maxDiaGlobal = series.fold<int>(0, (acc, serie) {
+      if (serie.pontos.isEmpty) return acc;
+      final ultimoDia = serie.pontos.last.diaMes;
+      return ultimoDia > acc ? ultimoDia : acc;
+    });
+    final anomeMaisRecente = series.isEmpty ? null : series.last.anome;
+    final pontosMesRecente = anomeMaisRecente == null
+        ? const <_EvolucaoDespesaDia>[]
+        : (series.firstWhere((item) => item.anome == anomeMaisRecente).pontos);
+    final diaLimiteFiltro = pontosMesRecente.isNotEmpty ? pontosMesRecente.last.diaMes : maxDiaGlobal;
+    final maxDia = widget.aplicarFiltroDiaDoMes ? diaLimiteFiltro : maxDiaGlobal;
+    final maxCumulativo = series.fold<double>(0.0, (acc, serie) {
+      for (final ponto in serie.pontos) {
+        if (ponto.cumulativo > acc) {
+          acc = ponto.cumulativo;
+        }
+      }
+      return acc;
+    });
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.multiline_chart_outlined),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Evolucao despesas no mes',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Acumulado diario de despesas para os ultimos meses.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 10),
+            if (series.isEmpty)
+              const ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.timeline_outlined),
+                title: Text('Sem dados para exibir'),
+              )
+            else ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var i = 0; i < series.length; i++)
+                    _TrendLegendChip(
+                      label: _formatarAnome(series[i].anome),
+                      color: _colorForLine(i),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const chartHeight = 230.0;
+                  final contentWidth = math.max(
+                    constraints.maxWidth,
+                    (maxDia.clamp(1, 31) * 22.0) + 40.0,
+                  );
+                  final chartSize = Size(contentWidth, chartHeight);
+                  final projectedPoints = _projectEvolucaoPoints(
+                    series: series,
+                    maxDia: maxDia,
+                    maxCumulativo: maxCumulativo,
+                    size: chartSize,
+                  );
+                  _ProjectedEvolucaoPoint? selectedProjectedPoint;
+                  if (_selecionado != null) {
+                    for (final point in projectedPoints) {
+                      if (point.anome == _selecionado!.anome &&
+                          point.diaMes == _selecionado!.diaMes &&
+                          point.cumulativo == _selecionado!.cumulativo) {
+                        selectedProjectedPoint = point;
+                        break;
+                      }
+                    }
+                  }
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: contentWidth,
+                      height: chartHeight,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned.fill(
+                            child: MouseRegion(
+                              opaque: true,
+                              onHover: (event) => _atualizarSelecaoPorPosicao(
+                                event.localPosition,
+                                projectedPoints,
+                              ),
+                              onExit: (_) {
+                                if (_selecionado != null) {
+                                  setState(() => _selecionado = null);
+                                }
+                              },
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onPanDown: (details) => _atualizarSelecaoPorPosicao(
+                                  details.localPosition,
+                                  projectedPoints,
+                                ),
+                                onPanUpdate: (details) => _atualizarSelecaoPorPosicao(
+                                  details.localPosition,
+                                  projectedPoints,
+                                ),
+                                onPanEnd: (_) {
+                                  if (_selecionado != null) {
+                                    setState(() => _selecionado = null);
+                                  }
+                                },
+                                onPanCancel: () {
+                                  if (_selecionado != null) {
+                                    setState(() => _selecionado = null);
+                                  }
+                                },
+                                child: CustomPaint(
+                                  painter: _EvolucaoDespesasMesPainter(
+                                    series: series,
+                                    maxDia: maxDia,
+                                    maxCumulativo: maxCumulativo,
+                                    selecionado: _selecionado,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_selecionado != null && selectedProjectedPoint != null)
+                            _EvolucaoPontoTooltip(
+                              ponto: selectedProjectedPoint,
+                              chartWidth: contentWidth,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EvolucaoDespesasMesPainter extends CustomPainter {
+  _EvolucaoDespesasMesPainter({
+    required this.series,
+    required this.maxDia,
+    required this.maxCumulativo,
+    required this.selecionado,
+  });
+
+  final List<_SerieEvolucaoMes> series;
+  final int maxDia;
+  final double maxCumulativo;
+  final _PontoEvolucaoSelecionado? selecionado;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (series.isEmpty || maxDia <= 0) return;
+    final projectedPoints = _projectEvolucaoPoints(
+      series: series,
+      maxDia: maxDia,
+      maxCumulativo: maxCumulativo,
+      size: size,
+    );
+    if (projectedPoints.isEmpty) return;
+    final groupedPoints = <int, List<_ProjectedEvolucaoPoint>>{};
+    for (final point in projectedPoints) {
+      groupedPoints.putIfAbsent(point.anome, () => <_ProjectedEvolucaoPoint>[]).add(point);
+    }
+
+    final plotWidth = size.width - _evolucaoLeftPadding - _evolucaoRightPadding;
+    final plotHeight = size.height - _evolucaoTopPadding - _evolucaoBottomPadding;
+    final baseY = size.height - _evolucaoBottomPadding;
+
+    final gridPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.08)
+      ..strokeWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+      final y = _evolucaoTopPadding + (plotHeight * (i / 4));
+      canvas.drawLine(Offset(_evolucaoLeftPadding, y), Offset(size.width - _evolucaoRightPadding, y), gridPaint);
+    }
+
+    for (final entry in groupedPoints.entries.toList()..sort((a, b) => a.key.compareTo(b.key))) {
+      final pontosProjetados = entry.value..sort((a, b) => a.diaMes.compareTo(b.diaMes));
+      final color = pontosProjetados.first.color;
+      final pontos = pontosProjetados.map((e) => e.offset).toList();
+      if (pontos.isEmpty) continue;
+
+      final linePaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+
+      if (pontos.length > 1) {
+        final path = Path()..moveTo(pontos.first.dx, pontos.first.dy);
+        for (var i = 1; i < pontos.length; i++) {
+          path.lineTo(pontos[i].dx, pontos[i].dy);
+        }
+        canvas.drawPath(path, linePaint);
+      }
+
+      final pointPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+      for (final point in pontos) {
+        canvas.drawCircle(point, 2.8, pointPaint);
+      }
+
+      for (final ponto in pontosProjetados) {
+        final isSelected = selecionado != null &&
+            selecionado!.anome == ponto.anome &&
+            selecionado!.diaMes == ponto.diaMes &&
+            selecionado!.cumulativo == ponto.cumulativo;
+        if (!isSelected) {
+          continue;
+        }
+        final stroke = Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5;
+        canvas.drawCircle(ponto.offset, 6.0, stroke);
+        canvas.drawCircle(ponto.offset, 3.2, pointPaint);
+      }
+    }
+
+    final eixoDias = _buildEixoDias(maxDia);
+    final stepX = maxDia == 1 ? 0.0 : plotWidth / (maxDia - 1);
+    for (final dia in eixoDias.where((value) => value >= 1 && value <= maxDia)) {
+      final x = _evolucaoLeftPadding + ((dia - 1) * stepX);
+      final label = TextPainter(
+        text: TextSpan(
+          text: dia.toString(),
+          style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      label.paint(canvas, Offset(x - (label.width / 2), size.height - _evolucaoBottomPadding + 6));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _EvolucaoDespesasMesPainter oldDelegate) {
+    if (oldDelegate.maxDia != maxDia ||
+        oldDelegate.maxCumulativo != maxCumulativo ||
+        oldDelegate.selecionado != selecionado) {
+      return true;
+    }
+    if (oldDelegate.series.length != series.length) {
+      return true;
+    }
+    for (var i = 0; i < series.length; i++) {
+      final atual = series[i];
+      final antigo = oldDelegate.series[i];
+      if (atual.anome != antigo.anome || atual.pontos.length != antigo.pontos.length) {
+        return true;
+      }
+      for (var j = 0; j < atual.pontos.length; j++) {
+        final pontoAtual = atual.pontos[j];
+        final pontoAntigo = antigo.pontos[j];
+        if (pontoAtual.diaMes != pontoAntigo.diaMes || pontoAtual.cumulativo != pontoAntigo.cumulativo) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+}
+
+class _EvolucaoPontoTooltip extends StatelessWidget {
+  const _EvolucaoPontoTooltip({
+    required this.ponto,
+    required this.chartWidth,
+  });
+
+  final _ProjectedEvolucaoPoint ponto;
+  final double chartWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    const tooltipWidth = 170.0;
+    const tooltipHeight = 88.0;
+    final maxLeft = math.max(6.0, chartWidth - tooltipWidth - 6.0);
+    final left = (ponto.offset.dx - (tooltipWidth / 2)).clamp(6.0, maxLeft);
+    final maxTop = 230.0 - tooltipHeight - 10;
+    final top = (ponto.offset.dy - tooltipHeight - 12).clamp(6.0, maxTop);
+
+    return Positioned(
+      left: left,
+      top: top,
+      child: IgnorePointer(
+        child: Container(
+          width: tooltipWidth,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dia ${ponto.diaMes}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Mês/ano: ${_formatarAnome(ponto.anome)}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.86),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Valor acumulado: ${formatarMoeda(ponto.cumulativo)}',
+                style: TextStyle(
+                  color: ponto.color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+const double _evolucaoLeftPadding = 20.0;
+const double _evolucaoRightPadding = 14.0;
+const double _evolucaoTopPadding = 12.0;
+const double _evolucaoBottomPadding = 26.0;
+
+List<_ProjectedEvolucaoPoint> _projectEvolucaoPoints({
+  required List<_SerieEvolucaoMes> series,
+  required int maxDia,
+  required double maxCumulativo,
+  required Size size,
+}) {
+  if (series.isEmpty || maxDia <= 0) {
+    return const <_ProjectedEvolucaoPoint>[];
+  }
+  final plotWidth = size.width - _evolucaoLeftPadding - _evolucaoRightPadding;
+  final plotHeight = size.height - _evolucaoTopPadding - _evolucaoBottomPadding;
+  if (plotWidth <= 0 || plotHeight <= 0) {
+    return const <_ProjectedEvolucaoPoint>[];
+  }
+
+  final safeMax = maxCumulativo > 0 ? maxCumulativo : 1.0;
+  final stepX = maxDia == 1 ? 0.0 : plotWidth / (maxDia - 1);
+  final baseY = size.height - _evolucaoBottomPadding;
+  final points = <_ProjectedEvolucaoPoint>[];
+
+  for (var index = 0; index < series.length; index++) {
+    final serie = series[index];
+    final color = _colorForLine(index);
+    for (final ponto in serie.pontos) {
+      if (ponto.diaMes < 1 || ponto.diaMes > maxDia) {
+        continue;
+      }
+      final diaNormalizado = ponto.diaMes;
+      final x = _evolucaoLeftPadding + ((diaNormalizado - 1) * stepX);
+      final normalized = (ponto.cumulativo / safeMax).clamp(0.0, 1.0);
+      final y = baseY - (normalized * plotHeight);
+      points.add(
+        _ProjectedEvolucaoPoint(
+          anome: ponto.anome,
+          diaMes: ponto.diaMes,
+          cumulativo: ponto.cumulativo,
+          color: color,
+          offset: Offset(x, y),
+        ),
+      );
+    }
+  }
+
+  return points;
+}
+
+_ProjectedEvolucaoPoint? _findNearestPoint(
+  Offset tap,
+  List<_ProjectedEvolucaoPoint> points, {
+  required double maxDistance,
+}) {
+  if (points.isEmpty) {
+    return null;
+  }
+  final maxDistanceSquared = maxDistance * maxDistance;
+  _ProjectedEvolucaoPoint? winner;
+  double bestDistanceSquared = double.infinity;
+  for (final point in points) {
+    final dx = tap.dx - point.offset.dx;
+    final dy = tap.dy - point.offset.dy;
+    final d2 = (dx * dx) + (dy * dy);
+    if (d2 <= maxDistanceSquared && d2 < bestDistanceSquared) {
+      bestDistanceSquared = d2;
+      winner = point;
+    }
+  }
+  return winner;
+}
+
+List<int> _buildEixoDias(int maxDia) {
+  if (maxDia <= 1) {
+    return const <int>[1];
+  }
+  final intervalo = maxDia <= 8
+      ? 1
+      : maxDia <= 16
+          ? 2
+          : maxDia <= 24
+              ? 3
+              : 5;
+  final dias = <int>[1];
+  var atual = 1 + intervalo;
+  while (atual < maxDia) {
+    dias.add(atual);
+    atual += intervalo;
+  }
+  if (!dias.contains(maxDia)) {
+    dias.add(maxDia);
+  }
+  return dias;
 }
 
 class _EvolucaoCategoriaCard extends StatelessWidget {
@@ -1488,6 +2031,18 @@ String _abreviarMes(int mes) {
   return meses[mes] ?? 'M$mes';
 }
 
+Color _colorForLine(int index) {
+  const palette = <Color>[
+    Color(0xFF0E7A6D),
+    Color(0xFF2563EB),
+    Color(0xFFB76E00),
+    Color(0xFF9333EA),
+    Color(0xFFDC2626),
+  ];
+  if (palette.isEmpty) return const Color(0xFF0E7A6D);
+  return palette[index % palette.length];
+}
+
 _MetricSemanticState _metricStateForDelta(double? delta) {
   if (delta == null) {
     return _MetricSemanticState.neutral();
@@ -1554,4 +2109,71 @@ class _SerieMensal {
 
   final int anome;
   final double valor;
+}
+
+class _EvolucaoDespesaDia {
+  _EvolucaoDespesaDia({
+    required this.anome,
+    required this.diaMes,
+    required this.cumulativo,
+  });
+
+  final int anome;
+  final int diaMes;
+  final double cumulativo;
+}
+
+class _SerieEvolucaoMes {
+  _SerieEvolucaoMes({
+    required this.anome,
+    required this.pontos,
+  });
+
+  final int anome;
+  final List<_EvolucaoDespesaDia> pontos;
+}
+
+class _ProjectedEvolucaoPoint {
+  _ProjectedEvolucaoPoint({
+    required this.anome,
+    required this.diaMes,
+    required this.cumulativo,
+    required this.color,
+    required this.offset,
+  });
+
+  final int anome;
+  final int diaMes;
+  final double cumulativo;
+  final Color color;
+  final Offset offset;
+}
+
+class _PontoEvolucaoSelecionado {
+  const _PontoEvolucaoSelecionado({
+    required this.anome,
+    required this.diaMes,
+    required this.cumulativo,
+    required this.color,
+  });
+
+  final int anome;
+  final int diaMes;
+  final double cumulativo;
+  final Color color;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _PontoEvolucaoSelecionado &&
+        other.anome == anome &&
+        other.diaMes == diaMes &&
+        other.cumulativo == cumulativo &&
+        other.color == color;
+  }
+
+  @override
+  int get hashCode => Object.hash(anome, diaMes, cumulativo, color);
 }
