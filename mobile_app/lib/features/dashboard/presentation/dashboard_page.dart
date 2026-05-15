@@ -48,7 +48,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     }.toList()
       ..sort();
     final valores = <String, double>{
-      for (final categoria in categorias) categoria: orcamentoAtual[categoria] ?? 0.0,
+      for (final categoria in categorias)
+        categoria: orcamentoAtual[categoria] ?? 0.0,
     };
 
     if (!mounted) return;
@@ -82,8 +83,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: TextFormField(
-                        initialValue: (valores[categoria] ?? 0.0).toStringAsFixed(2),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        initialValue:
+                            (valores[categoria] ?? 0.0).toStringAsFixed(2),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: InputDecoration(
                           labelText: categoria,
                           border: const OutlineInputBorder(),
@@ -112,12 +115,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             await _recarregar();
                             if (!mounted) return;
                             ScaffoldMessenger.of(this.context).showSnackBar(
-                              const SnackBar(content: Text('Orçamento salvo com sucesso.')),
+                              const SnackBar(
+                                  content:
+                                      Text('Orçamento salvo com sucesso.')),
                             );
                           } catch (error) {
                             if (!mounted) return;
                             ScaffoldMessenger.of(this.context).showSnackBar(
-                              SnackBar(content: Text('Erro ao salvar orçamento: $error')),
+                              SnackBar(
+                                  content:
+                                      Text('Erro ao salvar orçamento: $error')),
                             );
                           } finally {
                             if (mounted) {
@@ -159,8 +166,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             data: data,
             filtros: filtros,
             categoriaSelecionada: _categoriaSelecionada,
-            onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-            onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+            onCategoriaChanged: (value) => setState(
+                () => _categoriaSelecionada = value == 'Todas' ? null : value),
+            onAtualizarFiltros: (novosFiltros) => ref
+                .read(dashboardFiltersProvider.notifier)
+                .aplicar(novosFiltros),
             onEditarOrcamento: () => _abrirEditorOrcamento(data),
           ),
           loading: () {
@@ -169,9 +179,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data: _ultimoSnapshotVisivel!,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-                onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
-                onEditarOrcamento: () => _abrirEditorOrcamento(_ultimoSnapshotVisivel!),
+                onCategoriaChanged: (value) => setState(() =>
+                    _categoriaSelecionada = value == 'Todas' ? null : value),
+                onAtualizarFiltros: (novosFiltros) => ref
+                    .read(dashboardFiltersProvider.notifier)
+                    .aplicar(novosFiltros),
+                onEditarOrcamento: () =>
+                    _abrirEditorOrcamento(_ultimoSnapshotVisivel!),
                 avisoOffline: 'Atualizando filtros...',
               );
             }
@@ -188,10 +202,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data: cache,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                onCategoriaChanged: (value) => setState(() => _categoriaSelecionada = value == 'Todas' ? null : value),
-                onAtualizarFiltros: (novosFiltros) => ref.read(dashboardFiltersProvider.notifier).aplicar(novosFiltros),
+                onCategoriaChanged: (value) => setState(() =>
+                    _categoriaSelecionada = value == 'Todas' ? null : value),
+                onAtualizarFiltros: (novosFiltros) => ref
+                    .read(dashboardFiltersProvider.notifier)
+                    .aplicar(novosFiltros),
                 onEditarOrcamento: () => _abrirEditorOrcamento(cache),
-                avisoOffline: 'Exibindo último cache local. Não foi possível atualizar agora.',
+                avisoOffline:
+                    'Exibindo último cache local. Não foi possível atualizar agora.',
               );
             }
             return ListView(
@@ -202,7 +220,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: ListTile(
                     leading: Icon(Icons.cloud_off_outlined),
                     title: Text('Não foi possível conectar com a API.'),
-                    subtitle: Text('Tente novamente em instantes ou confira a URL configurada.'),
+                    subtitle: Text(
+                        'Tente novamente em instantes ou confira a URL configurada.'),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -214,7 +233,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () => ref.refresh(dashboardSnapshotProvider(providerArgs)),
+                  onPressed: () =>
+                      ref.refresh(dashboardSnapshotProvider(providerArgs)),
                   child: const Text('Tentar novamente'),
                 ),
               ],
@@ -277,7 +297,8 @@ class _DashboardBody extends StatelessWidget {
           ),
         )
         .toList();
-    final evolucaoEfetiva = categoriaEfetiva == 'Todas' ? tendenciaMeses : evolucaoCategoria;
+    final evolucaoEfetiva =
+        categoriaEfetiva == 'Todas' ? tendenciaMeses : evolucaoCategoria;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -317,8 +338,10 @@ class _DashboardBody extends StatelessWidget {
                     title: 'Gasto no mês anterior',
                     label: _formatarLabelPeriodo(data.metricas.labelPrev),
                     value: formatarMoeda(data.metricas.gastoAnterior),
-                    delta: _formatarDelta(data.metricas.deltaAnterior, referencia: 'mês anterior'),
-                    semanticState: _metricStateForDelta(data.metricas.deltaAnterior),
+                    delta: _formatarDelta(data.metricas.deltaAnterior,
+                        referencia: 'mês anterior'),
+                    semanticState:
+                        _metricStateForDelta(data.metricas.deltaAnterior),
                   ),
                 ),
                 SizedBox(
@@ -327,8 +350,10 @@ class _DashboardBody extends StatelessWidget {
                     title: 'Gasto no mês atual',
                     label: _formatarLabelPeriodo(data.metricas.labelCurr),
                     value: formatarMoeda(data.metricas.gastoAtual),
-                    delta: _formatarDelta(data.metricas.deltaAtual, referencia: 'mês anterior'),
-                    semanticState: _metricStateForDelta(data.metricas.deltaAtual),
+                    delta: _formatarDelta(data.metricas.deltaAtual,
+                        referencia: 'mês anterior'),
+                    semanticState:
+                        _metricStateForDelta(data.metricas.deltaAtual),
                   ),
                 ),
                 SizedBox(
@@ -337,7 +362,8 @@ class _DashboardBody extends StatelessWidget {
                     title: 'Média dos últimos 3 meses',
                     label: _formatarLabelPeriodo(data.metricas.label3m),
                     value: formatarMoeda(data.metricas.gasto3mMedia),
-                    delta: _formatarDelta(data.metricas.delta3m, referencia: '3 meses anteriores'),
+                    delta: _formatarDelta(data.metricas.delta3m,
+                        referencia: '3 meses anteriores'),
                     semanticState: _metricStateForDelta(data.metricas.delta3m),
                   ),
                 ),
@@ -392,7 +418,9 @@ class _DashboardBody extends StatelessWidget {
                       : const Color(0xFFB76E00).withValues(alpha: 0.12),
                   child: Icon(
                     item.valor >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: item.valor >= 0 ? const Color(0xFF0E7A6D) : const Color(0xFFB76E00),
+                    color: item.valor >= 0
+                        ? const Color(0xFF0E7A6D)
+                        : const Color(0xFFB76E00),
                   ),
                 ),
                 title: Text(item.nome),
@@ -403,7 +431,9 @@ class _DashboardBody extends StatelessWidget {
                   formatarMoeda(item.valor),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: item.valor >= 0 ? const Color(0xFF0E7A6D) : const Color(0xFFB76E00),
+                    color: item.valor >= 0
+                        ? const Color(0xFF0E7A6D)
+                        : const Color(0xFFB76E00),
                   ),
                 ),
               ),
@@ -461,7 +491,8 @@ class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedAnome = widget.filtros.anomeReferencia ?? widget.data.anomeReferencia;
+    final selectedAnome =
+        widget.filtros.anomeReferencia ?? widget.data.anomeReferencia;
     final options = <int>{
       ...widget.data.anomesDisponiveis,
       selectedAnome,
@@ -470,7 +501,9 @@ class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
     final index = options.indexWhere((item) => item == selectedAnome);
     final selectedIndex = index >= 0 ? index : options.length - 1;
     final maxIndex = (options.length - 1).clamp(0, 999).toDouble();
-    final sliderValue = ((_sliderTempIndex ?? selectedIndex.toDouble()).clamp(0.0, maxIndex)).toDouble();
+    final sliderValue =
+        ((_sliderTempIndex ?? selectedIndex.toDouble()).clamp(0.0, maxIndex))
+            .toDouble();
 
     return Card(
       child: Padding(
@@ -503,9 +536,12 @@ class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
                   ? null
                   : (value) {
                       setState(() => _sliderTempIndex = null);
-                      final chosen = options[value.round().clamp(0, options.length - 1)];
+                      final chosen =
+                          options[value.round().clamp(0, options.length - 1)];
                       widget.onAtualizarFiltros(
-                        widget.filtros.copyWith(anomeReferencia: chosen, clearAnomeReferencia: false),
+                        widget.filtros.copyWith(
+                            anomeReferencia: chosen,
+                            clearAnomeReferencia: false),
                       );
                     },
             ),
@@ -517,32 +553,38 @@ class _AnalysisFiltersCardState extends State<_AnalysisFiltersCard> {
                 FilterChip(
                   label: const Text('Grandes transações'),
                   selected: widget.filtros.desconsiderar,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(desconsiderar: value)),
+                  onSelected: (value) => widget.onAtualizarFiltros(
+                      widget.filtros.copyWith(desconsiderar: value)),
                 ),
                 FilterChip(
                   label: const Text('VA'),
                   selected: widget.filtros.va,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(va: value)),
+                  onSelected: (value) => widget
+                      .onAtualizarFiltros(widget.filtros.copyWith(va: value)),
                 ),
                 FilterChip(
                   label: const Text('VR'),
                   selected: widget.filtros.vr,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(vr: value)),
+                  onSelected: (value) => widget
+                      .onAtualizarFiltros(widget.filtros.copyWith(vr: value)),
                 ),
                 FilterChip(
                   label: const Text('Bianca'),
                   selected: widget.filtros.bianca,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(bianca: value)),
+                  onSelected: (value) => widget.onAtualizarFiltros(
+                      widget.filtros.copyWith(bianca: value)),
                 ),
                 FilterChip(
                   label: const Text('Filippe'),
                   selected: widget.filtros.filippe,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(filippe: value)),
+                  onSelected: (value) => widget.onAtualizarFiltros(
+                      widget.filtros.copyWith(filippe: value)),
                 ),
                 FilterChip(
                   label: const Text('Dias do mês'),
                   selected: widget.filtros.dayToDate,
-                  onSelected: (value) => widget.onAtualizarFiltros(widget.filtros.copyWith(dayToDate: value)),
+                  onSelected: (value) => widget.onAtualizarFiltros(
+                      widget.filtros.copyWith(dayToDate: value)),
                 ),
               ],
             ),
@@ -587,7 +629,8 @@ class _ResumoOrcamentoCard extends StatelessWidget {
                   label: const Text('Editar'),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: const Size(0, 30),
                   ),
                 ),
@@ -602,7 +645,8 @@ class _ResumoOrcamentoCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             LinearProgressIndicator(
-              value: (data.orcamentoUsadoPercentual / 100).clamp(0, 1).toDouble(),
+              value:
+                  (data.orcamentoUsadoPercentual / 100).clamp(0, 1).toDouble(),
               minHeight: 10,
               borderRadius: BorderRadius.circular(999),
             ),
@@ -626,19 +670,24 @@ class _DistribuicaoCategoriaCard extends StatefulWidget {
   final List<_CategoriaTotal> categorias;
 
   @override
-  State<_DistribuicaoCategoriaCard> createState() => _DistribuicaoCategoriaCardState();
+  State<_DistribuicaoCategoriaCard> createState() =>
+      _DistribuicaoCategoriaCardState();
 }
 
-class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> {
+class _DistribuicaoCategoriaCardState
+    extends State<_DistribuicaoCategoriaCard> {
   bool _mostrarTodas = false;
   bool _modoPercentualOrcamento = false;
 
-  Widget _buildCategoriaItem(BuildContext context, _CategoriaTotal item, double maxValor) {
+  Widget _buildCategoriaItem(
+      BuildContext context, _CategoriaTotal item, double maxValor) {
     final percentualOrcamento = item.percentualOrcamento ?? 0.0;
     final usarPercentual = _modoPercentualOrcamento == true;
     final double valorBarra = usarPercentual
         ? (percentualOrcamento / 100).clamp(0, 1).toDouble()
-        : (maxValor <= 0 ? 0.0 : (item.valor / maxValor).clamp(0, 1).toDouble());
+        : (maxValor <= 0
+            ? 0.0
+            : (item.valor / maxValor).clamp(0, 1).toDouble());
     final valorDestaque = usarPercentual
         ? '${percentualOrcamento.toStringAsFixed(1).replaceAll('.', ',')}%'
         : formatarMoeda(item.valor);
@@ -651,7 +700,8 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
           Row(
             children: [
               Expanded(child: Text(item.nome)),
-              Text(valorDestaque, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(valorDestaque,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 4),
@@ -675,8 +725,11 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
   @override
   Widget build(BuildContext context) {
     final categorias = widget.categorias;
-    final itensRestantes = categorias.length > 5 ? categorias.skip(5).toList() : const <_CategoriaTotal>[];
-    final itensVisiveis = _mostrarTodas ? categorias : categorias.take(5).toList();
+    final itensRestantes = categorias.length > 5
+        ? categorias.skip(5).toList()
+        : const <_CategoriaTotal>[];
+    final itensVisiveis =
+        _mostrarTodas ? categorias : categorias.take(5).toList();
     final maxValor = categorias.isEmpty ? 0.0 : categorias.first.valor;
 
     return Card(
@@ -699,7 +752,8 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
                 ),
                 Switch(
                   value: _modoPercentualOrcamento == true,
-                  onChanged: (value) => setState(() => _modoPercentualOrcamento = value),
+                  onChanged: (value) =>
+                      setState(() => _modoPercentualOrcamento = value),
                 ),
               ],
             ),
@@ -717,15 +771,18 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
               const ListTile(
                 leading: Icon(Icons.label_off_outlined),
                 title: Text('Sem despesas para exibir'),
-                subtitle: Text('A distribuição aparece assim que o filtro encontrar dados.'),
+                subtitle: Text(
+                    'A distribuição aparece assim que o filtro encontrar dados.'),
               )
             else ...[
-              ...itensVisiveis.map((item) => _buildCategoriaItem(context, item, maxValor)),
+              ...itensVisiveis
+                  .map((item) => _buildCategoriaItem(context, item, maxValor)),
               if (itensRestantes.isNotEmpty)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
-                    onPressed: () => setState(() => _mostrarTodas = !_mostrarTodas),
+                    onPressed: () =>
+                        setState(() => _mostrarTodas = !_mostrarTodas),
                     icon: Icon(
                       _mostrarTodas ? Icons.expand_less : Icons.expand_more,
                       size: 16,
@@ -733,11 +790,14 @@ class _DistribuicaoCategoriaCardState extends State<_DistribuicaoCategoriaCard> 
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.grey.shade600,
                       visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       minimumSize: const Size(0, 30),
                     ),
                     label: Text(
-                      _mostrarTodas ? 'Mostrar menos categorias' : 'Mostrar todas as categorias',
+                      _mostrarTodas
+                          ? 'Mostrar menos categorias'
+                          : 'Mostrar todas as categorias',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.w500,
@@ -763,7 +823,8 @@ class _EvolucaoDespesasMesCard extends StatefulWidget {
   final bool aplicarFiltroDiaDoMes;
 
   @override
-  State<_EvolucaoDespesasMesCard> createState() => _EvolucaoDespesasMesCardState();
+  State<_EvolucaoDespesasMesCard> createState() =>
+      _EvolucaoDespesasMesCardState();
 }
 
 class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
@@ -813,7 +874,9 @@ class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
   Widget build(BuildContext context) {
     final seriesMap = <int, List<_EvolucaoDespesaDia>>{};
     for (final item in widget.evolucao) {
-      seriesMap.putIfAbsent(item.anome, () => <_EvolucaoDespesaDia>[]).add(item);
+      seriesMap
+          .putIfAbsent(item.anome, () => <_EvolucaoDespesaDia>[])
+          .add(item);
     }
 
     final series = seriesMap.entries
@@ -834,8 +897,11 @@ class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
     final pontosMesRecente = anomeMaisRecente == null
         ? const <_EvolucaoDespesaDia>[]
         : (series.firstWhere((item) => item.anome == anomeMaisRecente).pontos);
-    final diaLimiteFiltro = pontosMesRecente.isNotEmpty ? pontosMesRecente.last.diaMes : maxDiaGlobal;
-    final maxDia = widget.aplicarFiltroDiaDoMes ? diaLimiteFiltro : maxDiaGlobal;
+    final diaLimiteFiltro = pontosMesRecente.isNotEmpty
+        ? pontosMesRecente.last.diaMes
+        : maxDiaGlobal;
+    final maxDia =
+        widget.aplicarFiltroDiaDoMes ? diaLimiteFiltro : maxDiaGlobal;
     final maxCumulativo = series.fold<double>(0.0, (acc, serie) {
       for (final ponto in serie.pontos) {
         if (ponto.cumulativo > acc) {
@@ -937,11 +1003,13 @@ class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
                               },
                               child: GestureDetector(
                                 behavior: HitTestBehavior.opaque,
-                                onPanDown: (details) => _atualizarSelecaoPorPosicao(
+                                onPanDown: (details) =>
+                                    _atualizarSelecaoPorPosicao(
                                   details.localPosition,
                                   projectedPoints,
                                 ),
-                                onPanUpdate: (details) => _atualizarSelecaoPorPosicao(
+                                onPanUpdate: (details) =>
+                                    _atualizarSelecaoPorPosicao(
                                   details.localPosition,
                                   projectedPoints,
                                 ),
@@ -966,7 +1034,8 @@ class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
                               ),
                             ),
                           ),
-                          if (_selecionado != null && selectedProjectedPoint != null)
+                          if (_selecionado != null &&
+                              selectedProjectedPoint != null)
                             _EvolucaoPontoTooltip(
                               ponto: selectedProjectedPoint,
                               chartWidth: contentWidth,
@@ -1010,11 +1079,14 @@ class _EvolucaoDespesasMesPainter extends CustomPainter {
     if (projectedPoints.isEmpty) return;
     final groupedPoints = <int, List<_ProjectedEvolucaoPoint>>{};
     for (final point in projectedPoints) {
-      groupedPoints.putIfAbsent(point.anome, () => <_ProjectedEvolucaoPoint>[]).add(point);
+      groupedPoints
+          .putIfAbsent(point.anome, () => <_ProjectedEvolucaoPoint>[])
+          .add(point);
     }
 
     final plotWidth = size.width - _evolucaoLeftPadding - _evolucaoRightPadding;
-    final plotHeight = size.height - _evolucaoTopPadding - _evolucaoBottomPadding;
+    final plotHeight =
+        size.height - _evolucaoTopPadding - _evolucaoBottomPadding;
     final baseY = size.height - _evolucaoBottomPadding;
 
     final gridPaint = Paint()
@@ -1022,11 +1094,14 @@ class _EvolucaoDespesasMesPainter extends CustomPainter {
       ..strokeWidth = 1;
     for (var i = 0; i <= 4; i++) {
       final y = _evolucaoTopPadding + (plotHeight * (i / 4));
-      canvas.drawLine(Offset(_evolucaoLeftPadding, y), Offset(size.width - _evolucaoRightPadding, y), gridPaint);
+      canvas.drawLine(Offset(_evolucaoLeftPadding, y),
+          Offset(size.width - _evolucaoRightPadding, y), gridPaint);
     }
 
-    for (final entry in groupedPoints.entries.toList()..sort((a, b) => a.key.compareTo(b.key))) {
-      final pontosProjetados = entry.value..sort((a, b) => a.diaMes.compareTo(b.diaMes));
+    for (final entry in groupedPoints.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key))) {
+      final pontosProjetados = entry.value
+        ..sort((a, b) => a.diaMes.compareTo(b.diaMes));
       final color = pontosProjetados.first.color;
       final pontos = pontosProjetados.map((e) => e.offset).toList();
       if (pontos.isEmpty) continue;
@@ -1072,16 +1147,23 @@ class _EvolucaoDespesasMesPainter extends CustomPainter {
 
     final eixoDias = _buildEixoDias(maxDia);
     final stepX = maxDia == 1 ? 0.0 : plotWidth / (maxDia - 1);
-    for (final dia in eixoDias.where((value) => value >= 1 && value <= maxDia)) {
+    for (final dia
+        in eixoDias.where((value) => value >= 1 && value <= maxDia)) {
       final x = _evolucaoLeftPadding + ((dia - 1) * stepX);
       final label = TextPainter(
         text: TextSpan(
           text: dia.toString(),
-          style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+          style: const TextStyle(
+              fontSize: 10,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w600),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      label.paint(canvas, Offset(x - (label.width / 2), size.height - _evolucaoBottomPadding + 6));
+      label.paint(
+          canvas,
+          Offset(
+              x - (label.width / 2), size.height - _evolucaoBottomPadding + 6));
     }
   }
 
@@ -1098,13 +1180,15 @@ class _EvolucaoDespesasMesPainter extends CustomPainter {
     for (var i = 0; i < series.length; i++) {
       final atual = series[i];
       final antigo = oldDelegate.series[i];
-      if (atual.anome != antigo.anome || atual.pontos.length != antigo.pontos.length) {
+      if (atual.anome != antigo.anome ||
+          atual.pontos.length != antigo.pontos.length) {
         return true;
       }
       for (var j = 0; j < atual.pontos.length; j++) {
         final pontoAtual = atual.pontos[j];
         final pontoAntigo = antigo.pontos[j];
-        if (pontoAtual.diaMes != pontoAntigo.diaMes || pontoAtual.cumulativo != pontoAntigo.cumulativo) {
+        if (pontoAtual.diaMes != pontoAntigo.diaMes ||
+            pontoAtual.cumulativo != pontoAntigo.cumulativo) {
           return true;
         }
       }
@@ -1128,7 +1212,7 @@ class _EvolucaoPontoTooltip extends StatelessWidget {
     const tooltipHeight = 88.0;
     final maxLeft = math.max(6.0, chartWidth - tooltipWidth - 6.0);
     final left = (ponto.offset.dx - (tooltipWidth / 2)).clamp(6.0, maxLeft);
-    final maxTop = 230.0 - tooltipHeight - 10;
+    const maxTop = 230.0 - tooltipHeight - 10;
     final top = (ponto.offset.dy - tooltipHeight - 12).clamp(6.0, maxTop);
 
     return Positioned(
@@ -1299,7 +1383,9 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxValor = evolucao.isEmpty ? 0.0 : evolucao.map((e) => e.valor).reduce((a, b) => a > b ? a : b);
+    final maxValor = evolucao.isEmpty
+        ? 0.0
+        : evolucao.map((e) => e.valor).reduce((a, b) => a > b ? a : b);
 
     return Card(
       child: Padding(
@@ -1324,9 +1410,11 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
               initialValue: categoria,
-              decoration: const InputDecoration(labelText: 'Escolha a categoria'),
+              decoration:
+                  const InputDecoration(labelText: 'Escolha a categoria'),
               items: categoriasDisponiveis
-                  .map((item) => DropdownMenuItem<String?>(value: item, child: Text(item)))
+                  .map((item) =>
+                      DropdownMenuItem<String?>(value: item, child: Text(item)))
                   .toList(),
               onChanged: onCategoriaChanged,
             ),
@@ -1340,7 +1428,8 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
               const ListTile(
                 leading: Icon(Icons.insights_outlined),
                 title: Text('Sem dados para exibir evolução'),
-                subtitle: Text('O gráfico usa o recorte do mês selecionado e o histórico visível.'),
+                subtitle: Text(
+                    'O gráfico usa o recorte do mês selecionado e o histórico visível.'),
               )
             else
               SizedBox(
@@ -1360,7 +1449,8 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
                                   child: Text(
                                     formatarMoeda(item.valor),
                                     maxLines: 1,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -1376,7 +1466,9 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
                                 Container(
                                   height: maxValor <= 0
                                       ? 8
-                                      : (108 * (item.valor / maxValor)).clamp(8, 108).toDouble(),
+                                      : (108 * (item.valor / maxValor))
+                                          .clamp(8, 108)
+                                          .toDouble(),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF0E7A6D),
                                     borderRadius: BorderRadius.circular(12),
@@ -1389,7 +1481,8 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
                                     _formatarAnome(item.anome),
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ),
                               ],
@@ -1427,7 +1520,7 @@ class _TendenciaMensalCard extends StatelessWidget {
             ...despesas.map((item) => item.anome),
             ...receitas.map((item) => item.anome),
           }.toList()
-          ..sort();
+      ..sort();
     final despesasPorMes = {
       for (final item in despesas) item.anome: item.valor,
     };
@@ -1480,9 +1573,14 @@ class _TendenciaMensalCard extends StatelessWidget {
             else
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final contentWidth = math.max(constraints.maxWidth, meses.length * 80.0);
-                  final serieDespesas = meses.map((anome) => despesasPorMes[anome] ?? 0.0).toList();
-                  final serieReceitas = meses.map((anome) => receitasPorMes[anome] ?? 0.0).toList();
+                  final contentWidth =
+                      math.max(constraints.maxWidth, meses.length * 80.0);
+                  final serieDespesas = meses
+                      .map((anome) => despesasPorMes[anome] ?? 0.0)
+                      .toList();
+                  final serieReceitas = meses
+                      .map((anome) => receitasPorMes[anome] ?? 0.0)
+                      .toList();
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
@@ -1613,7 +1711,8 @@ class _TrendLinesPainter extends CustomPainter {
       ..strokeWidth = 1;
     for (var i = 0; i <= 3; i++) {
       final y = topPadding + (plotHeight * (i / 3));
-      canvas.drawLine(Offset(leftPadding, y), Offset(size.width - rightPadding, y), gridPaint);
+      canvas.drawLine(Offset(leftPadding, y),
+          Offset(size.width - rightPadding, y), gridPaint);
     }
 
     void drawSeries(List<double> values, Color color) {
@@ -1663,7 +1762,8 @@ class _TrendLinesPainter extends CustomPainter {
           maxLines: 1,
         )..layout();
         final dx = points[i].dx - (textPainter.width / 2);
-        final dy = (points[i].dy - textPainter.height - 6).clamp(0.0, size.height);
+        final dy =
+            (points[i].dy - textPainter.height - 6).clamp(0.0, size.height);
         textPainter.paint(canvas, Offset(dx, dy));
       }
     }
@@ -1733,13 +1833,15 @@ class _MetricCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: semanticState.background,
-                  child: Icon(semanticState.icon, color: semanticState.foreground, size: 18),
+                  child: Icon(semanticState.icon,
+                      color: semanticState.foreground, size: 18),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     title,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -1764,7 +1866,8 @@ class _MetricCard extends StatelessWidget {
             if (delta != null)
               Row(
                 children: [
-                  Icon(semanticState.icon, size: 18, color: semanticState.foreground),
+                  Icon(semanticState.icon,
+                      size: 18, color: semanticState.foreground),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -1843,7 +1946,9 @@ class _HeroCard extends StatelessWidget {
                   ),
                   _StatusChip(
                     label: isOnline ? 'Online' : data.status.toUpperCase(),
-                    color: isOnline ? const Color(0xFF7CF2C8) : const Color(0xFFF7C46C),
+                    color: isOnline
+                        ? const Color(0xFF7CF2C8)
+                        : const Color(0xFFF7C46C),
                   ),
                 ],
               ),

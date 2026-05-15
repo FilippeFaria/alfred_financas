@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +12,9 @@ import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LocalNotificationService.instance.initialize();
+  if (!kIsWeb) {
+    await LocalNotificationService.instance.initialize();
+  }
   runApp(const ProviderScope(child: AlfredApp()));
 }
 
@@ -29,19 +32,21 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
   @override
   void initState() {
     super.initState();
-    _sincronizarApiBaseUrl();
-    _abrirRotaPendenteAoIniciar();
-    _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
-      if (!mounted) return;
-      if (action.type == 'detected_transaction') {
-        final pendingId = action.pendingTransactionId?.trim();
-        if (pendingId != null && pendingId.isNotEmpty) {
-          ref.read(appRouterProvider).go('/insights?from_notification=1&pending_id=$pendingId');
-        } else {
-          ref.read(appRouterProvider).go('/insights?from_notification=1');
+    if (!kIsWeb) {
+      _sincronizarApiBaseUrl();
+      _abrirRotaPendenteAoIniciar();
+      _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
+        if (!mounted) return;
+        if (action.type == 'detected_transaction') {
+          final pendingId = action.pendingTransactionId?.trim();
+          if (pendingId != null && pendingId.isNotEmpty) {
+            ref.read(appRouterProvider).go('/insights?from_notification=1&pending_id=$pendingId');
+          } else {
+            ref.read(appRouterProvider).go('/insights?from_notification=1');
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   Future<void> _sincronizarApiBaseUrl() async {

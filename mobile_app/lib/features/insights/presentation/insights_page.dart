@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -249,7 +248,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   }
 
   Future<void> _abrirConfiguracaoNotificacoes() async {
-    if (defaultTargetPlatform != TargetPlatform.android) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     try {
       await _notificationChannel.invokeMethod('openNotificationAccessSettings');
     } catch (_) {
@@ -261,7 +260,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   }
 
   Future<void> _sincronizarStatusNotificacoes({required bool processQueue}) async {
-    if (defaultTargetPlatform != TargetPlatform.android) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     if (_loadingNotificationStatus) return;
 
     setState(() {
@@ -575,11 +574,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           _audioPcmBuffer.addAll(chunk);
         });
       } else {
-        final caminhoAudio =
-            '${Directory.systemTemp.path}/alfred_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         await _audioRecorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc),
-          path: caminhoAudio,
         );
       }
 
@@ -1041,6 +1037,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
 
   @override
   Widget build(BuildContext context) {
+    final suportaCapturaNativaAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Alfred IA')),
       body: RefreshIndicator(
@@ -1113,17 +1111,18 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           const SizedBox(height: 12),
           const Text('Transacoes detectadas automaticamente', style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text(
-            'Status: ${_notificationPermissionActive ? "Leitura de notificacoes ativa" : "Leitura de notificacoes inativa"}',
-          ),
-          const SizedBox(height: 4),
-          Text('Ultima notificacao processada: ${_formatarUltimoProcessamento(_lastNotificationProcessedAt)}'),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: _loadingNotificationStatus ? null : _abrirConfiguracaoNotificacoes,
-            icon: const Icon(Icons.notifications_active_outlined),
-            label: const Text('Ativar leitura de notificacoes'),
-          ),
+          if (suportaCapturaNativaAndroid) ...[
+            Text(
+              'Status: ${_notificationPermissionActive ? "Leitura de notificacoes ativa" : "Leitura de notificacoes inativa"}',
+            ),
+            const SizedBox(height: 8),
+            Text('Ultima notificacao processada: ${_formatarUltimoProcessamento(_lastNotificationProcessedAt)}'),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _loadingNotificationStatus ? null : _abrirConfiguracaoNotificacoes,
+              icon: const Icon(Icons.notifications_active_outlined),
+              label: const Text('Ativar leitura de notificacoes'),
+            ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () async {
@@ -1136,6 +1135,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
               icon: const Icon(Icons.notification_add_outlined),
               label: const Text('Testar notificacao local'),
             ),
+          ] else ...[
+            const Text(
+              'No navegador, a captura automatica de notificacoes Android fica desativada. '
+              'Voce ainda pode revisar e tratar pendencias detectadas no mobile.',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ],
             const SizedBox(height: 8),
             const Text(
               'Nenhuma transacao sera salva automaticamente. Todas as sugestoes passam por confirmacao, edicao, ignorar ou criacao mesmo com alerta de duplicidade.',

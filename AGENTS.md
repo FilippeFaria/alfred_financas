@@ -252,6 +252,42 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 - edição de transferência passa a preservar corretamente origem/destino
 - saldos no mobile devem refletir a transferência sem necessidade de refresh manual extra
 
+### ✅ Fix: Edição de pendência IA para Transferência respeita conta destino (15/05/2026)
+**Problema observado**:
+- no fluxo de pendência (`Insights`), ao editar uma sugestão de `Receita` para `Transferência`, o app permitia selecionar `Conta destino`, mas ao confirmar retornava erro de destino obrigatório
+
+**Causa raiz**:
+- o mobile enviava `conta_destino`, porém o schema do endpoint `POST /transacoes/pendentes/{pending_id}/confirmar` não aceitava esse campo
+- o payload era sanitizado pelo Pydantic e `conta_destino` era descartada antes de chegar na confirmação
+
+**Implementado**:
+- `src/api/schemas.py`:
+  - `ConfirmarTransacaoPendenteRequest` agora inclui `conta_destino`
+- `mobile_app/lib/features/insights/presentation/insights_page.dart`:
+  - ao trocar tipo para `Transferência`, categoria é ajustada automaticamente para `Transferência`
+  - confirmação de pendência agora também invalida cache financeiro (dashboard/saldos)
+
+**Resultado**:
+- edição de pendência para `Transferência` passa a confirmar com origem/destino corretamente
+- saldos e dashboard refletem a confirmação sem depender de refresh manual extra
+
+### ✅ Feature: Filtro de transações com múltiplas contas (15/05/2026)
+**Objetivo**:
+- permitir selecionar mais de uma conta simultaneamente no filtro da tela de transações
+
+**Implementado**:
+- Mobile:
+  - `TransactionsFilters` migrou de `conta` (única) para `contas` (lista)
+  - UI de filtros passou a usar seleção múltipla com `FilterChip` na seção de contas
+  - persistência dos filtros mantém compatibilidade com formato legado (campo `conta`)
+- API:
+  - `GET /transacoes` passou a aceitar `contas` como query param repetido (`?contas=A&contas=B`)
+  - `src/api/services.py` e `src/database/repositories.py` aplicam `IN (...)` quando há múltiplas contas
+  - compatibilidade preservada com `conta` única
+
+**Observação operacional**:
+- após deploy local dessas mudanças, é necessário reiniciar a FastAPI para o novo parâmetro `contas` aparecer no `/openapi.json` e começar a filtrar efetivamente
+
 ### ✅ Feature: Otimização de performance da tela Insights (11/05/2026)
 **Objetivo**: melhorar a responsividade das ações `Confirmar`, `Ignorar` e `Editar` nas pendências detectadas por notificação.
 
