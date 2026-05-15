@@ -26,6 +26,17 @@ String formatarDataCurta(String valorBruto) {
   return '$dia/$mes/${data.year} $hora:$minuto';
 }
 
+String formatarHoraCurta(String valorBruto) {
+  final data = tentarConverterParaData(valorBruto);
+  if (data == null) {
+    return valorBruto;
+  }
+
+  final hora = data.hour.toString().padLeft(2, '0');
+  final minuto = data.minute.toString().padLeft(2, '0');
+  return '$hora:$minuto';
+}
+
 DateTime? tentarConverterParaData(String valorBruto) {
   if (valorBruto.trim().isEmpty) {
     return null;

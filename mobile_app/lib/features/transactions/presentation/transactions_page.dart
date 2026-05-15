@@ -33,6 +33,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   final ScrollController _scrollController = ScrollController();
   static const Color _positivoColor = Color(0xFF0E7A6D);
   static const Color _negativoColor = Color(0xFFB76E00);
+  static const double _gapEntreDias = 18;
 
   @override
   void initState() {
@@ -135,6 +136,112 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
+  String _chaveDia(DateTime data) {
+    final ano = data.year.toString().padLeft(4, '0');
+    final mes = data.month.toString().padLeft(2, '0');
+    final dia = data.day.toString().padLeft(2, '0');
+    return '$ano-$mes-$dia';
+  }
+
+  Widget _construirCabecalhoDia(DateTime data) {
+    final dataFormatada = formatarDataCurta(data.toIso8601String()).split(' ').first;
+    return Padding(
+      padding: const EdgeInsets.only(top: _gapEntreDias, bottom: 8),
+      child: Row(
+        children: [
+          Text(
+            dataFormatada,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(child: Divider(height: 1)),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _construirExtratoAgrupadoPorDia(List<TransacaoItem> itens) {
+    final widgets = <Widget>[];
+    String? ultimoDia;
+
+    for (final item in itens) {
+      final data = tentarConverterParaData(item.data);
+      final diaAtual = data != null ? _chaveDia(data) : 'raw:${item.data}';
+      final iniciouNovoGrupo = diaAtual != ultimoDia;
+      if (iniciouNovoGrupo) {
+        if (data != null) {
+          widgets.add(_construirCabecalhoDia(data));
+        } else {
+          widgets.add(const SizedBox(height: _gapEntreDias));
+        }
+      }
+
+      final isPositivo = item.valor >= 0;
+      final cor = isPositivo ? _positivoColor : _negativoColor;
+      final categoria = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
+
+      widgets.add(
+        Card(
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: cor.withValues(alpha: 0.12),
+              child: Icon(
+                isPositivo ? Icons.arrow_upward : Icons.arrow_downward,
+                color: cor,
+              ),
+            ),
+            title: Text(item.nome),
+            subtitle: Text('$categoria - ${item.conta} - ${item.tipo} - ${formatarHoraCurta(item.data)}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatarMoeda(item.valor),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: cor,
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'desconsiderar') {
+                      await _alternarDesconsiderar(item);
+                    } else if (value == 'grande') {
+                      await _alternarGrandeTransacao(item);
+                    } else if (value == 'editar') {
+                      await _abrirEdicao(item);
+                    } else if (value == 'excluir') {
+                      await _confirmarExclusao(item);
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
+                    return [
+                      PopupMenuItem<String>(
+                        value: 'desconsiderar',
+                        child: Text(item.desconsiderar ? 'Considerar novamente' : 'Desconsiderar'),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'grande',
+                        child: Text(marcada ? 'Remover grande transação' : 'Grande transação'),
+                      ),
+                      const PopupMenuItem<String>(value: 'editar', child: Text('Editar')),
+                      const PopupMenuItem<String>(value: 'excluir', child: Text('Excluir')),
+                    ];
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      ultimoDia = diaAtual;
+    }
+
+    return widgets;
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -191,70 +298,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               ),
             ] else ...[
               _ResumoCard(total: state.total, exibindo: state.items.length),
-              const SizedBox(height: 8),
-              ...state.items.map(
-                (item) {
-                  final isPositivo = item.valor >= 0;
-                  final cor = isPositivo ? _positivoColor : _negativoColor;
-                  final categoria = item.categoria.trim().isEmpty ? 'Sem categoria' : item.categoria;
-
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: cor.withValues(alpha: 0.12),
-                        child: Icon(
-                          isPositivo ? Icons.arrow_upward : Icons.arrow_downward,
-                          color: cor,
-                        ),
-                      ),
-                      title: Text(item.nome),
-                      subtitle: Text(
-                        '$categoria • ${item.conta} • ${item.tipo} • ${formatarDataCurta(item.data)}',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            formatarMoeda(item.valor),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: cor,
-                            ),
-                          ),
-                          PopupMenuButton<String>(
-                            onSelected: (value) async {
-                              if (value == 'desconsiderar') {
-                                await _alternarDesconsiderar(item);
-                              } else if (value == 'grande') {
-                                await _alternarGrandeTransacao(item);
-                              } else if (value == 'editar') {
-                                await _abrirEdicao(item);
-                              } else if (value == 'excluir') {
-                                await _confirmarExclusao(item);
-                              }
-                            },
-                            itemBuilder: (context) {
-                              final marcada = (item.tag ?? '').toUpperCase() == 'GRANDE_TRANSACAO';
-                              return [
-                                PopupMenuItem<String>(
-                                  value: 'desconsiderar',
-                                  child: Text(item.desconsiderar ? 'Considerar novamente' : 'Desconsiderar'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'grande',
-                                  child: Text(marcada ? 'Remover grande transação' : 'Grande transação'),
-                                ),
-                                const PopupMenuItem<String>(value: 'editar', child: Text('Editar')),
-                                const PopupMenuItem<String>(value: 'excluir', child: Text('Excluir')),
-                              ];
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              ..._construirExtratoAgrupadoPorDia(state.items),
               if (state.isLoadingMore)
                 const Padding(
                   padding: EdgeInsets.all(16),
