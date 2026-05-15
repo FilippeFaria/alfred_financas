@@ -21,29 +21,29 @@ class TransactionsFilters {
   const TransactionsFilters({
     this.mesReferencia,
     this.categoria,
-    this.conta,
+    this.contas,
     this.tipo,
   });
 
   final String? mesReferencia;
   final String? categoria;
-  final String? conta;
+  final List<String>? contas;
   final String? tipo;
 
   TransactionsFilters copyWith({
     String? mesReferencia,
     String? categoria,
-    String? conta,
+    List<String>? contas,
     String? tipo,
     bool clearMesReferencia = false,
     bool clearCategoria = false,
-    bool clearConta = false,
+    bool clearContas = false,
     bool clearTipo = false,
   }) {
     return TransactionsFilters(
       mesReferencia: clearMesReferencia ? null : (mesReferencia ?? this.mesReferencia),
       categoria: clearCategoria ? null : (categoria ?? this.categoria),
-      conta: clearConta ? null : (conta ?? this.conta),
+      contas: clearContas ? null : (contas ?? this.contas),
       tipo: clearTipo ? null : (tipo ?? this.tipo),
     );
   }
@@ -52,16 +52,32 @@ class TransactionsFilters {
     return {
       'mes_referencia': mesReferencia,
       'categoria': categoria,
-      'conta': conta,
+      'contas': contas,
       'tipo': tipo,
     };
   }
 
   factory TransactionsFilters.fromMap(Map<String, dynamic> map) {
+    final contasRaw = map['contas'];
+    List<String>? contas;
+    if (contasRaw is List) {
+      final lista = contasRaw
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+      contas = lista.isEmpty ? null : lista;
+    } else {
+      final contaLegada = map['conta']?.toString().trim();
+      if (contaLegada != null && contaLegada.isNotEmpty) {
+        contas = [contaLegada];
+      }
+    }
     return TransactionsFilters(
       mesReferencia: _inferirMesReferencia(map),
       categoria: map['categoria']?.toString(),
-      conta: map['conta']?.toString(),
+      contas: contas,
       tipo: map['tipo']?.toString(),
     );
   }
@@ -224,7 +240,7 @@ class TransactionsRepository {
       dataInicio: intervaloMes?.dataInicio,
       dataFim: intervaloMes?.dataFim,
       categoria: filtros.categoria,
-      conta: filtros.conta,
+      contas: filtros.contas,
       tipo: filtros.tipo,
     );
 

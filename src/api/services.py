@@ -127,6 +127,7 @@ def listar_transacoes_paginado(
     data_fim: str | None = None,
     categoria: str | None = None,
     conta: str | None = None,
+    contas: list[str] | None = None,
     tipo: str | None = None,
 ) -> dict:
     pagina = max(1, int(pagina))
@@ -134,6 +135,13 @@ def listar_transacoes_paginado(
     offset = (pagina - 1) * limite
     data_inicio_obj = pd.to_datetime(data_inicio, errors="coerce").date() if data_inicio else None
     data_fim_obj = pd.to_datetime(data_fim, errors="coerce").date() if data_fim else None
+    contas_filtradas = [c.strip() for c in (contas or []) if c and c.strip()]
+    if conta and conta.strip():
+        conta_unica = conta.strip()
+        if conta_unica not in contas_filtradas:
+            contas_filtradas.append(conta_unica)
+    conta_efetiva = contas_filtradas[0] if len(contas_filtradas) == 1 else None
+    contas_efetivas = None if conta_efetiva else contas_filtradas
 
     try:
         with SessionLocal() as db:
@@ -144,7 +152,8 @@ def listar_transacoes_paginado(
                 data_inicio=data_inicio_obj,
                 data_fim=data_fim_obj,
                 categoria=categoria,
-                conta=conta,
+                conta=conta_efetiva,
+                contas=contas_efetivas,
                 tipo=tipo,
             )
             items = tx_repo.list_filtered(
@@ -154,7 +163,8 @@ def listar_transacoes_paginado(
                 data_inicio=data_inicio_obj,
                 data_fim=data_fim_obj,
                 categoria=categoria,
-                conta=conta,
+                conta=conta_efetiva,
+                contas=contas_efetivas,
                 tipo=tipo,
             )
             payload = [_map_tx_to_api_dict(item) for item in items]
@@ -191,8 +201,10 @@ def listar_transacoes_paginado(
         df = df[df["_data_ord"] <= pd.Timestamp(data_fim_obj) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)]
     if categoria:
         df = df[df["Categoria"] == categoria]
-    if conta:
-        df = df[df["Conta"] == conta]
+    if conta_efetiva:
+        df = df[df["Conta"] == conta_efetiva]
+    elif contas_efetivas:
+        df = df[df["Conta"].isin(contas_efetivas)]
     if tipo:
         df = df[df["Tipo"] == tipo]
 

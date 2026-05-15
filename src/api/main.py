@@ -115,6 +115,7 @@ def get_transacoes(
     data_fim: str | None = Query(default=None),
     categoria: str | None = Query(default=None),
     conta: str | None = Query(default=None),
+    contas: list[str] | None = Query(default=None),
     tipo: str | None = Query(default=None),
     user_context: UserContext = Depends(get_current_user_optional),
 ) -> TransacoesResponse:
@@ -125,6 +126,7 @@ def get_transacoes(
         data_fim=data_fim,
         categoria=categoria,
         conta=conta,
+        contas=contas,
         tipo=tipo,
     )
     return TransacoesResponse(**payload)

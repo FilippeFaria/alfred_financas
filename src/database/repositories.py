@@ -42,6 +42,7 @@ class TransactionRepository:
         data_fim: date | None = None,
         categoria: str | None = None,
         conta: str | None = None,
+        contas: list[str] | None = None,
         tipo: str | None = None,
     ) -> list[Transaction]:
         query = (
@@ -60,6 +61,8 @@ class TransactionRepository:
             query = query.filter(Category.nome == categoria)
         if conta:
             query = query.filter(Account.nome == conta)
+        elif contas:
+            query = query.filter(Account.nome.in_(contas))
         if tipo:
             query = query.filter(Transaction.tipo == tipo)
 
@@ -73,6 +76,7 @@ class TransactionRepository:
         data_fim: date | None = None,
         categoria: str | None = None,
         conta: str | None = None,
+        contas: list[str] | None = None,
         tipo: str | None = None,
     ) -> int:
         query = (
@@ -90,6 +94,8 @@ class TransactionRepository:
             query = query.filter(Category.nome == categoria)
         if conta:
             query = query.filter(Account.nome == conta)
+        elif contas:
+            query = query.filter(Account.nome.in_(contas))
         if tipo:
             query = query.filter(Transaction.tipo == tipo)
 

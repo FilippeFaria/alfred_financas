@@ -96,6 +96,7 @@ class AlfredApiClient {
     String? dataFim,
     String? categoria,
     String? conta,
+    List<String>? contas,
     String? tipo,
   }) async {
     try {
@@ -114,6 +115,9 @@ class AlfredApiClient {
       }
       if (conta != null && conta.isNotEmpty) {
         queryParameters['conta'] = conta;
+      }
+      if (contas != null && contas.isNotEmpty) {
+        queryParameters['contas'] = contas;
       }
       if (tipo != null && tipo.isNotEmpty) {
         queryParameters['tipo'] = tipo;

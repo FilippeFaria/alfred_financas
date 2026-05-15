@@ -15,6 +15,7 @@ import '../../../core/network/dto/categorias_dto.dart';
 import '../../../core/network/dto/notificacao_transacao_dto.dart';
 import '../../../core/network/dto/pending_transaction_dto.dart';
 import '../../../core/utils/formatters.dart';
+import '../../dashboard/data/dashboard_repository.dart';
 import '../data/insights_repository.dart';
 
 class InsightsPage extends ConsumerStatefulWidget {
@@ -686,6 +687,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     try {
       final repo = ref.read(insightsRepositoryProvider);
       await repo.confirmarTransacaoPendente(pendencia.id, payload: payload);
+      _invalidarCachesFinanceiros();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Transacao confirmada com sucesso.')),
@@ -757,6 +759,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         resultado.pendingTransactionId,
         payload: payload,
       );
+      _invalidarCachesFinanceiros();
       if (!mounted) return;
       setState(() {
         _resultado = null;
@@ -776,6 +779,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         });
       }
     }
+  }
+
+  void _invalidarCachesFinanceiros() {
+    ref.read(dashboardRepositoryProvider).clearCache();
+    ref.invalidate(dashboardSnapshotProvider);
   }
 
   Future<void> _ignorar() async {
@@ -894,7 +902,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                     items: tipos.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
                     onChanged: (value) => setStateDialog(() {
                       tipoSelecionado = value;
-                      if (tipoSelecionado != 'Transferência') {
+                      if (tipoSelecionado == 'Transferência') {
+                        categoriaSelecionada = 'Transferência';
+                      } else {
                         contaDestinoSelecionada = null;
                       }
                     }),

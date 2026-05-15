@@ -260,6 +260,7 @@ class ConfirmarTransacaoPendenteRequest(BaseModel):
     tipo: str | None = None
     categoria: str | None = None
     conta: str | None = None
+    conta_destino: str | None = None
     nome: str | None = None
     valor: float | None = None
     obs: str | None = None

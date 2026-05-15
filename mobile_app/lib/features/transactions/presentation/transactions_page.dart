@@ -1151,7 +1151,7 @@ class _FiltersCardState extends State<_FiltersCard> {
   int? _mes;
   int? _ano;
   String? _categoria;
-  String? _conta;
+  final Set<String> _contasSelecionadas = <String>{};
   String? _tipo;
 
   @override
@@ -1179,7 +1179,9 @@ class _FiltersCardState extends State<_FiltersCard> {
       _ano = null;
     }
     _categoria = filtros.categoria;
-    _conta = filtros.conta;
+    _contasSelecionadas
+      ..clear()
+      ..addAll(filtros.contas ?? const <String>[]);
     _tipo = filtros.tipo;
   }
 
@@ -1259,16 +1261,33 @@ class _FiltersCardState extends State<_FiltersCard> {
               onChanged: (value) => setState(() => _categoria = value),
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String?>(
-              initialValue: _conta,
-              decoration: const InputDecoration(labelText: 'Conta'),
-              items: [
-                const DropdownMenuItem<String?>(value: null, child: Text('Todas')),
-                ...?opcoes?.contas.map(
-                  (item) => DropdownMenuItem<String?>(value: item, child: Text(item)),
-                ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Contas',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final conta in opcoes?.contas ?? const <String>[])
+                  FilterChip(
+                    label: Text(conta),
+                    selected: _contasSelecionadas.contains(conta),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _contasSelecionadas.add(conta);
+                        } else {
+                          _contasSelecionadas.remove(conta);
+                        }
+                      });
+                    },
+                  ),
               ],
-              onChanged: (value) => setState(() => _conta = value),
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
@@ -1295,7 +1314,7 @@ class _FiltersCardState extends State<_FiltersCard> {
                         _mes = agora.month;
                         _ano = agora.year;
                         _categoria = null;
-                        _conta = null;
+                        _contasSelecionadas.clear();
                         _tipo = null;
                       });
                       await widget.onApply(TransactionsFilters(mesReferencia: mesReferenciaAtual));
@@ -1308,15 +1327,16 @@ class _FiltersCardState extends State<_FiltersCard> {
                   child: FilledButton(
                     onPressed: () async {
                       final mesReferencia = _mesReferenciaSelecionada();
+                      final contasSelecionadas = _contasSelecionadas.toList()..sort();
                       await widget.onApply(
                         widget.state.filtros.copyWith(
                           mesReferencia: mesReferencia,
                           categoria: _categoria,
-                          conta: _conta,
+                          contas: _contasSelecionadas.isEmpty ? null : contasSelecionadas,
                           tipo: _tipo,
                           clearMesReferencia: mesReferencia == null,
                           clearCategoria: _categoria == null,
-                          clearConta: _conta == null,
+                          clearContas: _contasSelecionadas.isEmpty,
                           clearTipo: _tipo == null,
                         ),
                       );
