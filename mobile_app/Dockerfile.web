@@ -7,6 +7,9 @@ RUN flutter pub get
 
 COPY . .
 
+RUN flutter config --enable-web
+RUN flutter create . --platforms web
+
 ARG API_BASE_URL
 RUN flutter build web --release \
     --dart-define=FLAVOR=prod \
