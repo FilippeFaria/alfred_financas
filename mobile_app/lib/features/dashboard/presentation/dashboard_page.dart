@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -18,7 +19,85 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   String? _categoriaSelecionada;
   DashboardSnapshot? _ultimoSnapshotVisivel;
   DashboardSnapshot? _ultimoSnapshotEvolucaoVisivel;
+  String? _ultimaChavePrefetchEvolucao;
   bool _salvandoOrcamento = false;
+
+  String _gerarChavePrefetch({
+    required DashboardFilters filtros,
+    required List<String> categorias,
+  }) {
+    final categoriasNormalizadas = categorias
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return [
+      filtros.anomeReferencia?.toString() ?? 'latest',
+      filtros.desconsiderar,
+      filtros.va,
+      filtros.vr,
+      filtros.bianca,
+      filtros.filippe,
+      filtros.dayToDate,
+      categoriasNormalizadas.join('|'),
+    ].join('||');
+  }
+
+  void _precarregarEvolucoesPorCategoria({
+    required DashboardSnapshot data,
+    required DashboardFilters filtros,
+  }) {
+    final categorias = data.categoriasDestaque
+        .map((item) => item.nome.trim())
+        .where((item) => item.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    if (categorias.isEmpty) {
+      return;
+    }
+
+    final chave = _gerarChavePrefetch(filtros: filtros, categorias: categorias);
+    if (_ultimaChavePrefetchEvolucao == chave) {
+      return;
+    }
+    _ultimaChavePrefetchEvolucao = chave;
+
+    final repository = ref.read(dashboardRepositoryProvider);
+    unawaited(
+      Future.wait(
+        categorias.map(
+          (categoria) => repository.carregarResumo(
+            filtros: filtros,
+            categoria: categoria,
+            mesesHistorico: 6,
+          ),
+        ),
+      ).catchError((_) {
+        // Prefetch é best-effort: erros não devem impactar a UX principal.
+      }),
+    );
+  }
+
+  void _atualizarCategoriaSelecionada({
+    required DashboardFilters filtros,
+    required String? value,
+  }) {
+    final categoria = value == 'Todas' ? null : value;
+    final repository = ref.read(dashboardRepositoryProvider);
+    final cache = repository.getCache(
+      filtros,
+      categoria: categoria,
+      mesesHistorico: 6,
+    );
+    setState(() {
+      _categoriaSelecionada = categoria;
+      if (cache != null) {
+        _ultimoSnapshotEvolucaoVisivel = cache;
+      }
+    });
+  }
 
   Future<void> _recarregar() async {
     final filtros = ref.read(dashboardFiltersProvider);
@@ -180,7 +259,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final snapshotEvolucaoAsync =
         ref.watch(dashboardSnapshotProvider(providerArgsEvolucao));
     final repository = ref.watch(dashboardRepositoryProvider);
-    snapshotAsync.whenData((data) => _ultimoSnapshotVisivel = data);
+    snapshotAsync.whenData((data) {
+      _ultimoSnapshotVisivel = data;
+      _precarregarEvolucoesPorCategoria(data: data, filtros: filtros);
+    });
     snapshotEvolucaoAsync.whenData((data) => _ultimoSnapshotEvolucaoVisivel = data);
 
     return Scaffold(
@@ -198,8 +280,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 data,
             filtros: filtros,
             categoriaSelecionada: _categoriaSelecionada,
-            onCategoriaChanged: (value) => setState(
-                () => _categoriaSelecionada = value == 'Todas' ? null : value),
+            onCategoriaChanged: (value) =>
+                _atualizarCategoriaSelecionada(filtros: filtros, value: value),
             onAtualizarFiltros: (novosFiltros) => ref
                 .read(dashboardFiltersProvider.notifier)
                 .aplicar(novosFiltros),
@@ -215,8 +297,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     _ultimoSnapshotVisivel!,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                onCategoriaChanged: (value) => setState(() =>
-                    _categoriaSelecionada = value == 'Todas' ? null : value),
+                onCategoriaChanged: (value) => _atualizarCategoriaSelecionada(
+                  filtros: filtros,
+                  value: value,
+                ),
                 onAtualizarFiltros: (novosFiltros) => ref
                     .read(dashboardFiltersProvider.notifier)
                     .aplicar(novosFiltros),
@@ -245,8 +329,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 dataEvolucaoFiltrada: cacheEvolucao,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
-                onCategoriaChanged: (value) => setState(() =>
-                    _categoriaSelecionada = value == 'Todas' ? null : value),
+                onCategoriaChanged: (value) => _atualizarCategoriaSelecionada(
+                  filtros: filtros,
+                  value: value,
+                ),
                 onAtualizarFiltros: (novosFiltros) => ref
                     .read(dashboardFiltersProvider.notifier)
                     .aplicar(novosFiltros),
