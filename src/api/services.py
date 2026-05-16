@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import date, datetime
 from decimal import Decimal
 import json
 import logging
 import os
 from pathlib import Path
+from time import monotonic
 import unicodedata
 from uuid import UUID
 
@@ -32,10 +34,63 @@ DATE_FORMAT = "%d/%m/%Y %H:%M"
 LOGGER = logging.getLogger("alfred.api.services")
 FALLBACK_ENABLED = os.getenv("ALFRED_SHEETS_FALLBACK_ENABLED", "true").strip().lower() in {"1", "true", "yes"}
 DUAL_WRITE_ENABLED = os.getenv("ALFRED_DUAL_WRITE_ENABLED", "false").strip().lower() in {"1", "true", "yes"}
+DASHBOARD_CACHE_TTL_SECONDS = int(os.getenv("ALFRED_DASHBOARD_CACHE_TTL_SECONDS", "60"))
+_DASHBOARD_SNAPSHOT_CACHE: dict[tuple, tuple[float, dict]] = {}
 
 
 def _log_error(event: str, **fields) -> None:
     LOGGER.error(json.dumps({"event": event, **fields}, ensure_ascii=False, default=str))
+
+
+def invalidar_dashboard_snapshot_cache() -> None:
+    _DASHBOARD_SNAPSHOT_CACHE.clear()
+
+
+def _dashboard_snapshot_cache_key(
+    *,
+    desconsiderar: bool,
+    va: bool,
+    vr: bool,
+    bianca: bool,
+    filippe: bool,
+    day_to_date: bool,
+    anome_referencia: int | None,
+    categoria: str | None,
+    meses_historico: int,
+) -> tuple:
+    return (
+        bool(desconsiderar),
+        bool(va),
+        bool(vr),
+        bool(bianca),
+        bool(filippe),
+        bool(day_to_date),
+        int(anome_referencia) if anome_referencia is not None else None,
+        (categoria or "").strip(),
+        max(3, min(int(meses_historico or 6), 12)),
+    )
+
+
+def _get_dashboard_snapshot_cache(key: tuple) -> dict | None:
+    if DASHBOARD_CACHE_TTL_SECONDS <= 0:
+        return None
+    cached = _DASHBOARD_SNAPSHOT_CACHE.get(key)
+    if cached is None:
+        return None
+    created_at, payload = cached
+    if monotonic() - created_at > DASHBOARD_CACHE_TTL_SECONDS:
+        _DASHBOARD_SNAPSHOT_CACHE.pop(key, None)
+        return None
+    return deepcopy(payload)
+
+
+def _set_dashboard_snapshot_cache(key: tuple, payload: dict) -> None:
+    if DASHBOARD_CACHE_TTL_SECONDS <= 0:
+        return
+    if len(_DASHBOARD_SNAPSHOT_CACHE) >= 32:
+        oldest_key = min(_DASHBOARD_SNAPSHOT_CACHE, key=lambda item: _DASHBOARD_SNAPSHOT_CACHE[item][0])
+        _DASHBOARD_SNAPSHOT_CACHE.pop(oldest_key, None)
+    _DASHBOARD_SNAPSHOT_CACHE[key] = (monotonic(), deepcopy(payload))
 
 
 def _normalizar_datas(df: pd.DataFrame, colunas: list[str] | None = None) -> pd.DataFrame:
@@ -317,6 +372,7 @@ def salvar_orcamento_valores(*, items: list[dict]) -> dict:
             details={"error_type": type(exc).__name__, "error": str(exc)},
         ) from exc
 
+    invalidar_dashboard_snapshot_cache()
     return {
         "data": data_snapshot.strftime("%d/%m/%Y"),
         "items": [{"categoria": cat, "valor": float(val)} for cat, val in sorted(valores.items())],
@@ -548,6 +604,7 @@ def criar_transacao(
             write_sheet(sheet, _normalizar_datas(df_final))
         except Exception as exc:
             _log_error("dual_write_warning", error_type=type(exc).__name__)
+    invalidar_dashboard_snapshot_cache()
     return resultado
 
 
@@ -557,6 +614,7 @@ def excluir_transacao_por_id(transacao_id: int) -> dict:
             user = UserRepository(db).get_or_create_default()
             removidos = TransactionRepository(db).delete_by_legacy_id(user_id=user.id, legacy_id=transacao_id)
             db.commit()
+            invalidar_dashboard_snapshot_cache()
             return {"id": transacao_id, "removidos": removidos, "mensagem": f"{removidos} registro(s) removido(s) para o id {transacao_id}."}
     except Exception as exc:
         _log_error("postgres_delete_error", error_type=type(exc).__name__)
@@ -762,6 +820,7 @@ def atualizar_transacao_por_id(
             if item is None:
                 raise ApiServiceError(code="DADOS_INVALIDOS", message="Nenhuma transacao atualizada.", status_code=400)
             db.refresh(item)
+            invalidar_dashboard_snapshot_cache()
             return _map_tx_to_api_dict(item)
     except ApiServiceError:
         raise
@@ -794,6 +853,7 @@ def atualizar_flags_transacao_por_id(
                 tag=tag,
             )
             db.commit()
+            invalidar_dashboard_snapshot_cache()
             return {
                 "id": transacao_id,
                 "removidos": 0,
@@ -973,10 +1033,25 @@ def obter_dashboard_snapshot_mobile(
     meses_historico: int = 6,
 ) -> dict:
     status = "ok"
+    cache_key = _dashboard_snapshot_cache_key(
+        desconsiderar=desconsiderar,
+        va=va,
+        vr=vr,
+        bianca=bianca,
+        filippe=filippe,
+        day_to_date=day_to_date,
+        anome_referencia=anome_referencia,
+        categoria=categoria,
+        meses_historico=meses_historico,
+    )
+    cached = _get_dashboard_snapshot_cache(cache_key)
+    if cached is not None:
+        return cached
+
     items = listar_transacoes()
     if not items:
         anome_atual = int(datetime.now().strftime("%Y%m"))
-        return {
+        payload = {
             "status": status,
             "anome_referencia": anome_atual,
             "anomes_disponiveis": [],
@@ -1003,6 +1078,8 @@ def obter_dashboard_snapshot_mobile(
             "serie_categoria": [],
             "serie_evolucao_despesas_mes": [],
         }
+        _set_dashboard_snapshot_cache(cache_key, payload)
+        return payload
 
     df = pd.DataFrame(
         [
@@ -1103,7 +1180,7 @@ def obter_dashboard_snapshot_mobile(
     serie_categoria = _serie_categoria_despesa(df_temp, meses_visiveis, categoria)
     serie_evolucao_despesas_mes = _serie_evolucao_despesas_mes(df_temp, anome_referencia=int(anome_base))
 
-    return {
+    payload = {
         "status": status,
         "anome_referencia": int(anome_base),
         "anomes_disponiveis": anomes_disponiveis,
@@ -1130,3 +1207,5 @@ def obter_dashboard_snapshot_mobile(
         "serie_categoria": serie_categoria,
         "serie_evolucao_despesas_mes": serie_evolucao_despesas_mes,
     }
+    _set_dashboard_snapshot_cache(cache_key, payload)
+    return payload
