@@ -54,8 +54,14 @@ class AlfredApiClient {
     if (exception.type == DioExceptionType.connectionTimeout ||
         exception.type == DioExceptionType.receiveTimeout ||
         exception.type == DioExceptionType.sendTimeout) {
+      final message = switch (exception.type) {
+        DioExceptionType.connectionTimeout => 'Timeout ao conectar com a API.',
+        DioExceptionType.receiveTimeout => 'Timeout aguardando resposta da API.',
+        DioExceptionType.sendTimeout => 'Timeout ao enviar dados para a API.',
+        _ => 'Timeout ao comunicar com a API.',
+      };
       throw ApiException(
-        message: 'Timeout ao conectar com a API.',
+        message: message,
         statusCode: response?.statusCode,
       );
     }
@@ -224,6 +230,11 @@ class AlfredApiClient {
       final response = await _dio.get(
         '/mobile/dashboard_snapshot',
         queryParameters: queryParameters,
+        options: Options(
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 30),
+        ),
       );
       return DashboardSnapshotDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {
