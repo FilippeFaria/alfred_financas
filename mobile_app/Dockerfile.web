@@ -7,7 +7,9 @@ RUN flutter pub get
 
 COPY . .
 
+RUN grep -n "path_provider" pubspec.yaml
 RUN flutter pub get
+RUN grep -n "path_provider" .dart_tool/package_config.json
 RUN flutter config --enable-web
 
 ARG API_BASE_URL
