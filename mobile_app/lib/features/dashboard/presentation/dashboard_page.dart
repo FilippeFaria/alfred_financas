@@ -75,6 +75,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ),
         ),
       ).catchError((_) {
+        return <DashboardSnapshot>[];
         // Prefetch é best-effort: erros não devem impactar a UX principal.
       }),
     );
@@ -1290,7 +1291,6 @@ class _EvolucaoDespesasMesPainter extends CustomPainter {
     final plotWidth = size.width - _evolucaoLeftPadding - _evolucaoRightPadding;
     final plotHeight =
         size.height - _evolucaoTopPadding - _evolucaoBottomPadding;
-    final baseY = size.height - _evolucaoBottomPadding;
 
     final gridPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.08)
@@ -2468,4 +2468,3 @@ class _PontoEvolucaoSelecionado {
   @override
   int get hashCode => Object.hash(anome, diaMes, cumulativo, color);
 }
-
