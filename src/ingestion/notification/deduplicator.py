@@ -76,9 +76,16 @@ class NotificationDeduplicator:
         eventos = [item for item in state.get("events", []) if isinstance(item, dict)]
 
         notification_key = (notification_key or "").strip()
+        valor_round = round(float(valor), 2)
         if notification_key:
             for evento in eventos:
                 if str(evento.get("notification_key") or "").strip() == notification_key:
+                    try:
+                        valor_evento = round(float(evento.get("valor") or 0), 2)
+                    except Exception:
+                        valor_evento = 0.0
+                    if valor_evento == 0.0 and valor_round != 0.0:
+                        continue
                     return DuplicateCheckResult(
                         is_duplicate=True,
                         reason="Duplicada por notification_key ja processada.",
@@ -86,7 +93,6 @@ class NotificationDeduplicator:
 
         posted_at = self._parse_iso(posted_at_iso) or datetime.now(timezone.utc)
         nome_norm = self._normalizar_nome(nome_estabelecimento)
-        valor_round = round(float(valor), 2)
         package_name = (package_name or "").strip()
 
         for evento in eventos:

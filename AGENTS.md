@@ -218,6 +218,56 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 
 ## Mudanças Recentes (v3)
 
+### ✅ Feature: Deploy do `mobile_app` Web no Render + hardening de compatibilidade (16/05/2026)
+**Objetivo**: publicar o app Flutter Web no Render com o mínimo de mudanças e sem quebrar fluxos já existentes.
+
+**Infra implementada (`mobile_app/`)**:
+- `Dockerfile.web` com build multi-stage (Flutter -> Nginx)
+- `nginx.conf` com fallback SPA (`try_files ... /index.html`) para rotas internas
+- `RENDER_DEPLOY.md` com checklist de configuração/validação
+
+**Ajustes de código para Web**:
+- `mobile_app/lib/main.dart`:
+  - proteção de integrações nativas Android com `kIsWeb`
+  - inicialização de notificações locais somente fora do Web
+- `mobile_app/lib/features/insights/presentation/insights_page.dart`:
+  - ocultação/desativação da captura nativa Android no navegador
+  - manutenção das ações de pendências (`Confirmar`, `Editar`, `Ignorar`) no Web
+  - gravação nativa ajustada para usar diretório temporário quando aplicável
+- `mobile_app/lib/core/network/alfred_api_client.dart`:
+  - timeout específico e maior para `/mobile/dashboard_snapshot`
+  - mensagens de timeout mais precisas (`conectar`, `aguardar resposta`, `enviar`)
+
+**Ajustes de versionamento que impactavam o build no Render**:
+- `mobile_app/.gitignore`: remoção de `web/` para garantir versionamento da pasta `mobile_app/web/`
+- `.gitignore` raiz: `env/` passou para `/env/` para não ignorar `mobile_app/lib/core/env/`
+- `mobile_app/pubspec.yaml`: inclusão de `path_provider`
+
+**Resultado esperado**:
+- build/deploy web estável no Render
+- app web navegável em `/transactions`, `/dashboard`, `/insights`, `/settings`
+- fluxos Android nativos preservados no mobile sem bloquear uso no navegador
+
+### ✅ Perf: cache de snapshot do dashboard na API (16/05/2026)
+**Problema observado**:
+- endpoint `GET /mobile/dashboard_snapshot` com latência significativamente maior que os demais endpoints, causando timeout intermitente no Web sob concorrência/cold start.
+
+**Backend implementado (`src/api/services.py`)**:
+- cache em memória para payload de `obter_dashboard_snapshot_mobile(...)`
+  - TTL configurável por env: `ALFRED_DASHBOARD_CACHE_TTL_SECONDS` (padrão `60`)
+  - chave inclui filtros relevantes (`desconsiderar`, `va`, `vr`, `bianca`, `filippe`, `day_to_date`, `anome_referencia`, `categoria`, `meses_historico`)
+  - limite de até 32 entradas com descarte da mais antiga
+- invalidação automática do cache em mutações que alteram visão de dashboard:
+  - `criar_transacao`
+  - `excluir_transacao_por_id`
+  - `atualizar_transacao_por_id`
+  - `atualizar_flags_transacao_por_id`
+  - `salvar_orcamento_valores`
+
+**Resultado esperado**:
+- primeira carga pode continuar mais cara, mas recargas/navegação subsequente ficam substancialmente mais rápidas
+- redução de timeout por recomputação completa em chamadas repetidas
+
 ### ✅ Fix: Transferência com criação atômica + edição robusta + refresh de saldos no mobile (15/05/2026)
 **Problemas observados**:
 - algumas transferências eram gravadas/consultadas com apenas uma linha, quebrando a edição de origem/destino
@@ -734,6 +784,16 @@ python run_api.py
   - manter `ALFRED_API_TIMEOUT_SECONDS` maior em produção (ex.: `30`)
   - evitar recargas duplicadas após operações compostas (ex.: transferência)
 
+### ⚠️ Snapshot do dashboard pode ser caro sem cache aquecido
+- **Problema**: `GET /mobile/dashboard_snapshot` agrega múltiplas visões em uma única resposta e pode ter latência alta em cold start/concorrência.
+- **Mitigação atual**:
+  - cache em memória no backend (`ALFRED_DASHBOARD_CACHE_TTL_SECONDS`, padrão `60`)
+  - invalidação automática em mutações de transação e orçamento
+- **Recomendação**:
+  - manter TTL > 0 em produção
+  - monitorar latência P95 desse endpoint no Render
+  - em plano free/sleep, considerar pré-aquecimento leve após wake-up
+
 ### ⚠️ Não versionar bancos locais
 - **Problema**: arquivos `.db` em Git geram risco de dados sensíveis e conflitos binários.
 - **Recomendação**: manter `*.db` no `.gitignore`.
@@ -780,5 +840,5 @@ python run_api.py
 
 ---
 
-**Última atualização**: 15/05/2026  
+**Última atualização**: 16/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot

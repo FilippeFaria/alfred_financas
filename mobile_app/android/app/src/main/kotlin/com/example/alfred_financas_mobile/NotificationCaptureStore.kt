@@ -18,25 +18,37 @@ object NotificationCaptureStore {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
+    @Synchronized
     fun enqueue(context: Context, payload: JSONObject) {
+        val notificationKey = payload.optString("notification_key").trim()
         val pref = prefs(context)
         val current = pref.getString(KEY_QUEUE, null)
         val items = if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
-        items.put(payload)
+        val deduped = JSONArray()
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            if (notificationKey.isNotBlank() && item.optString("notification_key").trim() == notificationKey) {
+                continue
+            }
+            deduped.put(item)
+        }
+        deduped.put(payload)
 
-        while (items.length() > KEY_MAX_QUEUE_ITEMS) {
-            items.remove(0)
+        while (deduped.length() > KEY_MAX_QUEUE_ITEMS) {
+            deduped.remove(0)
         }
 
-        pref.edit().putString(KEY_QUEUE, items.toString()).apply()
+        pref.edit().putString(KEY_QUEUE, deduped.toString()).apply()
     }
 
+    @Synchronized
     fun listPendingNotifications(context: Context): JSONArray {
         val pref = prefs(context)
         val current = pref.getString(KEY_QUEUE, null)
         return if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
     }
 
+    @Synchronized
     fun removePendingNotification(context: Context, notificationKey: String) {
         if (notificationKey.isBlank()) return
         val pref = prefs(context)

@@ -98,6 +98,20 @@ def listar_transacoes_pendentes(*, status: str | None = STATUS_PENDING) -> list[
         return [_map_pending(item) for item in itens]
 
 
+def buscar_pendencia_pendente_por_notification_key(*, notification_key: str) -> PendingTransaction | None:
+    notification_key = (notification_key or "").strip()
+    if not notification_key:
+        return None
+
+    with SessionLocal() as db:
+        user = UserRepository(db).get_or_create_default()
+        item = PendingTransactionRepository(db).find_pending_android_notification_by_key(
+            user_id=user.id,
+            notification_key=notification_key,
+        )
+        return _map_pending(item) if item is not None else None
+
+
 def ignorar_transacao_pendente(*, pending_id: str) -> PendingTransaction:
     with SessionLocal() as db:
         user = UserRepository(db).get_or_create_default()

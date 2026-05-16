@@ -17,24 +17,43 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   String? _categoriaSelecionada;
   DashboardSnapshot? _ultimoSnapshotVisivel;
+  DashboardSnapshot? _ultimoSnapshotEvolucaoVisivel;
   bool _salvandoOrcamento = false;
 
   Future<void> _recarregar() async {
     final filtros = ref.read(dashboardFiltersProvider);
     final repository = ref.read(dashboardRepositoryProvider);
-    final providerArgs = (
+    final ({DashboardFilters filtros, String? categoria, int mesesHistorico})
+        providerArgsGeral = (
+      filtros: filtros,
+      categoria: null,
+      mesesHistorico: 6,
+    );
+    final providerArgsEvolucao = (
       filtros: filtros,
       categoria: _categoriaSelecionada,
       mesesHistorico: 6,
     );
-    await repository.carregarResumo(
-      filtros: filtros,
-      categoria: _categoriaSelecionada,
-      mesesHistorico: 6,
-      forceRefresh: true,
-    );
-    ref.invalidate(dashboardSnapshotProvider(providerArgs));
-    await ref.read(dashboardSnapshotProvider(providerArgs).future);
+    await Future.wait([
+      repository.carregarResumo(
+        filtros: filtros,
+        categoria: null,
+        mesesHistorico: 6,
+        forceRefresh: true,
+      ),
+      repository.carregarResumo(
+        filtros: filtros,
+        categoria: _categoriaSelecionada,
+        mesesHistorico: 6,
+        forceRefresh: true,
+      ),
+    ]);
+    ref.invalidate(dashboardSnapshotProvider(providerArgsGeral));
+    ref.invalidate(dashboardSnapshotProvider(providerArgsEvolucao));
+    await Future.wait([
+      ref.read(dashboardSnapshotProvider(providerArgsGeral).future),
+      ref.read(dashboardSnapshotProvider(providerArgsEvolucao).future),
+    ]);
   }
 
   Future<void> _abrirEditorOrcamento(DashboardSnapshot data) async {
@@ -146,14 +165,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final filtros = ref.watch(dashboardFiltersProvider);
-    final providerArgs = (
+    final ({DashboardFilters filtros, String? categoria, int mesesHistorico})
+        providerArgsGeral = (
+      filtros: filtros,
+      categoria: null,
+      mesesHistorico: 6,
+    );
+    final providerArgsEvolucao = (
       filtros: filtros,
       categoria: _categoriaSelecionada,
       mesesHistorico: 6,
     );
-    final snapshotAsync = ref.watch(dashboardSnapshotProvider(providerArgs));
+    final snapshotAsync = ref.watch(dashboardSnapshotProvider(providerArgsGeral));
+    final snapshotEvolucaoAsync =
+        ref.watch(dashboardSnapshotProvider(providerArgsEvolucao));
     final repository = ref.watch(dashboardRepositoryProvider);
     snapshotAsync.whenData((data) => _ultimoSnapshotVisivel = data);
+    snapshotEvolucaoAsync.whenData((data) => _ultimoSnapshotEvolucaoVisivel = data);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard analítico')),
@@ -164,6 +192,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           skipError: true,
           data: (data) => _DashboardBody(
             data: data,
+            dataEvolucaoFiltrada:
+                snapshotEvolucaoAsync.valueOrNull ??
+                _ultimoSnapshotEvolucaoVisivel ??
+                data,
             filtros: filtros,
             categoriaSelecionada: _categoriaSelecionada,
             onCategoriaChanged: (value) => setState(
@@ -177,6 +209,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             if (_ultimoSnapshotVisivel != null) {
               return _DashboardBody(
                 data: _ultimoSnapshotVisivel!,
+                dataEvolucaoFiltrada:
+                    snapshotEvolucaoAsync.valueOrNull ??
+                    _ultimoSnapshotEvolucaoVisivel ??
+                    _ultimoSnapshotVisivel!,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
                 onCategoriaChanged: (value) => setState(() =>
@@ -194,12 +230,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           error: (error, stack) {
             final cache = repository.getCache(
               filtros,
-              categoria: _categoriaSelecionada,
+              categoria: null,
               mesesHistorico: 6,
             );
+            final cacheEvolucao = repository.getCache(
+                  filtros,
+                  categoria: _categoriaSelecionada,
+                  mesesHistorico: 6,
+                ) ??
+                cache;
             if (cache != null) {
               return _DashboardBody(
                 data: cache,
+                dataEvolucaoFiltrada: cacheEvolucao,
                 filtros: filtros,
                 categoriaSelecionada: _categoriaSelecionada,
                 onCategoriaChanged: (value) => setState(() =>
@@ -233,8 +276,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () =>
-                      ref.refresh(dashboardSnapshotProvider(providerArgs)),
+                  onPressed: () => _recarregar(),
                   child: const Text('Tentar novamente'),
                 ),
               ],
@@ -249,6 +291,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.data,
+    required this.dataEvolucaoFiltrada,
     required this.filtros,
     required this.categoriaSelecionada,
     required this.onCategoriaChanged,
@@ -258,6 +301,7 @@ class _DashboardBody extends StatelessWidget {
   });
 
   final DashboardSnapshot data;
+  final DashboardSnapshot dataEvolucaoFiltrada;
   final DashboardFilters filtros;
   final String? categoriaSelecionada;
   final ValueChanged<String?> onCategoriaChanged;
@@ -277,18 +321,21 @@ class _DashboardBody extends StatelessWidget {
               percentualOrcamento: item.percentualOrcamento,
             ))
         .toList();
-    final categoriasDisponiveis = {
+    final categoriasDisponiveis = <String>[
       'Todas',
-      ...data.categoriasDestaque.map((item) => item.nome),
-    }.toList();
+      ...{
+        ...data.categoriasDestaque.map((item) => item.nome),
+      }.toList()
+        ..sort(),
+    ];
     final categoriaEfetiva = categoriaSelecionada ?? 'Todas';
-    final evolucaoCategoria = data.serieCategoria
+    final evolucaoCategoria = dataEvolucaoFiltrada.serieCategoria
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
         .toList();
     final tendenciaMeses = data.serieMensal
         .map((item) => _SerieMensal(anome: item.anome, valor: item.valor))
         .toList();
-    final evolucaoDespesasMes = data.serieEvolucaoDespesasMes
+    final evolucaoDespesasMes = dataEvolucaoFiltrada.serieEvolucaoDespesasMes
         .map(
           (item) => _EvolucaoDespesaDia(
             anome: item.anome,
@@ -381,17 +428,21 @@ class _DashboardBody extends StatelessWidget {
           categorias: categoriasMes,
         ),
         const SizedBox(height: 12),
-        _EvolucaoDespesasMesCard(
-          evolucao: evolucaoDespesasMes,
-          aplicarFiltroDiaDoMes: filtros.dayToDate,
+        _FiltroCategoriaEvolucaoCard(
+          categoriaSelecionada: categoriaEfetiva,
+          categoriasDisponiveis: categoriasDisponiveis,
+          onCategoriaChanged: onCategoriaChanged,
         ),
         const SizedBox(height: 12),
         _EvolucaoCategoriaCard(
-          categoria: categoriaEfetiva,
-          categoriasDisponiveis: categoriasDisponiveis,
           mesesVisiveis: mesesVisiveis,
           evolucao: evolucaoEfetiva,
-          onCategoriaChanged: onCategoriaChanged,
+        ),
+        const SizedBox(height: 12),
+        _EvolucaoDespesasMesCard(
+          categoriaSelecionada: categoriaEfetiva,
+          evolucao: evolucaoDespesasMes,
+          aplicarFiltroDiaDoMes: filtros.dayToDate,
         ),
         const SizedBox(height: 12),
         _TendenciaMensalCard(
@@ -813,12 +864,76 @@ class _DistribuicaoCategoriaCardState
   }
 }
 
+class _FiltroCategoriaEvolucaoCard extends StatelessWidget {
+  const _FiltroCategoriaEvolucaoCard({
+    required this.categoriaSelecionada,
+    required this.categoriasDisponiveis,
+    required this.onCategoriaChanged,
+  });
+
+  final String categoriaSelecionada;
+  final List<String> categoriasDisponiveis;
+  final ValueChanged<String?> onCategoriaChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.blueGrey.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.filter_alt_outlined),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Filtro da seção de evolução',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Este filtro afeta apenas os 2 gráficos abaixo: Evolução de categoria e Evolução despesas no mês.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              initialValue: categoriaSelecionada,
+              decoration: const InputDecoration(
+                labelText: 'Escolha a categoria (somente seção de evolução)',
+              ),
+              items: categoriasDisponiveis
+                  .map(
+                    (item) => DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    ),
+                  )
+                  .toList(),
+              onChanged: onCategoriaChanged,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EvolucaoDespesasMesCard extends StatefulWidget {
   const _EvolucaoDespesasMesCard({
+    required this.categoriaSelecionada,
     required this.evolucao,
     required this.aplicarFiltroDiaDoMes,
   });
 
+  final String categoriaSelecionada;
   final List<_EvolucaoDespesaDia> evolucao;
   final bool aplicarFiltroDiaDoMes;
 
@@ -933,7 +1048,9 @@ class _EvolucaoDespesasMesCardState extends State<_EvolucaoDespesasMesCard> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Acumulado diario de despesas para os ultimos meses.',
+              widget.categoriaSelecionada == 'Todas'
+                  ? 'Acumulado diario de despesas para os ultimos meses.'
+                  : 'Acumulado diario de despesas para a categoria ${widget.categoriaSelecionada}.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 10),
@@ -1368,18 +1485,12 @@ List<int> _buildEixoDias(int maxDia) {
 
 class _EvolucaoCategoriaCard extends StatelessWidget {
   const _EvolucaoCategoriaCard({
-    required this.categoria,
-    required this.categoriasDisponiveis,
     required this.mesesVisiveis,
     required this.evolucao,
-    required this.onCategoriaChanged,
   });
 
-  final String? categoria;
-  final List<String> categoriasDisponiveis;
   final List<int> mesesVisiveis;
   final List<_SerieMensal> evolucao;
-  final ValueChanged<String?> onCategoriaChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1406,17 +1517,6 @@ class _EvolucaoCategoriaCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String?>(
-              initialValue: categoria,
-              decoration:
-                  const InputDecoration(labelText: 'Escolha a categoria'),
-              items: categoriasDisponiveis
-                  .map((item) =>
-                      DropdownMenuItem<String?>(value: item, child: Text(item)))
-                  .toList(),
-              onChanged: onCategoriaChanged,
             ),
             const SizedBox(height: 12),
             Text(
@@ -2282,3 +2382,4 @@ class _PontoEvolucaoSelecionado {
   @override
   int get hashCode => Object.hash(anome, diaMes, cumulativo, color);
 }
+

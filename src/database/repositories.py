@@ -354,6 +354,33 @@ class PendingTransactionRepository:
             query = query.filter(PendingTransaction.status == status)
         return query.all()
 
+    def find_pending_android_notification_by_key(
+        self,
+        *,
+        user_id: UUID,
+        notification_key: str,
+    ) -> PendingTransaction | None:
+        notification_key = (notification_key or "").strip()
+        if not notification_key:
+            return None
+
+        itens = (
+            self.db.query(PendingTransaction)
+            .filter(
+                PendingTransaction.user_id == user_id,
+                PendingTransaction.source == "android_notification",
+                PendingTransaction.status == "pending",
+            )
+            .order_by(PendingTransaction.created_at.desc())
+            .all()
+        )
+        for item in itens:
+            payload = item.suggested_payload if isinstance(item.suggested_payload, dict) else {}
+            notificacao = payload.get("notificacao") if isinstance(payload.get("notificacao"), dict) else {}
+            if str(notificacao.get("notification_key") or "").strip() == notification_key:
+                return item
+        return None
+
     def update_status(self, *, item: PendingTransaction, status: str) -> PendingTransaction:
         item.status = status
         self.db.flush()

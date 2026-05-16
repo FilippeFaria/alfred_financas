@@ -329,6 +329,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             notificationKey: key,
           );
           if (response.duplicate) {
+            final pendingIdExistente = response.pendingTransactionId?.trim();
+            if (pendingIdExistente != null && pendingIdExistente.isNotEmpty) {
+              await _removerNotificacaoPendenteLocal(key);
+              await _carregarPendenciasNotificacao();
+              continue;
+            }
+
             final aceitarMesmoAssim = await _confirmarDuplicidadeNotificacao(
               appName: appName.isEmpty ? packageName : appName,
               title: title,
