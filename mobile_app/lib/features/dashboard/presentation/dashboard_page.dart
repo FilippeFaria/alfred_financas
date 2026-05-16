@@ -233,13 +233,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               categoria: null,
               mesesHistorico: 6,
             );
-            final cacheEvolucao = repository.getCache(
-                  filtros,
-                  categoria: _categoriaSelecionada,
-                  mesesHistorico: 6,
-                ) ??
-                cache;
             if (cache != null) {
+              final cacheEvolucao = repository.getCache(
+                    filtros,
+                    categoria: _categoriaSelecionada,
+                    mesesHistorico: 6,
+                  ) ??
+                  cache;
               return _DashboardBody(
                 data: cache,
                 dataEvolucaoFiltrada: cacheEvolucao,
