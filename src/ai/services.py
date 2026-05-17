@@ -49,6 +49,16 @@ class NotificacaoTransacaoResultado:
 _NOTIFICATION_CREATION_LOCK = Lock()
 
 
+def _normalizar_valor_absoluto_sugestao_payload(payload: dict) -> None:
+    valor = payload.get("valor")
+    if valor in (None, ""):
+        return
+    try:
+        payload["valor"] = abs(float(valor))
+    except (TypeError, ValueError):
+        return
+
+
 def sugerir_transacao_por_texto(texto: str, *, data_referencia: datetime | None = None) -> SugestaoTransacaoResultado:
     entrada = EntradaTexto(texto=texto, data_referencia=data_referencia)
     sugestao = extrair_transacao_por_texto(entrada)
@@ -79,6 +89,7 @@ def sugerir_transacao_por_audio(caminho_arquivo: str, *, data_referencia: dateti
 def criar_pendencia_por_texto(texto: str, *, data_referencia: datetime | None = None):
     resultado = sugerir_transacao_por_texto(texto, data_referencia=data_referencia)
     payload = resultado.sugestao.model_dump(mode="json")
+    _normalizar_valor_absoluto_sugestao_payload(payload)
     return criar_transacao_pendente(
         source="texto",
         raw_text=resultado.sugestao.descricao_original,
@@ -91,6 +102,7 @@ def criar_pendencia_por_texto(texto: str, *, data_referencia: datetime | None = 
 def criar_pendencia_por_audio(caminho_arquivo: str, *, data_referencia: datetime | None = None):
     resultado = sugerir_transacao_por_audio(caminho_arquivo, data_referencia=data_referencia)
     payload = resultado.sugestao.model_dump(mode="json")
+    _normalizar_valor_absoluto_sugestao_payload(payload)
     return criar_transacao_pendente(
         source="audio",
         raw_text=resultado.sugestao.descricao_original,
@@ -191,6 +203,7 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         sugestao_payload["valor"] = valor_heuristico
     elif sugestao_payload.get("valor") in (None, "", 0):
         sugestao_payload["valor"] = valor_heuristico
+    _normalizar_valor_absoluto_sugestao_payload(sugestao_payload)
 
     # Em capturas por notificacao, a transacao usa o horario de criacao da pendencia.
     sugestao_payload["data"] = data_criacao_pendencia_iso
@@ -276,6 +289,7 @@ def criar_pendencia_por_sms(payload: dict) -> NotificacaoTransacaoResultado:
         sugestao_payload["valor"] = valor_heuristico
     elif sugestao_payload.get("valor") in (None, "", 0):
         sugestao_payload["valor"] = valor_heuristico
+    _normalizar_valor_absoluto_sugestao_payload(sugestao_payload)
 
     sugestao_payload["data"] = data_criacao_pendencia_iso
     if sugestao_payload.get("valor") in (None, "", 0):

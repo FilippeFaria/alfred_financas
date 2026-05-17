@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import unicodedata
 from uuid import UUID
 
 from src.api.services import criar_transacao
@@ -58,6 +59,19 @@ def _validar_payload_para_confirmacao(payload: dict) -> None:
     faltantes = [campo for campo in obrigatorios if payload.get(campo) in (None, "")]
     if faltantes:
         raise ValueError(f"Campos obrigatorios ausentes na pendencia: {', '.join(faltantes)}")
+
+
+def _normalizar_tipo(valor: str) -> str:
+    base = unicodedata.normalize("NFKD", str(valor or "").strip().lower())
+    return "".join(ch for ch in base if not unicodedata.combining(ch))
+
+
+def _normalizar_valor_por_tipo_para_confirmacao(*, tipo: str, valor: float) -> float:
+    tipo_norm = _normalizar_tipo(tipo)
+    valor_abs = abs(float(valor))
+    if tipo_norm == "despesa":
+        return -valor_abs
+    return valor_abs
 
 
 def criar_transacao_pendente(
@@ -150,11 +164,17 @@ def confirmar_transacao_pendente(
         if payload_confirmado:
             payload_base.update(payload_confirmado)
         _validar_payload_para_confirmacao(payload_base)
+        tipo_confirmado = str(payload_base["tipo"])
+        valor_confirmado = _normalizar_valor_por_tipo_para_confirmacao(
+            tipo=tipo_confirmado,
+            valor=float(payload_base["valor"]),
+        )
+        payload_base["valor"] = valor_confirmado
 
         transacao_oficial = criar_transacao(
             nome=str(payload_base["nome"]),
-            tipo=str(payload_base["tipo"]),
-            valor=float(payload_base["valor"]),
+            tipo=tipo_confirmado,
+            valor=valor_confirmado,
             categoria=str(payload_base["categoria"]),
             conta=str(payload_base["conta"]),
             conta_destino=payload_base.get("conta_destino"),

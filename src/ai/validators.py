@@ -41,12 +41,8 @@ def validar_transacao_sugerida(sugestao: TransacaoSugerida) -> tuple[list[str], 
     if sugestao.tipo in {"Transferência", "Pagamento de Cartão", "Investimento"} and not sugestao.conta_destino:
         campos_incertos.add("conta_destino")
 
-    if sugestao.tipo == "Despesa" and sugestao.valor is not None and sugestao.valor > 0:
-        avisos.append("Despesa normalmente deve ser negativa")
-        campos_incertos.add("valor")
-
-    if sugestao.tipo == "Receita" and sugestao.valor is not None and sugestao.valor < 0:
-        avisos.append("Receita normalmente deve ser positiva")
+    if sugestao.valor is not None and float(sugestao.valor) == 0:
+        avisos.append("Valor zero detectado")
         campos_incertos.add("valor")
 
     return avisos, sorted(campos_incertos)

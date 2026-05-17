@@ -93,6 +93,17 @@ register_exception_handlers(app)
 app.middleware("http")(auth_context_middleware)
 
 
+def _normalizar_valor_absoluto(payload: dict) -> dict:
+    valor = payload.get("valor")
+    if valor in (None, ""):
+        return payload
+    try:
+        payload["valor"] = abs(float(valor))
+    except (TypeError, ValueError):
+        return payload
+    return payload
+
+
 @app.on_event("startup")
 def startup_db() -> None:
     init_db()
@@ -310,6 +321,7 @@ def post_ai_texto_transacao(
 
     resultado = sugerir_transacao_por_texto(texto)
     sugestao_payload = resultado.sugestao.model_dump(mode="json")
+    sugestao_payload = _normalizar_valor_absoluto(sugestao_payload)
     pendencia = criar_transacao_pendente(
         source="texto",
         raw_text=resultado.sugestao.descricao_original,
@@ -354,6 +366,7 @@ async def post_ai_audio_transacao(
 
         resultado = sugerir_transacao_por_audio(caminho_temp)
         sugestao_payload = resultado.sugestao.model_dump(mode="json")
+        sugestao_payload = _normalizar_valor_absoluto(sugestao_payload)
         pendencia = criar_transacao_pendente(
             source="audio",
             raw_text=resultado.sugestao.descricao_original,
