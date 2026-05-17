@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/env/app_env.dart';
+import 'core/network/api_client.dart';
 import 'core/notifications/local_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -34,6 +35,7 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
     super.initState();
     if (!kIsWeb) {
       _sincronizarApiBaseUrl();
+      _sincronizarPreferenciasSmsNativas();
       _abrirRotaPendenteAoIniciar();
       _notificationSubscription = LocalNotificationService.instance.actions.listen((action) {
         if (!mounted) return;
@@ -57,6 +59,23 @@ class _AlfredAppState extends ConsumerState<AlfredApp> {
       );
     } catch (_) {
       // Se a ponte nativa falhar, o fluxo normal ainda funciona quando a tela abre.
+    }
+  }
+
+  Future<void> _sincronizarPreferenciasSmsNativas() async {
+    try {
+      final client = ref.read(alfredApiClientProvider);
+      final prefs = await client.getSmsCapturePreferences();
+      await _notificationChannel.invokeMethod<void>(
+        'setSmsCaptureConfig',
+        {
+          'sms_enabled': prefs.smsEnabled,
+          'bancos_selecionados': prefs.bancosSelecionados,
+          'mapeamento_cartao_ultimos4': prefs.mapeamentoCartaoUltimos4,
+        },
+      );
+    } catch (_) {
+      // Se a sincronizacao falhar, o app continua com o cache local anterior.
     }
   }
 

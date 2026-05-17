@@ -15,7 +15,7 @@ STATUS_CONFIRMED = "confirmed"
 STATUS_IGNORED = "ignored"
 STATUS_AUTO_CONFIRMED = "auto_confirmed"
 STATUS_VALIDOS = {STATUS_PENDING, STATUS_CONFIRMED, STATUS_IGNORED, STATUS_AUTO_CONFIRMED}
-SOURCE_VALIDOS = {"texto", "audio", "android_notification"}
+SOURCE_VALIDOS = {"texto", "audio", "android_notification", "android_sms"}
 
 
 def _map_pending(item) -> PendingTransaction:
@@ -69,7 +69,7 @@ def criar_transacao_pendente(
     transcription: str | None = None,
 ) -> PendingTransaction:
     if source not in SOURCE_VALIDOS:
-        raise ValueError("source invalido. Use 'texto', 'audio' ou 'android_notification'.")
+        raise ValueError("source invalido. Use 'texto', 'audio', 'android_notification' ou 'android_sms'.")
     if not raw_text or not raw_text.strip():
         raise ValueError("raw_text obrigatorio para criar pendencia.")
 

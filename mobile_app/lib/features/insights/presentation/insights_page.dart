@@ -12,7 +12,6 @@ import '../../../core/notifications/local_notification_service.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/dto/ai_transacao_dto.dart';
 import '../../../core/network/dto/categorias_dto.dart';
-import '../../../core/network/dto/notificacao_transacao_dto.dart';
 import '../../../core/network/dto/pending_transaction_dto.dart';
 import '../../../core/utils/formatters.dart';
 import '../../dashboard/data/dashboard_repository.dart';
@@ -329,51 +328,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             notificationKey: key,
           );
           if (response.duplicate) {
-            final pendingIdExistente = response.pendingTransactionId?.trim();
-            if (pendingIdExistente != null && pendingIdExistente.isNotEmpty) {
-              await _removerNotificacaoPendenteLocal(key);
-              await _carregarPendenciasNotificacao();
-              continue;
-            }
-
-            final aceitarMesmoAssim = await _confirmarDuplicidadeNotificacao(
-              appName: appName.isEmpty ? packageName : appName,
-              title: title,
-              text: text,
-              response: response,
-            );
-            if (!aceitarMesmoAssim) {
-              await _removerNotificacaoPendenteLocal(key);
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Duplicidade descartada.')),
-              );
-              continue;
-            }
-
-            final respostaForcada = await repo.interpretarTransacaoPorNotificacao(
-              packageName: packageName,
-              appName: appName.isEmpty ? packageName : appName,
-              title: title,
-              text: text,
-              subText: subText,
-              postedAt: postedAt.isEmpty ? DateTime.now().toIso8601String() : postedAt,
-              notificationKey: key,
-              ignorarDuplicata: true,
-            );
             await _removerNotificacaoPendenteLocal(key);
-            if (respostaForcada.created) {
-              criadas += 1;
-              final pendingId = respostaForcada.pendingTransactionId;
-              if (pendingId != null && pendingId.trim().isNotEmpty) {
-                await LocalNotificationService.instance.showDetectedTransactionNotification(
-                  pendingTransactionId: pendingId,
-                  conta: appName.isEmpty ? packageName : appName,
-                  nome: _extrairNomeDaNotificacao(text),
-                  valor: _extrairValorDaNotificacao(text),
-                  confidence: respostaForcada.confidence,
-                );
-              }
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Duplicidade descartada automaticamente.')),
+            );
+            if (response.pendingTransactionId != null && response.pendingTransactionId!.trim().isNotEmpty) {
+              await _carregarPendenciasNotificacao();
             }
             continue;
           }
@@ -419,74 +380,6 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     } catch (_) {
       // Se a limpeza local falhar, ainda assim preservamos o estado do backend.
     }
-  }
-
-  Future<bool> _confirmarDuplicidadeNotificacao({
-    required String appName,
-    required String title,
-    required String text,
-    required NotificacaoTransacaoResponseDto response,
-  }) async {
-    if (!mounted) return false;
-    final sugestao = response.transacaoSugerida;
-    final valorFormatado = sugestao?.valor == null ? '-' : formatarMoeda(sugestao!.valor!);
-    final linhasSugestao = <String>[
-      if ((sugestao?.nome ?? '').trim().isNotEmpty) 'Nome: ${sugestao!.nome!.trim()}',
-      if ((sugestao?.tipo ?? '').trim().isNotEmpty) 'Tipo: ${sugestao!.tipo!.trim()}',
-      if ((sugestao?.categoria ?? '').trim().isNotEmpty) 'Categoria: ${sugestao!.categoria!.trim()}',
-      if ((sugestao?.conta ?? '').trim().isNotEmpty) 'Conta: ${sugestao!.conta!.trim()}',
-      'Valor: $valorFormatado',
-      if ((response.duplicateReason ?? '').trim().isNotEmpty) 'Motivo: ${response.duplicateReason!.trim()}',
-    ];
-
-    final decision = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Duplicidade detectada'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('A notificacao de $appName parece repetir um lancamento ja processado.'),
-                const SizedBox(height: 12),
-                Text(
-                  response.message.isNotEmpty
-                      ? response.message
-                      : 'Voce ainda pode criar a pendencia mesmo assim, se fizer sentido.',
-                ),
-                const SizedBox(height: 12),
-                if (title.trim().isNotEmpty) Text('Titulo: ${title.trim()}'),
-                if (text.trim().isNotEmpty) Text('Texto: ${text.trim()}'),
-                const SizedBox(height: 12),
-                if (linhasSugestao.isNotEmpty) ...[
-                  const Text('Sugestao identificada:', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  ...linhasSugestao.map((linha) => Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Text(linha),
-                      )),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Descartar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Criar mesmo assim'),
-            ),
-          ],
-        );
-      },
-    );
-    if (!mounted) return false;
-    return decision ?? false;
   }
 
   Future<void> _interpretarTexto() async {
@@ -1162,7 +1055,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 12),
-            const Text('Pendencias detectadas por notificacao', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Pendencias detectadas por captura automatica', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             if (_loadingPendenciasNotificacao)
               const Padding(
@@ -1170,7 +1063,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (_pendenciasNotificacao.isEmpty)
-              const Text('Nenhuma pendencia de notificacao no momento.', style: TextStyle(color: Colors.black54))
+              const Text('Nenhuma pendencia de captura automatica no momento.', style: TextStyle(color: Colors.black54))
             else
               ..._pendenciasNotificacao.map(_buildPendenciaNotificacaoCard),
           ],
@@ -1182,7 +1075,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   Widget _buildPendenciaNotificacaoCard(PendingTransactionDto pendencia) {
     final s = pendencia.transacaoSugerida;
     final notificacao = pendencia.suggestedPayload['notificacao'];
-    final appName = notificacao is Map ? (notificacao['app_name']?.toString() ?? 'App') : 'App';
+    final sms = pendencia.suggestedPayload['sms'];
+    final isSms = pendencia.source == 'android_sms';
+    final origemNome = isSms ? 'SMS' : 'notificacao';
+    final appName = isSms
+        ? (sms is Map ? (sms['sender']?.toString() ?? 'Remetente') : 'Remetente')
+        : (notificacao is Map ? (notificacao['app_name']?.toString() ?? 'App') : 'App');
     final nome = s?.nome?.trim().isNotEmpty == true ? s!.nome!.trim() : 'Transacao detectada';
     final tipo = s?.tipo ?? '-';
     final categoria = s?.categoria ?? '-';
@@ -1204,7 +1102,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             ),
             const SizedBox(height: 4),
             Text(
-              'Detectado por notificacao $appName - ${_formatarDataHoraDeteccao(pendencia.createdAt)}',
+              'Detectado por $origemNome $appName - ${_formatarDataHoraDeteccao(pendencia.createdAt)}',
               style: const TextStyle(color: Colors.black54),
             ),
             const SizedBox(height: 10),

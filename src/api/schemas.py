@@ -296,3 +296,35 @@ class NotificacaoTransacaoResponse(BaseModel):
     duplicate_reason: str | None = None
     transacao_sugerida: TransacaoSugeridaResponse | None = None
     message: str
+
+
+class SmsCapturaPreferenciasRequest(BaseModel):
+    sms_enabled: bool = False
+    bancos_selecionados: list[str] = Field(default_factory=list)
+    mapeamento_cartao_ultimos4: dict[str, str] = Field(default_factory=dict)
+
+
+class SmsBancoCatalogoItemResponse(BaseModel):
+    id: str
+    nome: str
+
+
+class SmsCapturaPreferenciasResponse(BaseModel):
+    sms_enabled: bool
+    bancos_selecionados: list[str]
+    mapeamento_cartao_ultimos4: dict[str, str]
+    catalogo_bancos: list[SmsBancoCatalogoItemResponse]
+    catalogo_cartoes: list[str]
+
+
+class SmsTransacaoRequest(BaseModel):
+    source: str = Field(default="android_sms", min_length=1)
+    sender: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    received_at: str
+    sms_message_id: str = Field(min_length=1)
+    ignorar_duplicata: bool = False
+
+
+class SmsTransacaoResponse(NotificacaoTransacaoResponse):
+    pass

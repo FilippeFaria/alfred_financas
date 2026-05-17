@@ -32,6 +32,10 @@ from src.api.schemas import (
     DashboardSnapshotResponse,
     NotificacaoTransacaoRequest,
     NotificacaoTransacaoResponse,
+    SmsCapturaPreferenciasRequest,
+    SmsCapturaPreferenciasResponse,
+    SmsTransacaoRequest,
+    SmsTransacaoResponse,
     OrcamentoValoresResponse,
     SalvarOrcamentoRequest,
     TextoParaTransacaoResponse,
@@ -57,6 +61,7 @@ from src.api.services import (
 from src.ai.services import (
     criar_pendencia_por_audio,
     criar_pendencia_por_notificacao,
+    criar_pendencia_por_sms,
     criar_pendencia_por_texto,
     sugerir_transacao_por_audio,
     sugerir_transacao_por_texto,
@@ -68,6 +73,7 @@ from src.services.pending_transaction_service import (
     ignorar_transacao_pendente,
     listar_transacoes_pendentes,
 )
+from src.services.sms_capture_preferences_service import obter_preferencias_sms, salvar_preferencias_sms
 
 
 app = FastAPI(
@@ -394,6 +400,47 @@ def post_ai_notificacao_transacao(
         ),
         message=resultado.message,
     )
+
+
+@app.post("/ai/sms/transacao", response_model=SmsTransacaoResponse)
+def post_ai_sms_transacao(
+    payload: SmsTransacaoRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> SmsTransacaoResponse:
+    resultado = criar_pendencia_por_sms(payload.model_dump(mode="json"))
+    return SmsTransacaoResponse(
+        created=resultado.created,
+        duplicate=resultado.duplicate,
+        pending_transaction_id=resultado.pending_transaction_id,
+        confidence=resultado.confidence,
+        duplicate_reason=resultado.duplicate_reason,
+        transacao_sugerida=(
+            TransacaoSugeridaResponse(**resultado.transacao_sugerida)
+            if resultado.transacao_sugerida is not None
+            else None
+        ),
+        message=resultado.message,
+    )
+
+
+@app.get("/mobile/captura/sms/preferencias", response_model=SmsCapturaPreferenciasResponse)
+def get_mobile_sms_captura_preferencias(
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> SmsCapturaPreferenciasResponse:
+    return SmsCapturaPreferenciasResponse(**obter_preferencias_sms())
+
+
+@app.put("/mobile/captura/sms/preferencias", response_model=SmsCapturaPreferenciasResponse)
+def put_mobile_sms_captura_preferencias(
+    payload: SmsCapturaPreferenciasRequest,
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> SmsCapturaPreferenciasResponse:
+    resposta = salvar_preferencias_sms(
+        sms_enabled=payload.sms_enabled,
+        bancos_selecionados=payload.bancos_selecionados,
+        mapeamento_cartao_ultimos4=payload.mapeamento_cartao_ultimos4,
+    )
+    return SmsCapturaPreferenciasResponse(**resposta)
 
 
 @app.post("/ia/pendencias/audio", response_model=PendingTransactionResponse)

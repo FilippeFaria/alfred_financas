@@ -42,6 +42,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    sms_capture_preference: Mapped["SmsCapturePreference"] = relationship(
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
 
 
 class Account(Base):
@@ -213,3 +217,34 @@ class PendingTransaction(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="pending_transactions")
+
+
+class SmsCapturePreference(Base):
+    """Preferencias de captura automatica por SMS por usuario."""
+
+    __tablename__ = "sms_capture_preferences"
+
+    id: Mapped[UUIDValue] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUIDValue] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    sms_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    bancos_selecionados: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    mapeamento_cartao_ultimos4: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    user: Mapped["User"] = relationship()

@@ -1,49 +1,43 @@
-"""Parser e heuristicas de notificacao Android para transacoes."""
+"""Parser e heuristicas de SMS Android para transacoes."""
 
 from __future__ import annotations
 
 import re
 from datetime import datetime
 
-from src.ingestion.notification.normalizer import NotificacaoNormalizada
+from src.ingestion.sms.normalizer import SmsNormalizado, inferir_banco_por_sender
 
 
-_PACKAGE_CONTA_MAP = {
-    "com.nu.production": "Nubank",
-    "com.itau": "Itaú CC",
-    "br.com.intermedium": "Inter",
-    "com.c6bank.app": "C6Invest",
-    "com.mercadopago.wallet": "99Pay",
-    "com.picpay": "99Pay",
+_BANCO_CONTA_MAP = {
+    "nubank": "Nubank",
+    "itau": "Itaú CC",
+    "inter": "Inter",
+    "c6": "C6Invest",
+    "mercado_pago": "99Pay",
+    "picpay": "99Pay",
 }
 
 
-def montar_texto_notificacao(notificacao: NotificacaoNormalizada) -> str:
+def montar_texto_sms(sms: SmsNormalizado) -> str:
     partes = [
-        "Origem: notificacao Android",
-        f"App: {notificacao.app_name or notificacao.package_name}",
+        "Origem: SMS Android",
+        f"Remetente: {sms.sender}",
+        f"Texto: {sms.text}",
     ]
-    if notificacao.title:
-        partes.append(f"Titulo: {notificacao.title}")
-    partes.append(f"Texto: {notificacao.text}")
-    if notificacao.sub_text:
-        partes.append(f"Subtexto: {notificacao.sub_text}")
-    if notificacao.posted_at:
-        partes.append(f"Horario: {notificacao.posted_at}")
+    if sms.received_at:
+        partes.append(f"Horario: {sms.received_at}")
     return " | ".join(partes)
 
 
-def inferir_tipo_por_texto(notificacao: NotificacaoNormalizada) -> str | None:
-    texto = f"{notificacao.title} {notificacao.text} {notificacao.sub_text or ''}".lower()
-    if "pix recebido" in texto or "recebido" in texto:
+def inferir_tipo_por_texto(texto: str) -> str | None:
+    base = (texto or "").lower()
+    if "pix recebido" in base or "recebido" in base:
         return "Receita"
-    if "pagamento de fatura" in texto or "fatura" in texto:
+    if "pagamento de fatura" in base or "fatura" in base:
         return "Pagamento de Cartão"
-    if "transfer" in texto and ("enviad" in texto or "enviado" in texto):
+    if "transfer" in base and ("enviado" in base or "enviad" in base):
         return "Transferência"
-    if "compra aprovada" in texto or "compra" in texto:
-        return "Despesa"
-    if "pagamento" in texto and "receb" not in texto:
+    if "compra" in base or ("pagamento" in base and "receb" not in base):
         return "Despesa"
     return None
 
@@ -55,10 +49,8 @@ def extrair_valor(texto: str) -> float | None:
             return None
 
         if "," in token:
-            # Formato BR: 1.234,56
             normalizado = token.replace(".", "").replace(",", ".")
         else:
-            # Sem virgula: pode ser decimal com ponto (44.98) ou milhar (4.498)
             qtd_pontos = token.count(".")
             if qtd_pontos == 0:
                 normalizado = token
@@ -87,7 +79,7 @@ def extrair_valor(texto: str) -> float | None:
         r"r\$\s*([0-9\.\,]+)",
         r"valor\s*de\s*([0-9\.\,]+)",
     ]
-    texto_lower = texto.lower()
+    texto_lower = (texto or "").lower()
     for padrao in padroes:
         match = re.search(padrao, texto_lower, flags=re.IGNORECASE)
         if not match:
@@ -98,35 +90,19 @@ def extrair_valor(texto: str) -> float | None:
     return None
 
 
-def inferir_conta(notificacao: NotificacaoNormalizada) -> str | None:
-    package_name = notificacao.package_name or ""
-    if package_name in _PACKAGE_CONTA_MAP:
-        return _PACKAGE_CONTA_MAP[package_name]
-    if package_name.startswith("com.itau"):
-        return "Itaú CC"
-    app = (notificacao.app_name or "").lower()
-    if "nubank" in app:
-        return "Nubank"
-    if "itau" in app or "itaú" in app:
-        return "Itaú CC"
-    if "inter" in app:
-        return "Inter"
-    return None
-
-
 def inferir_nome_estabelecimento(texto: str) -> str | None:
     padroes = [
         r"\bem\s+([a-z0-9\-\_\s\.]{3,})",
         r"\bno\s+([a-z0-9\-\_\s\.]{3,})",
         r"\bpara\s+([a-z0-9\-\_\s\.]{3,})",
     ]
-    texto_limpo = texto.strip()
+    texto_limpo = (texto or "").strip()
     for padrao in padroes:
         match = re.search(padrao, texto_limpo, flags=re.IGNORECASE)
         if not match:
             continue
         nome = match.group(1).strip(" .,-")
-        nome = re.split(r"(com cartao|cartao final|ref:|id:)", nome, flags=re.IGNORECASE)[0].strip()
+        nome = re.split(r"(cartao final|cartao|ref:|id:)", nome, flags=re.IGNORECASE)[0].strip()
         if nome:
             return nome.upper()
     if texto_limpo:
@@ -134,8 +110,45 @@ def inferir_nome_estabelecimento(texto: str) -> str | None:
     return None
 
 
-def parse_posted_at_iso(posted_at: str) -> str | None:
-    raw = (posted_at or "").strip()
+def inferir_conta(sender: str, *, cartao_por_ultimos4: dict[str, str], texto: str) -> str | None:
+    ultimos4 = extrair_ultimos4_cartao(texto)
+    if ultimos4:
+        cartao = resolver_cartao_por_ultimos4(ultimos4, cartao_por_ultimos4=cartao_por_ultimos4)
+        if cartao:
+            return cartao
+    banco = inferir_banco_por_sender(sender)
+    if banco and banco in _BANCO_CONTA_MAP:
+        return _BANCO_CONTA_MAP[banco]
+    return None
+
+
+def extrair_ultimos4_cartao(texto: str) -> str | None:
+    base = (texto or "").lower()
+    patterns = (
+        r"final\s+(\d{4})",
+        r"cart[aã]o\s+\*+(\d{4})",
+        r"cart[aã]o\s+(\d{4})",
+        r"\b(\d{4})\b",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, base, flags=re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return None
+
+
+def resolver_cartao_por_ultimos4(ultimos4: str, *, cartao_por_ultimos4: dict[str, str]) -> str | None:
+    alvo = (ultimos4 or "").strip()
+    if not alvo:
+        return None
+    for cartao, sufixo in cartao_por_ultimos4.items():
+        if str(sufixo).strip() == alvo:
+            return str(cartao).strip() or None
+    return None
+
+
+def parse_received_at_iso(received_at: str) -> str | None:
+    raw = (received_at or "").strip()
     if not raw:
         return None
     try:

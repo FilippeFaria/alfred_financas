@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from threading import Lock
 
-from src.ingestion.notification.deduplicator import NotificationDeduplicator
+from src.ai.capture_deduplication import detectar_duplicidade_captura
+from src.database.connection import SessionLocal
+from src.database.repositories import PendingTransactionRepository, UserRepository
 from src.ingestion.notification.normalizer import eh_notificacao_financeira, normalizar_notificacao
-from src.services.pending_transaction_service import (
-    buscar_pendencia_pendente_por_notification_key,
-    criar_transacao_pendente,
-)
+from src.ingestion.sms.normalizer import eh_sms_financeiro, normalizar_sms
+from src.services.pending_transaction_service import criar_transacao_pendente
+from src.services.sms_capture_preferences_service import obter_preferencias_sms
 
 from .parsers.audio_parser import extrair_transacao_por_audio
 from .parsers.notification_parser import (
@@ -19,6 +20,15 @@ from .parsers.notification_parser import (
     inferir_tipo_por_texto,
     montar_texto_notificacao,
     parse_posted_at_iso,
+)
+from .parsers.sms_parser import (
+    extrair_ultimos4_cartao,
+    extrair_valor as extrair_valor_sms,
+    inferir_conta as inferir_conta_sms,
+    inferir_nome_estabelecimento as inferir_nome_sms,
+    inferir_tipo_por_texto as inferir_tipo_sms,
+    montar_texto_sms,
+    parse_received_at_iso,
 )
 from .parsers.text_parser import extrair_transacao_por_texto
 from .schemas import EntradaAudio, EntradaTexto, SugestaoTransacaoResultado
@@ -90,9 +100,65 @@ def criar_pendencia_por_audio(caminho_arquivo: str, *, data_referencia: datetime
     )
 
 
+def _criar_pendencia_com_deduplicacao_captura(
+    *,
+    source: str,
+    raw_text: str,
+    sugestao_payload: dict,
+    confidence: float,
+    event_key: str | None,
+    occurred_at_iso: str | None,
+    ignorar_duplicata: bool,
+) -> NotificacaoTransacaoResultado:
+    event_key_norm = (event_key or "").strip()
+    with _NOTIFICATION_CREATION_LOCK:
+        with SessionLocal() as db:
+            user = UserRepository(db).get_or_create_default()
+            pending_repo = PendingTransactionRepository(db)
+            duplicate_check = detectar_duplicidade_captura(
+                pending_repo=pending_repo,
+                user_id=user.id,
+                source=source,
+                event_key=event_key_norm,
+                sugestao_payload=sugestao_payload,
+                occurred_at_iso=occurred_at_iso,
+            )
+
+        sugestao_payload["capture_metadata"] = {
+            "channel": source,
+            "event_key": event_key_norm or None,
+            "occurred_at": occurred_at_iso,
+            "fingerprint": duplicate_check.fingerprint,
+        }
+        if duplicate_check.is_duplicate and not ignorar_duplicata:
+            return NotificacaoTransacaoResultado(
+                created=False,
+                duplicate=True,
+                message=duplicate_check.reason or "Captura automatica duplicada ignorada.",
+                duplicate_reason=duplicate_check.reason,
+                transacao_sugerida=sugestao_payload,
+            )
+
+        pendencia = criar_transacao_pendente(
+            source=source,
+            raw_text=raw_text,
+            transcription=None,
+            suggested_payload=sugestao_payload,
+            confidence=float(sugestao_payload.get("confianca") or confidence),
+        )
+
+    return NotificacaoTransacaoResultado(
+        created=True,
+        duplicate=False,
+        pending_transaction_id=pendencia.id,
+        confidence=float(confidence),
+        message="Transacao pendente criada com sucesso.",
+        transacao_sugerida=sugestao_payload,
+    )
+
+
 def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResultado:
     notificacao = normalizar_notificacao(payload)
-    deduplicador = NotificationDeduplicator()
     ignorar_duplicata = bool(payload.get("ignorar_duplicata", False))
     data_criacao_pendencia_iso = datetime.now().isoformat(timespec="seconds")
 
@@ -121,14 +187,13 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         sugestao_payload["nome"] = nome_heuristico
     if not sugestao_payload.get("data") and data_postada_iso:
         sugestao_payload["data"] = data_postada_iso
-    if sugestao_payload.get("valor") in (None, "", 0):
+    if valor_heuristico not in (None, "", 0):
+        sugestao_payload["valor"] = valor_heuristico
+    elif sugestao_payload.get("valor") in (None, "", 0):
         sugestao_payload["valor"] = valor_heuristico
 
     # Em capturas por notificacao, a transacao usa o horario de criacao da pendencia.
     sugestao_payload["data"] = data_criacao_pendencia_iso
-
-    valor_final = sugestao_payload.get("valor")
-    nome_final = str(sugestao_payload.get("nome") or nome_heuristico or "").strip()
 
     if sugestao_payload.get("valor") in (None, "", 0):
         return NotificacaoTransacaoResultado(
@@ -149,64 +214,94 @@ def criar_pendencia_por_notificacao(payload: dict) -> NotificacaoTransacaoResult
         "posted_at": notificacao.posted_at or None,
         "notification_key": notificacao.notification_key or None,
     }
-
-    with _NOTIFICATION_CREATION_LOCK:
-        pendencia_existente = buscar_pendencia_pendente_por_notification_key(
-            notification_key=notificacao.notification_key,
-        )
-        if pendencia_existente is not None and not ignorar_duplicata:
-            return NotificacaoTransacaoResultado(
-                created=False,
-                duplicate=True,
-                pending_transaction_id=pendencia_existente.id,
-                confidence=pendencia_existente.confidence,
-                message="Notificacao ja possui pendencia aguardando revisao.",
-                duplicate_reason="Pendencia existente para a mesma notification_key.",
-                transacao_sugerida=pendencia_existente.suggested_payload,
-            )
-
-        duplicate_check = deduplicador.check_duplicate(
-            notification_key=notificacao.notification_key,
-            package_name=notificacao.package_name,
-            valor=float(valor_final),
-            nome_estabelecimento=nome_final,
-            posted_at_iso=data_postada_iso,
-        )
-        if duplicate_check.is_duplicate and not ignorar_duplicata:
-            return NotificacaoTransacaoResultado(
-                created=False,
-                duplicate=True,
-                message=duplicate_check.reason or "Notificacao duplicada ignorada.",
-                duplicate_reason=duplicate_check.reason,
-                transacao_sugerida=sugestao_payload,
-            )
-
-        pendencia = criar_transacao_pendente(
-            source="android_notification",
-            raw_text=notificacao.text,
-            transcription=None,
-            suggested_payload=sugestao_payload,
-            confidence=float(sugestao_payload.get("confianca") or resultado.confianca),
-        )
-
-        deduplicador.mark_processed(
-            notification_key=notificacao.notification_key,
-            package_name=notificacao.package_name,
-            valor=float(valor_final),
-            nome_estabelecimento=nome_final,
-            posted_at_iso=data_postada_iso,
-        )
-
-    return NotificacaoTransacaoResultado(
-        created=True,
-        duplicate=False,
-        pending_transaction_id=pendencia.id,
+    return _criar_pendencia_com_deduplicacao_captura(
+        source="android_notification",
+        raw_text=notificacao.text,
+        sugestao_payload=sugestao_payload,
         confidence=float(resultado.confianca),
-        message=(
-            "Transacao pendente criada com sucesso"
-            if not duplicate_check.is_duplicate
-            else "Transacao pendente criada mesmo com alerta de duplicidade."
-        ),
-        duplicate_reason=duplicate_check.reason if duplicate_check.is_duplicate else None,
-        transacao_sugerida=sugestao_payload,
+        event_key=notificacao.notification_key,
+        occurred_at_iso=data_postada_iso,
+        ignorar_duplicata=ignorar_duplicata,
+    )
+
+
+def criar_pendencia_por_sms(payload: dict) -> NotificacaoTransacaoResultado:
+    sms = normalizar_sms(payload)
+    ignorar_duplicata = bool(payload.get("ignorar_duplicata", False))
+    data_criacao_pendencia_iso = datetime.now().isoformat(timespec="seconds")
+    preferencias = obter_preferencias_sms()
+
+    if not bool(preferencias.get("sms_enabled", False)):
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=False,
+            message="Captura por SMS desativada nas preferencias.",
+        )
+
+    bancos_habilitados = [str(item) for item in preferencias.get("bancos_selecionados", [])]
+    if not eh_sms_financeiro(sms, bancos_habilitados=bancos_habilitados):
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=False,
+            message="SMS ignorado por nao corresponder aos filtros financeiros configurados.",
+        )
+
+    cartao_por_ultimos4 = {
+        str(cartao): str(ultimos4)
+        for cartao, ultimos4 in dict(preferencias.get("mapeamento_cartao_ultimos4", {})).items()
+    }
+    tipo_heuristico = inferir_tipo_sms(sms.text)
+    valor_heuristico = extrair_valor_sms(sms.text)
+    nome_heuristico = inferir_nome_sms(sms.text)
+    conta_heuristica = inferir_conta_sms(
+        sms.sender,
+        cartao_por_ultimos4=cartao_por_ultimos4,
+        texto=sms.text,
+    )
+    ultimos4_detectado = extrair_ultimos4_cartao(sms.text)
+    data_recebimento_iso = parse_received_at_iso(sms.received_at)
+
+    texto_para_ia = montar_texto_sms(sms)
+    resultado = sugerir_transacao_por_texto(texto_para_ia)
+    sugestao_payload = resultado.sugestao.model_dump(mode="json")
+    if not sugestao_payload.get("tipo") and tipo_heuristico:
+        sugestao_payload["tipo"] = tipo_heuristico
+    if not sugestao_payload.get("conta") and conta_heuristica:
+        sugestao_payload["conta"] = conta_heuristica
+    if not sugestao_payload.get("nome") and nome_heuristico:
+        sugestao_payload["nome"] = nome_heuristico
+    if not sugestao_payload.get("data") and data_recebimento_iso:
+        sugestao_payload["data"] = data_recebimento_iso
+    if valor_heuristico not in (None, "", 0):
+        sugestao_payload["valor"] = valor_heuristico
+    elif sugestao_payload.get("valor") in (None, "", 0):
+        sugestao_payload["valor"] = valor_heuristico
+
+    sugestao_payload["data"] = data_criacao_pendencia_iso
+    if sugestao_payload.get("valor") in (None, "", 0):
+        return NotificacaoTransacaoResultado(
+            created=False,
+            duplicate=False,
+            message="SMS ignorado por nao conter valor identificavel.",
+        )
+
+    sugestao_payload["source"] = "android_sms"
+    sugestao_payload["raw_text"] = sms.text
+    sugestao_payload["sms"] = {
+        "source": sms.source,
+        "sender": sms.sender,
+        "text": sms.text,
+        "received_at": sms.received_at,
+        "sms_message_id": sms.sms_message_id,
+        "ultimos4_detectado": ultimos4_detectado,
+    }
+
+    return _criar_pendencia_com_deduplicacao_captura(
+        source="android_sms",
+        raw_text=sms.text,
+        sugestao_payload=sugestao_payload,
+        confidence=float(resultado.confianca),
+        event_key=sms.sms_message_id,
+        occurred_at_iso=data_recebimento_iso,
+        ignorar_duplicata=ignorar_duplicata,
     )

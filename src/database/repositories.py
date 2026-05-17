@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, date, time
+from datetime import date, datetime, time
 from decimal import Decimal
 import os
 from uuid import UUID
@@ -10,7 +10,15 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from src.database.models import Account, Budget, Category, PendingTransaction, Transaction, User
+from src.database.models import (
+    Account,
+    Budget,
+    Category,
+    PendingTransaction,
+    SmsCapturePreference,
+    Transaction,
+    User,
+)
 
 
 def _uuid_to_legacy_int(value: UUID) -> int:
@@ -383,6 +391,70 @@ class PendingTransactionRepository:
 
     def update_status(self, *, item: PendingTransaction, status: str) -> PendingTransaction:
         item.status = status
+        self.db.flush()
+        self.db.refresh(item)
+        return item
+
+    def list_recent_auto_captured(
+        self,
+        *,
+        user_id: UUID,
+        since: datetime,
+        sources: list[str] | tuple[str, ...],
+        statuses: list[str] | tuple[str, ...] = ("pending", "confirmed", "auto_confirmed"),
+    ) -> list[PendingTransaction]:
+        if not sources:
+            return []
+        if not statuses:
+            return []
+        return (
+            self.db.query(PendingTransaction)
+            .filter(
+                PendingTransaction.user_id == user_id,
+                PendingTransaction.source.in_(list(sources)),
+                PendingTransaction.status.in_(list(statuses)),
+                PendingTransaction.created_at >= since,
+            )
+            .order_by(PendingTransaction.created_at.desc())
+            .all()
+        )
+
+
+class SmsCapturePreferenceRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def get_or_create_default(self, *, user_id: UUID) -> SmsCapturePreference:
+        item = (
+            self.db.query(SmsCapturePreference)
+            .filter(SmsCapturePreference.user_id == user_id)
+            .one_or_none()
+        )
+        if item is not None:
+            return item
+
+        item = SmsCapturePreference(
+            user_id=user_id,
+            sms_enabled=False,
+            bancos_selecionados=[],
+            mapeamento_cartao_ultimos4={},
+        )
+        self.db.add(item)
+        self.db.flush()
+        self.db.refresh(item)
+        return item
+
+    def update_preferences(
+        self,
+        *,
+        item: SmsCapturePreference,
+        sms_enabled: bool,
+        bancos_selecionados: list[str],
+        mapeamento_cartao_ultimos4: dict[str, str],
+    ) -> SmsCapturePreference:
+        item.sms_enabled = bool(sms_enabled)
+        item.bancos_selecionados = list(bancos_selecionados)
+        item.mapeamento_cartao_ultimos4 = dict(mapeamento_cartao_ultimos4)
         self.db.flush()
         self.db.refresh(item)
         return item

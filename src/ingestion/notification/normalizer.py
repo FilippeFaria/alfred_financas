@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import unicodedata
 
 
 ALLOWED_NOTIFICATION_PACKAGES = {
@@ -30,6 +31,17 @@ FINANCIAL_HINTS = (
     "recebido",
     "deb",
 )
+DECLINED_TRANSACTION_HINTS = (
+    "compra nao aprovada",
+    "compra recusada",
+    "compra negada",
+    "transacao nao aprovada",
+    "transacao recusada",
+    "transacao negada",
+    "pagamento recusado",
+    "pagamento negado",
+    "cartao bloqueado por tentativa",
+)
 
 
 @dataclass
@@ -46,6 +58,11 @@ class NotificacaoNormalizada:
 
 def _limpar_texto(value: str | None, *, max_chars: int) -> str:
     return (value or "").strip()[:max_chars]
+
+
+def _normalizar_busca(value: str) -> str:
+    base = unicodedata.normalize("NFKD", value or "").lower()
+    return "".join(ch for ch in base if not unicodedata.combining(ch))
 
 
 def normalizar_notificacao(payload: dict) -> NotificacaoNormalizada:
@@ -80,5 +97,7 @@ def eh_notificacao_financeira(notificacao: NotificacaoNormalizada) -> bool:
     if not package_allowed:
         return False
 
-    texto_base = f"{notificacao.title} {notificacao.text} {notificacao.sub_text or ''}".lower()
+    texto_base = _normalizar_busca(f"{notificacao.title} {notificacao.text} {notificacao.sub_text or ''}")
+    if any(hint in texto_base for hint in DECLINED_TRANSACTION_HINTS):
+        return False
     return any(hint in texto_base for hint in FINANCIAL_HINTS)

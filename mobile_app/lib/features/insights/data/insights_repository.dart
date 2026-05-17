@@ -66,7 +66,9 @@ class InsightsRepository {
 
   Future<List<PendingTransactionDto>> carregarPendenciasNotificacao() async {
     final pendencias = await _apiClient.getPendenciasIa(status: 'pending');
-    return pendencias.where((item) => item.source == 'android_notification').toList();
+    return pendencias
+        .where((item) => item.source == 'android_notification' || item.source == 'android_sms')
+        .toList();
   }
 
   Future<NotificacaoTransacaoResponseDto> interpretarTransacaoPorNotificacao({
@@ -87,6 +89,22 @@ class InsightsRepository {
       subText: subText,
       postedAt: postedAt,
       notificationKey: notificationKey,
+      ignorarDuplicata: ignorarDuplicata,
+    );
+  }
+
+  Future<NotificacaoTransacaoResponseDto> interpretarTransacaoPorSms({
+    required String sender,
+    required String text,
+    required String receivedAt,
+    required String smsMessageId,
+    bool ignorarDuplicata = false,
+  }) {
+    return _apiClient.postAiSmsTransacao(
+      sender: sender,
+      text: text,
+      receivedAt: receivedAt,
+      smsMessageId: smsMessageId,
       ignorarDuplicata: ignorarDuplicata,
     );
   }

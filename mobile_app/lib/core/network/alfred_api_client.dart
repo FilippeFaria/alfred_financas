@@ -10,6 +10,7 @@ import 'dto/dashboard_snapshot_dto.dart';
 import 'dto/notificacao_transacao_dto.dart';
 import 'dto/pending_transaction_dto.dart';
 import 'dto/saldo_dto.dart';
+import 'dto/sms_capture_preferences_dto.dart';
 import 'dto/status_dto.dart';
 import 'dto/transacao_dto.dart';
 
@@ -398,6 +399,54 @@ class AlfredApiClient {
         },
       );
       return NotificacaoTransacaoResponseDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<NotificacaoTransacaoResponseDto> postAiSmsTransacao({
+    required String sender,
+    required String text,
+    required String receivedAt,
+    required String smsMessageId,
+    bool ignorarDuplicata = false,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/ai/sms/transacao',
+        data: {
+          'source': 'android_sms',
+          'sender': sender,
+          'text': text,
+          'received_at': receivedAt,
+          'sms_message_id': smsMessageId,
+          'ignorar_duplicata': ignorarDuplicata,
+        },
+      );
+      return NotificacaoTransacaoResponseDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<SmsCapturePreferencesDto> getSmsCapturePreferences() async {
+    try {
+      final response = await _dio.get('/mobile/captura/sms/preferencias');
+      return SmsCapturePreferencesDto.fromJson(_asMap(response.data));
+    } on DioException catch (exception) {
+      _throwFromDio(exception);
+    }
+  }
+
+  Future<SmsCapturePreferencesDto> putSmsCapturePreferences(
+    SmsCapturePreferencesUpdateDto payload,
+  ) async {
+    try {
+      final response = await _dio.put(
+        '/mobile/captura/sms/preferencias',
+        data: payload.toJson(),
+      );
+      return SmsCapturePreferencesDto.fromJson(_asMap(response.data));
     } on DioException catch (exception) {
       _throwFromDio(exception);
     }
