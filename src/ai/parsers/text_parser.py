@@ -148,8 +148,30 @@ def _parse_saida_modelo(payload: dict, entrada: EntradaTexto) -> TransacaoSugeri
 
 def extrair_transacao_por_texto(entrada: EntradaTexto) -> TransacaoSugerida:
     prompt = _carregar_prompt()
+
+    # Injetar catálogos de contas e categorias no prompt do sistema
+    contas_catalogo = list(dict.fromkeys(CONTAS + CONTAS_INVEST + CARTOES_PAGAMENTO))
+    contas_text = "\n".join(f"- {c}" for c in contas_catalogo)
+    categorias_desp_text = "\n".join(f"- {c}" for c in CATEGORIAS_DESPESA)
+    categorias_rec_text = "\n".join(f"- {c}" for c in CATEGORIAS_RECEITA)
+    categorias_inv_text = "\n".join(f"- {c}" for c in CATEGORIAS_INVESTIMENTO)
+
+    catalogo = (
+        "\n\nCatálogo de Contas:\n"
+        f"{contas_text}\n\n"
+        "Catálogo de Categorias:\n"
+        "Despesa:\n"
+        f"{categorias_desp_text}\n\n"
+        "Receita:\n"
+        f"{categorias_rec_text}\n\n"
+        "Investimento:\n"
+        f"{categorias_inv_text}\n"
+    )
+
+    system_prompt = prompt + catalogo
+
     texto_normalizado = normalizar_texto_entrada(entrada.texto)
-    payload = interpretar_transacao_texto(prompt, texto_normalizado)
+    payload = interpretar_transacao_texto(system_prompt, texto_normalizado)
 
     if not isinstance(payload, dict):
         try:
