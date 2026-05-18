@@ -10,6 +10,7 @@ from src.api.services import criar_transacao
 from src.database.connection import SessionLocal
 from src.database.repositories import PendingTransactionRepository, UserRepository
 from src.models.pending_transaction import PendingTransaction
+from src.services.capture_training_service import registrar_exemplo_captura_confirmada_async
 
 STATUS_PENDING = "pending"
 STATUS_CONFIRMED = "confirmed"
@@ -161,6 +162,7 @@ def confirmar_transacao_pendente(
             raise ValueError("Somente pendencias com status 'pending' podem ser confirmadas.")
 
         payload_base = dict(item.suggested_payload or {})
+        payload_inicial = dict(payload_base)
         if payload_confirmado:
             payload_base.update(payload_confirmado)
         _validar_payload_para_confirmacao(payload_base)
@@ -189,4 +191,13 @@ def confirmar_transacao_pendente(
         novo_status = STATUS_AUTO_CONFIRMED if auto_confirmed else STATUS_CONFIRMED
         atualizado = PendingTransactionRepository(db).update_status(item=item, status=novo_status)
         db.commit()
+        registrar_exemplo_captura_confirmada_async(
+            user_id=item.user_id,
+            pending_transaction_id=item.id,
+            source=str(item.source),
+            raw_text=str(item.raw_text or ""),
+            suggested_payload_inicial=payload_inicial,
+            payload_confirmado=payload_base,
+            transacao_confirmada=transacao_oficial,
+        )
         return _map_pending(atualizado), transacao_oficial

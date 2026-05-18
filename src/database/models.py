@@ -42,6 +42,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    capture_training_examples: Mapped[list["CaptureTrainingExample"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     sms_capture_preference: Mapped["SmsCapturePreference"] = relationship(
         cascade="all, delete-orphan",
         uselist=False,
@@ -248,3 +252,37 @@ class SmsCapturePreference(Base):
     )
 
     user: Mapped["User"] = relationship()
+
+
+class CaptureTrainingExample(Base):
+    """Exemplo supervisionado para ajuste de captura automatica (SMS/notificacao)."""
+
+    __tablename__ = "capture_training_examples"
+
+    id: Mapped[UUIDValue] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUIDValue] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+    )
+    pending_transaction_id: Mapped[UUIDValue | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("pending_transactions.id"),
+        nullable=True,
+        index=True,
+    )
+    source: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    capture_payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    suggested_payload_inicial: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    payload_confirmado: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    transacao_confirmada: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    campos_editados: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    user: Mapped["User"] = relationship(back_populates="capture_training_examples")

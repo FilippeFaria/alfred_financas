@@ -36,6 +36,7 @@ from src.api.schemas import (
     SmsCapturaPreferenciasResponse,
     SmsTransacaoRequest,
     SmsTransacaoResponse,
+    CaptureTrainingExampleResponse,
     OrcamentoValoresResponse,
     SalvarOrcamentoRequest,
     TextoParaTransacaoResponse,
@@ -74,6 +75,7 @@ from src.services.pending_transaction_service import (
     listar_transacoes_pendentes,
 )
 from src.services.sms_capture_preferences_service import obter_preferencias_sms, salvar_preferencias_sms
+from src.services.capture_training_service import listar_exemplos_captura_treinamento
 
 
 app = FastAPI(
@@ -534,6 +536,23 @@ def post_transacao_pendente_ignorar(
         return PendingTransactionResponse(**pendencia.__dict__)
     except ValueError as exc:
         raise ApiServiceError(code="DADOS_INVALIDOS", message=str(exc), status_code=400) from exc
+
+
+@app.get("/ia/capturas/exemplos", response_model=list[CaptureTrainingExampleResponse])
+def get_ia_capturas_exemplos(
+    limit: int = Query(default=200, ge=1, le=1000),
+    source: str | None = Query(default=None),
+    user_context: UserContext = Depends(get_current_user_optional),
+) -> list[CaptureTrainingExampleResponse]:
+    source_filtro = (source or "").strip() or None
+    if source_filtro and source_filtro not in {"android_sms", "android_notification"}:
+        raise ApiServiceError(
+            code="DADOS_INVALIDOS",
+            message="source deve ser 'android_sms' ou 'android_notification'.",
+            status_code=400,
+        )
+    itens = listar_exemplos_captura_treinamento(limit=limit, source=source_filtro)
+    return [CaptureTrainingExampleResponse(**item) for item in itens]
 
 
 @app.post("/ia/pendencias/{pending_id}/ignorar", response_model=PendingTransactionResponse)

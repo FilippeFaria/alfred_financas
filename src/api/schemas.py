@@ -328,3 +328,17 @@ class SmsTransacaoRequest(BaseModel):
 
 class SmsTransacaoResponse(NotificacaoTransacaoResponse):
     pass
+
+
+class CaptureTrainingExampleResponse(BaseModel):
+    id: str
+    user_id: str
+    pending_transaction_id: str | None = None
+    source: str
+    raw_text: str
+    capture_payload: dict
+    suggested_payload_inicial: dict
+    payload_confirmado: dict
+    transacao_confirmada: dict
+    campos_editados: list[str] = Field(default_factory=list)
+    created_at: datetime

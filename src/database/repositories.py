@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from src.database.models import (
     Account,
     Budget,
+    CaptureTrainingExample,
     Category,
     PendingTransaction,
     SmsCapturePreference,
@@ -418,6 +419,56 @@ class PendingTransactionRepository:
             .order_by(PendingTransaction.created_at.desc())
             .all()
         )
+
+
+class CaptureTrainingExampleRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def create(
+        self,
+        *,
+        user_id: UUID,
+        pending_transaction_id: UUID | None,
+        source: str,
+        raw_text: str,
+        capture_payload: dict,
+        suggested_payload_inicial: dict,
+        payload_confirmado: dict,
+        transacao_confirmada: dict,
+        campos_editados: list[str],
+    ) -> CaptureTrainingExample:
+        item = CaptureTrainingExample(
+            user_id=user_id,
+            pending_transaction_id=pending_transaction_id,
+            source=source,
+            raw_text=raw_text,
+            capture_payload=capture_payload,
+            suggested_payload_inicial=suggested_payload_inicial,
+            payload_confirmado=payload_confirmado,
+            transacao_confirmada=transacao_confirmada,
+            campos_editados=campos_editados,
+        )
+        self.db.add(item)
+        self.db.flush()
+        self.db.refresh(item)
+        return item
+
+    def list_recent(
+        self,
+        *,
+        user_id: UUID,
+        limit: int = 200,
+        source: str | None = None,
+    ) -> list[CaptureTrainingExample]:
+        query = (
+            self.db.query(CaptureTrainingExample)
+            .filter(CaptureTrainingExample.user_id == user_id)
+            .order_by(CaptureTrainingExample.created_at.desc())
+        )
+        if source:
+            query = query.filter(CaptureTrainingExample.source == source)
+        return query.limit(max(1, min(int(limit), 1000))).all()
 
 
 class SmsCapturePreferenceRepository:
