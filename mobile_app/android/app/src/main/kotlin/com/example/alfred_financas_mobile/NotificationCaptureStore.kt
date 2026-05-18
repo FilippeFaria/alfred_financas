@@ -10,6 +10,7 @@ private const val KEY_QUEUE = "pending_notifications"
 private const val KEY_LAST_PROCESSED_AT = "last_processed_at"
 private const val KEY_NOTIFIED_KEYS = "notified_notification_keys"
 private const val KEY_API_BASE_URL = "api_base_url"
+private const val KEY_CAPTURE_DIAGNOSTICS = "capture_diagnostics"
 private const val KEY_SMS_ENABLED = "sms_enabled"
 private const val KEY_SMS_BANKS = "sms_banks"
 private const val KEY_SMS_CARD_MAPPING = "sms_card_mapping"
@@ -17,6 +18,7 @@ private const val KEY_SMS_ENABLED_SINCE = "sms_enabled_since_ms"
 private const val KEY_SMS_QUEUE = "pending_sms_events"
 private const val KEY_MAX_QUEUE_ITEMS = 40
 private const val KEY_MAX_NOTIFIED_KEYS = 400
+private const val KEY_MAX_CAPTURE_DIAGNOSTICS = 80
 
 object NotificationCaptureStore {
     private fun prefs(context: Context): SharedPreferences {
@@ -115,6 +117,47 @@ object NotificationCaptureStore {
         return prefs(context).getString(KEY_API_BASE_URL, null)?.trim()?.takeIf { it.isNotEmpty() }
     }
 
+    @Synchronized
+    fun recordCaptureDiagnostic(
+        context: Context,
+        source: String,
+        stage: String,
+        status: String,
+        eventKey: String?,
+        message: String,
+        details: JSONObject? = null,
+    ) {
+        val pref = prefs(context)
+        val current = pref.getString(KEY_CAPTURE_DIAGNOSTICS, null)
+        val items = if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+        val item = JSONObject()
+            .put("timestamp_ms", System.currentTimeMillis())
+            .put("source", source)
+            .put("stage", stage)
+            .put("status", status)
+            .put("event_key", eventKey?.trim()?.takeIf { it.isNotEmpty() } ?: JSONObject.NULL)
+            .put("message", message)
+        if (details != null) {
+            item.put("details", details)
+        }
+        items.put(item)
+        while (items.length() > KEY_MAX_CAPTURE_DIAGNOSTICS) {
+            items.remove(0)
+        }
+        pref.edit().putString(KEY_CAPTURE_DIAGNOSTICS, items.toString()).apply()
+    }
+
+    @Synchronized
+    fun listCaptureDiagnostics(context: Context): JSONArray {
+        val current = prefs(context).getString(KEY_CAPTURE_DIAGNOSTICS, null)
+        return if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+    }
+
+    @Synchronized
+    fun clearCaptureDiagnostics(context: Context) {
+        prefs(context).edit().remove(KEY_CAPTURE_DIAGNOSTICS).apply()
+    }
+
     fun setSmsCaptureConfig(
         context: Context,
         smsEnabled: Boolean,
@@ -169,17 +212,34 @@ object NotificationCaptureStore {
         return if (value > 0L) value else null
     }
 
+    @Synchronized
     fun enqueuePendingSms(context: Context, payload: JSONObject) {
+        val smsMessageId = payload.optString("sms_message_id").trim()
         val pref = prefs(context)
         val current = pref.getString(KEY_SMS_QUEUE, null)
         val items = if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
-        items.put(payload)
-        while (items.length() > KEY_MAX_QUEUE_ITEMS) {
-            items.remove(0)
+        val deduped = JSONArray()
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            if (smsMessageId.isNotBlank() && item.optString("sms_message_id").trim() == smsMessageId) {
+                continue
+            }
+            deduped.put(item)
         }
-        pref.edit().putString(KEY_SMS_QUEUE, items.toString()).apply()
+        deduped.put(payload)
+        while (deduped.length() > KEY_MAX_QUEUE_ITEMS) {
+            deduped.remove(0)
+        }
+        pref.edit().putString(KEY_SMS_QUEUE, deduped.toString()).apply()
     }
 
+    @Synchronized
+    fun listPendingSms(context: Context): JSONArray {
+        val current = prefs(context).getString(KEY_SMS_QUEUE, null)
+        return if (current.isNullOrBlank()) JSONArray() else JSONArray(current)
+    }
+
+    @Synchronized
     fun removePendingSms(context: Context, smsMessageId: String) {
         if (smsMessageId.isBlank()) return
         val pref = prefs(context)

@@ -56,16 +56,48 @@ class AlfredNotificationListenerService : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName ?: return
         val allowedByPrefix = allowedPackagePrefixes.any { prefix -> packageName.startsWith(prefix) }
-        if (!allowedPackages.contains(packageName) && !allowedByPrefix) return
+        if (!allowedPackages.contains(packageName) && !allowedByPrefix) {
+            if (looksLikePotentialFinancePackage(packageName)) {
+                recordDiagnostic(
+                    stage = "filter",
+                    status = "skipped",
+                    eventKey = sbn.key,
+                    message = "package_not_allowed",
+                    details = JSONObject().put("package_name", packageName),
+                )
+            }
+            return
+        }
 
         val extras = sbn.notification.extras
         val title = extras?.getCharSequence("android.title")?.toString()?.trim().orEmpty()
         val text = extras?.getCharSequence("android.text")?.toString()?.trim().orEmpty()
         val subText = extras?.getCharSequence("android.subText")?.toString()?.trim().orEmpty()
 
-        if (text.isBlank()) return
+        if (text.isBlank()) {
+            recordDiagnostic(
+                stage = "filter",
+                status = "skipped",
+                eventKey = sbn.key,
+                message = "blank_text",
+                details = JSONObject().put("package_name", packageName),
+            )
+            return
+        }
         val rawText = "$title $text $subText".lowercase(Locale.ROOT)
-        if (financeHints.none { rawText.contains(it) }) return
+        if (financeHints.none { rawText.contains(it) }) {
+            recordDiagnostic(
+                stage = "filter",
+                status = "skipped",
+                eventKey = sbn.key,
+                message = "no_financial_hint",
+                details = JSONObject()
+                    .put("package_name", packageName)
+                    .put("title", title)
+                    .put("text_preview", preview(text)),
+            )
+            return
+        }
 
         val appName = try {
             val appInfo = packageManager.getApplicationInfo(packageName, 0)
@@ -85,6 +117,17 @@ class AlfredNotificationListenerService : NotificationListenerService() {
 
         NotificationCaptureStore.enqueue(this, payload)
         NotificationCaptureStore.setLastProcessedAt(this, formatIsoOffset(System.currentTimeMillis()))
+        recordDiagnostic(
+            stage = "capture",
+            status = "queued",
+            eventKey = sbn.key,
+            message = "notification_queued",
+            details = JSONObject()
+                .put("package_name", packageName)
+                .put("app_name", appName)
+                .put("title", title)
+                .put("text_preview", preview(text)),
+        )
 
         thread(name = "alfred-notification-sync-${sbn.key.hashCode()}") {
             sincronizarNotificacao(payload)
@@ -93,18 +136,51 @@ class AlfredNotificationListenerService : NotificationListenerService() {
 
     private fun sincronizarNotificacao(payload: JSONObject) {
         val notificationKey = payload.optString("notification_key")
-        if (notificationKey.isBlank()) return
+        if (notificationKey.isBlank()) {
+            recordDiagnostic(
+                stage = "sync",
+                status = "skipped",
+                eventKey = null,
+                message = "blank_notification_key",
+            )
+            return
+        }
 
-        val apiBaseUrl = NotificationCaptureStore.getApiBaseUrl(this) ?: return
+        val apiBaseUrl = NotificationCaptureStore.getApiBaseUrl(this)
+        if (apiBaseUrl == null) {
+            recordDiagnostic(
+                stage = "sync",
+                status = "skipped",
+                eventKey = notificationKey,
+                message = "missing_api_base_url",
+            )
+            return
+        }
         val resposta = postJson(apiBaseUrl, "/ai/notificacao/transacao", payload) ?: return
 
         NotificationCaptureStore.removePendingNotification(this, notificationKey)
 
         if (!resposta.optBoolean("created", false)) {
+            recordDiagnostic(
+                stage = "api_result",
+                status = if (resposta.optBoolean("duplicate", false)) "duplicate" else "ignored",
+                eventKey = notificationKey,
+                message = resposta.optString("message").ifBlank { "not_created" },
+                details = JSONObject()
+                    .put("duplicate", resposta.optBoolean("duplicate", false))
+                    .put("pending_transaction_id", resposta.optString("pending_transaction_id")),
+            )
             return
         }
 
         val pendingTransactionId = resposta.optString("pending_transaction_id").takeIf { it.isNotBlank() }
+        recordDiagnostic(
+            stage = "api_result",
+            status = "created",
+            eventKey = notificationKey,
+            message = "pending_transaction_created",
+            details = JSONObject().put("pending_transaction_id", pendingTransactionId ?: JSONObject.NULL),
+        )
         showLocalDetectedNotification(payload, pendingTransactionId)
     }
 
@@ -125,6 +201,13 @@ class AlfredNotificationListenerService : NotificationListenerService() {
             }
         } catch (error: Exception) {
             Log.w("AlfredNotifListener", "Falha ao preparar chamada HTTP", error)
+            recordDiagnostic(
+                stage = "http",
+                status = "error",
+                eventKey = payload.optString("notification_key"),
+                message = "prepare_failed",
+                details = JSONObject().put("error", error.javaClass.simpleName),
+            )
             return null
         }
 
@@ -142,17 +225,40 @@ class AlfredNotificationListenerService : NotificationListenerService() {
                     "AlfredNotifListener",
                     "Backend recusou notificacao. status=$responseCode body=$responseBody",
                 )
+                recordDiagnostic(
+                    stage = "http",
+                    status = "error",
+                    eventKey = payload.optString("notification_key"),
+                    message = "backend_rejected",
+                    details = JSONObject()
+                        .put("status_code", responseCode)
+                        .put("body_preview", preview(responseBody)),
+                )
                 return null
             }
 
             if (responseBody.isBlank()) {
                 Log.w("AlfredNotifListener", "Backend retornou resposta vazia para notificacao.")
+                recordDiagnostic(
+                    stage = "http",
+                    status = "error",
+                    eventKey = payload.optString("notification_key"),
+                    message = "blank_backend_response",
+                    details = JSONObject().put("status_code", responseCode),
+                )
                 return null
             }
 
             JSONObject(responseBody)
         } catch (error: Exception) {
             Log.w("AlfredNotifListener", "Falha ao sincronizar notificacao", error)
+            recordDiagnostic(
+                stage = "http",
+                status = "error",
+                eventKey = payload.optString("notification_key"),
+                message = "request_failed",
+                details = JSONObject().put("error", error.javaClass.simpleName),
+            )
             null
         } finally {
             connection.disconnect()
@@ -220,5 +326,34 @@ class AlfredNotificationListenerService : NotificationListenerService() {
             this,
             notificationIdentity,
         )
+    }
+
+    private fun recordDiagnostic(
+        stage: String,
+        status: String,
+        eventKey: String?,
+        message: String,
+        details: JSONObject? = null,
+    ) {
+        NotificationCaptureStore.recordCaptureDiagnostic(
+            context = this,
+            source = "android_notification",
+            stage = stage,
+            status = status,
+            eventKey = eventKey,
+            message = message,
+            details = details,
+        )
+    }
+
+    private fun preview(value: String): String {
+        val trimmed = value.trim()
+        return if (trimmed.length <= 120) trimmed else trimmed.take(117) + "..."
+    }
+
+    private fun looksLikePotentialFinancePackage(packageName: String): Boolean {
+        val normalized = packageName.lowercase(Locale.ROOT)
+        return listOf("bank", "banco", "itau", "nu", "inter", "c6", "mercado", "picpay", "wallet", "pay")
+            .any { normalized.contains(it) }
     }
 }

@@ -30,24 +30,71 @@ class AlfredSmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
-        if (!NotificationCaptureStore.isSmsCaptureEnabled(context)) return
+        if (!NotificationCaptureStore.isSmsCaptureEnabled(context)) {
+            recordDiagnostic(
+                context = context,
+                stage = "filter",
+                status = "skipped",
+                eventKey = null,
+                message = "sms_capture_disabled",
+            )
+            return
+        }
 
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-        if (messages.isNullOrEmpty()) return
+        if (messages.isNullOrEmpty()) {
+            recordDiagnostic(
+                context = context,
+                stage = "filter",
+                status = "skipped",
+                eventKey = null,
+                message = "empty_sms_intent",
+            )
+            return
+        }
 
         val sender = messages.firstOrNull()?.originatingAddress?.trim().orEmpty()
-        if (sender.isBlank()) return
+        if (sender.isBlank()) {
+            recordDiagnostic(
+                context = context,
+                stage = "filter",
+                status = "skipped",
+                eventKey = null,
+                message = "blank_sender",
+            )
+            return
+        }
 
         val smsTimestamp = messages.firstOrNull()?.timestampMillis ?: System.currentTimeMillis()
         val enabledSince = NotificationCaptureStore.getSmsEnabledSince(context)
-        if (enabledSince != null && smsTimestamp < enabledSince) return
+        if (enabledSince != null && smsTimestamp < enabledSince) {
+            recordDiagnostic(
+                context = context,
+                stage = "filter",
+                status = "skipped",
+                eventKey = "$sender|$smsTimestamp",
+                message = "sms_before_capture_enabled",
+                details = JSONObject().put("sender", sender),
+            )
+            return
+        }
 
         val body = buildString {
             messages.forEach { part ->
                 append(part.messageBody.orEmpty())
             }
         }.trim()
-        if (body.isBlank()) return
+        if (body.isBlank()) {
+            recordDiagnostic(
+                context = context,
+                stage = "filter",
+                status = "skipped",
+                eventKey = "$sender|$smsTimestamp",
+                message = "blank_body",
+                details = JSONObject().put("sender", sender),
+            )
+            return
+        }
 
         val smsMessageId = "$sender|$smsTimestamp|${body.hashCode()}"
         val payload = JSONObject()
@@ -58,6 +105,16 @@ class AlfredSmsReceiver : BroadcastReceiver() {
             .put("sms_message_id", smsMessageId)
 
         NotificationCaptureStore.enqueuePendingSms(context, payload)
+        recordDiagnostic(
+            context = context,
+            stage = "capture",
+            status = "queued",
+            eventKey = smsMessageId,
+            message = "sms_queued",
+            details = JSONObject()
+                .put("sender", sender)
+                .put("text_preview", preview(body)),
+        )
         thread(name = "alfred-sms-sync-${smsMessageId.hashCode()}") {
             sincronizarSms(context, payload)
         }
@@ -65,19 +122,58 @@ class AlfredSmsReceiver : BroadcastReceiver() {
 
     private fun sincronizarSms(context: Context, payload: JSONObject) {
         val smsMessageId = payload.optString("sms_message_id")
-        if (smsMessageId.isBlank()) return
-        val apiBaseUrl = NotificationCaptureStore.getApiBaseUrl(context) ?: return
-        val resposta = postJson(apiBaseUrl, "/ai/sms/transacao", payload) ?: return
+        if (smsMessageId.isBlank()) {
+            recordDiagnostic(
+                context = context,
+                stage = "sync",
+                status = "skipped",
+                eventKey = null,
+                message = "blank_sms_message_id",
+            )
+            return
+        }
+        val apiBaseUrl = NotificationCaptureStore.getApiBaseUrl(context)
+        if (apiBaseUrl == null) {
+            recordDiagnostic(
+                context = context,
+                stage = "sync",
+                status = "skipped",
+                eventKey = smsMessageId,
+                message = "missing_api_base_url",
+            )
+            return
+        }
+        val resposta = postJson(context, apiBaseUrl, "/ai/sms/transacao", payload) ?: return
 
         NotificationCaptureStore.removePendingSms(context, smsMessageId)
 
         val created = resposta.optBoolean("created", false)
-        if (!created) return
+        if (!created) {
+            recordDiagnostic(
+                context = context,
+                stage = "api_result",
+                status = if (resposta.optBoolean("duplicate", false)) "duplicate" else "ignored",
+                eventKey = smsMessageId,
+                message = resposta.optString("message").ifBlank { "not_created" },
+                details = JSONObject()
+                    .put("duplicate", resposta.optBoolean("duplicate", false))
+                    .put("pending_transaction_id", resposta.optString("pending_transaction_id")),
+            )
+            return
+        }
         val pendingTransactionId = resposta.optString("pending_transaction_id").takeIf { it.isNotBlank() }
+        recordDiagnostic(
+            context = context,
+            stage = "api_result",
+            status = "created",
+            eventKey = smsMessageId,
+            message = "pending_transaction_created",
+            details = JSONObject().put("pending_transaction_id", pendingTransactionId ?: JSONObject.NULL),
+        )
         showLocalDetectedNotification(context, payload, pendingTransactionId)
     }
 
-    private fun postJson(baseUrl: String, path: String, payload: JSONObject): JSONObject? {
+    private fun postJson(context: Context, baseUrl: String, path: String, payload: JSONObject): JSONObject? {
         val normalizedBaseUrl = baseUrl.trim().trimEnd('/')
         if (normalizedBaseUrl.isBlank()) return null
         val connection = try {
@@ -93,6 +189,14 @@ class AlfredSmsReceiver : BroadcastReceiver() {
             }
         } catch (error: Exception) {
             Log.w("AlfredSmsReceiver", "Falha ao preparar chamada HTTP", error)
+            recordDiagnostic(
+                context = context,
+                stage = "http",
+                status = "error",
+                eventKey = payload.optString("sms_message_id"),
+                message = "prepare_failed",
+                details = JSONObject().put("error", error.javaClass.simpleName),
+            )
             return null
         }
 
@@ -105,11 +209,29 @@ class AlfredSmsReceiver : BroadcastReceiver() {
             val responseBody = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
             if (responseCode !in 200..299 || responseBody.isBlank()) {
                 Log.w("AlfredSmsReceiver", "Backend recusou SMS. status=$responseCode body=$responseBody")
+                recordDiagnostic(
+                    context = context,
+                    stage = "http",
+                    status = "error",
+                    eventKey = payload.optString("sms_message_id"),
+                    message = if (responseBody.isBlank()) "blank_backend_response" else "backend_rejected",
+                    details = JSONObject()
+                        .put("status_code", responseCode)
+                        .put("body_preview", preview(responseBody)),
+                )
                 return null
             }
             JSONObject(responseBody)
         } catch (error: Exception) {
             Log.w("AlfredSmsReceiver", "Falha ao sincronizar SMS", error)
+            recordDiagnostic(
+                context = context,
+                stage = "http",
+                status = "error",
+                eventKey = payload.optString("sms_message_id"),
+                message = "request_failed",
+                details = JSONObject().put("error", error.javaClass.simpleName),
+            )
             null
         } finally {
             connection.disconnect()
@@ -172,5 +294,30 @@ class AlfredSmsReceiver : BroadcastReceiver() {
 
         manager.notify(notificationIdentity.hashCode(), notification)
         NotificationCaptureStore.markNotificationNotified(context, notificationIdentity)
+    }
+
+    private fun recordDiagnostic(
+        context: Context?,
+        stage: String,
+        status: String,
+        eventKey: String?,
+        message: String,
+        details: JSONObject? = null,
+    ) {
+        val targetContext = context ?: return
+        NotificationCaptureStore.recordCaptureDiagnostic(
+            context = targetContext,
+            source = "android_sms",
+            stage = stage,
+            status = status,
+            eventKey = eventKey,
+            message = message,
+            details = details,
+        )
+    }
+
+    private fun preview(value: String): String {
+        val trimmed = value.trim()
+        return if (trimmed.length <= 120) trimmed else trimmed.take(117) + "..."
     }
 }

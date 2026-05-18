@@ -33,6 +33,7 @@ src/
   │   ├── google_sheets.py   # Autenticação e sync com Google Sheets
   │   └── data_handler.py    # Manipulação de DataFrames (transformações, filtros)
   │   └── pending_transaction_service.py # Ciclo de vida de pendências (criar, confirmar, ignorar)
+  │   └── sms_capture_preferences_service.py # Preferências de captura SMS (bancos e mapeamento 4 dígitos)
   ├── ingestion/
   │   ├── __init__.py
   │   ├── audio/
@@ -41,10 +42,13 @@ src/
   │   ├── notification/
   │   │   ├── normalizer.py  # Whitelist/filtro financeiro de notificações Android
   │   │   └── deduplicator.py # Deduplicação por chave/similaridade temporal
+  │   ├── sms/
+  │   │   └── normalizer.py  # Filtro financeiro e normalização de SMS Android
   │   └── text/
   │       └── normalizer.py  # Normalização de texto de entrada
   ├── ai/
   │   ├── __init__.py
+  │   ├── capture_deduplication.py # Deduplicação cruzada notificação/SMS por janela temporal
   │   ├── clients.py         # Cliente OpenAI centralizado e tratamento de erro
   │   ├── schemas.py         # Contratos de sugestão de transação
   │   ├── services.py        # Orquestração IA + criação de pendência
@@ -57,6 +61,7 @@ src/
   │       ├── text_parser.py
   │       └── audio_parser.py
   │       └── notification_parser.py
+  │       └── sms_parser.py
   ├── analytics/
   │   ├── calculations.py    # Cálculos (saldo, despesas, comparativos por dia do mês)
   │   └── charts.py          # Gráficos Plotly
@@ -217,6 +222,104 @@ C:\Users\lippe\flutter\bin\flutter.bat run -d <device_id> --dart-define=FLAVOR=p
 ---
 
 ## Mudanças Recentes (v3)
+
+### ✅ Feature: Captura automática por SMS no Android + tela de Ajustes (18/05/2026)
+**Objetivo**: permitir detecção automática de transações por SMS, com controle explícito por usuário sobre bancos monitorados e cartões (4 últimos dígitos).
+
+**Backend implementado**:
+- Nova persistência por usuário: `sms_capture_preferences` em `src/database/models.py`
+  - campos: `sms_enabled`, `bancos_selecionados`, `mapeamento_cartao_ultimos4`
+- Serviço de preferências: `src/services/sms_capture_preferences_service.py`
+  - validações:
+    - últimos 4 dígitos no formato `^\d{4}$`
+    - cartão precisa existir no catálogo atual
+    - mesmo sufixo não pode ser usado em dois cartões
+- Novos endpoints:
+  - `GET /mobile/captura/sms/preferencias`
+  - `PUT /mobile/captura/sms/preferencias`
+  - `POST /ai/sms/transacao`
+
+**Pipeline de SMS implementado**:
+- `src/ingestion/sms/normalizer.py`: normalização/filtro financeiro por remetente + texto
+- `src/ai/parsers/sms_parser.py`: heurísticas de tipo/valor/nome/conta e extração de `ultimos4`
+- `src/ai/services.py`: criação de pendência com `source="android_sms"` (sem salvar transação definitiva)
+
+**Mobile/Android implementado**:
+- Tela `Ajustes` (`mobile_app/lib/features/settings/presentation/settings_page.dart`) com:
+  - toggle de captura SMS
+  - status/permissão de SMS
+  - seleção de bancos monitorados
+  - mapeamento cartão -> 4 dígitos
+  - persistência no backend
+- Receiver nativo Android:
+  - `mobile_app/android/app/src/main/kotlin/.../AlfredSmsReceiver.kt`
+  - captura apenas SMS novos após ativação (sem varredura retroativa)
+- Bridge nativa atualizada em `MainActivity.kt` e `NotificationCaptureStore.kt` para sync de configuração SMS.
+
+**Resultado esperado**:
+- SMS financeiros de bancos habilitados geram pendências para revisão no Alfred IA.
+- Captura fica governada por configuração explícita e permissão Android.
+
+### ✅ Feature: Deduplicação cruzada Notificação x SMS em 5 minutos (18/05/2026)
+**Objetivo**: impedir pendências duplicadas entre canais automáticos.
+
+**Implementado**:
+- Deduplicação unificada em `src/ai/capture_deduplication.py`:
+  - `event_key` exato (`notification_key` ou `sms_message_id`)
+  - `fingerprint` canônico (tipo + valor + nome + conta + bucket temporal)
+  - janela fixa de 5 minutos
+- Aplicação da regra no fluxo automático em `src/ai/services.py` para:
+  - `android_notification`
+  - `android_sms`
+- Fluxo padrão para duplicata: `created=false`, `duplicate=true`, sem criar nova pendência.
+
+**Resultado esperado**:
+- evento repetido entre SMS e notificação não duplica pendência.
+
+### ✅ Fix: Parsing monetário robusto para ponto e vírgula (18/05/2026)
+**Problema observado**:
+- valores como `44.98` podiam ser interpretados como `4498` em alguns alertas.
+
+**Implementado**:
+- parser monetário robusto em:
+  - `src/ai/parsers/notification_parser.py`
+  - `src/ai/parsers/sms_parser.py`
+- suporte consistente a formatos:
+  - `44,98` -> `44.98`
+  - `44.98` -> `44.98`
+  - `1.234,56` -> `1234.56`
+
+**Resultado esperado**:
+- menor risco de erro de escala em pendências automáticas.
+
+### ✅ Fix: Alertas de compra não aprovada não geram pendência (18/05/2026)
+**Problema observado**:
+- mensagens de transação negada (`compra não aprovada`, `recusada`, `negada`) podiam gerar pendência indevida.
+
+**Implementado**:
+- blacklist semântica antes da LLM em:
+  - `src/ingestion/notification/normalizer.py`
+  - `src/ingestion/sms/normalizer.py`
+- nesses casos, o evento é ignorado e não entra no pipeline de sugestão.
+
+**Resultado esperado**:
+- redução de ruído no Alfred IA para alertas não financeiros efetivos.
+
+### ✅ Fix: Sinal do valor passa a ser responsabilidade do código (18/05/2026)
+**Problema observado**:
+- pendências de `Despesa` com valor positivo podiam falhar ou exigir correção manual de sinal.
+
+**Implementado**:
+- normalização do valor na confirmação da pendência em `src/services/pending_transaction_service.py`:
+  - `Despesa` -> `-abs(valor)`
+  - demais tipos -> `abs(valor)`
+- fluxos de criação de pendência agora padronizam `valor` como absoluto no payload sugerido:
+  - `src/ai/services.py`
+  - `src/api/main.py` (rotas IA texto/áudio)
+- validação de IA deixou de penalizar sinal e passa a marcar incerteza apenas para valor zero.
+
+**Resultado esperado**:
+- a LLM não precisa “acertar o sinal”; o backend aplica o sinal correto por tipo.
 
 ### ✅ Feature: Deploy do `mobile_app` Web no Render + hardening de compatibilidade (16/05/2026)
 **Objetivo**: publicar o app Flutter Web no Render com o mínimo de mudanças e sem quebrar fluxos já existentes.
@@ -840,5 +943,5 @@ python run_api.py
 
 ---
 
-**Última atualização**: 16/05/2026  
+**Última atualização**: 18/05/2026  
 **Mantido por**: Agentes de IA do GitHub Copilot

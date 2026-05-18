@@ -31,8 +31,10 @@ class InsightsPage extends ConsumerStatefulWidget {
   ConsumerState<InsightsPage> createState() => _InsightsPageState();
 }
 
-class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBindingObserver {
-  static const MethodChannel _notificationChannel = MethodChannel('alfred_financas/notifications');
+class _InsightsPageState extends ConsumerState<InsightsPage>
+    with WidgetsBindingObserver {
+  static const MethodChannel _notificationChannel =
+      MethodChannel('alfred_financas/notifications');
 
   final TextEditingController _textoController = TextEditingController();
   final AudioRecorder _audioRecorder = AudioRecorder();
@@ -63,13 +65,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     final regex = RegExp(r'r\$\s*([0-9\.\,]+)', caseSensitive: false);
     final match = regex.firstMatch(text);
     if (match == null) return null;
-    final raw = (match.group(1) ?? '').replaceAll('.', '').replaceAll(',', '.').trim();
+    final raw =
+        (match.group(1) ?? '').replaceAll('.', '').replaceAll(',', '.').trim();
     return double.tryParse(raw);
   }
 
   String _extrairNomeDaNotificacao(String text) {
     final em = RegExp(r'\bem\s+(.+)$', caseSensitive: false).firstMatch(text);
-    final para = RegExp(r'\bpara\s+(.+?)(?:,|\.)', caseSensitive: false).firstMatch(text);
+    final para = RegExp(r'\bpara\s+(.+?)(?:,|\.)', caseSensitive: false)
+        .firstMatch(text);
     final nome = (em?.group(1) ?? para?.group(1) ?? '').trim();
     if (nome.isEmpty) return 'Transacao detectada';
     return nome.split(',').first.trim();
@@ -163,7 +167,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     try {
       final parsed = DateTime.parse(value).toLocal();
       final agora = DateTime.now();
-      final isHoje = parsed.year == agora.year && parsed.month == agora.month && parsed.day == agora.day;
+      final isHoje = parsed.year == agora.year &&
+          parsed.month == agora.month &&
+          parsed.day == agora.day;
       final hh = parsed.hour.toString().padLeft(2, '0');
       final mm = parsed.minute.toString().padLeft(2, '0');
       if (isHoje) return 'hoje as $hh:$mm';
@@ -177,7 +183,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     if (dataHora == null) return '-';
     final local = dataHora.toLocal();
     final agora = DateTime.now();
-    final isHoje = local.year == agora.year && local.month == agora.month && local.day == agora.day;
+    final isHoje = local.year == agora.year &&
+        local.month == agora.month &&
+        local.day == agora.day;
     final hh = local.hour.toString().padLeft(2, '0');
     final mm = local.minute.toString().padLeft(2, '0');
     if (isHoje) return 'hoje $hh:$mm';
@@ -219,7 +227,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
 
       if (!mounted) return;
       if (alvo != null && alvo.isNotEmpty) {
-        final encontrado = _pendenciasNotificacao.any((item) => item.id == alvo);
+        final encontrado =
+            _pendenciasNotificacao.any((item) => item.id == alvo);
         if (encontrado) {
           return;
         }
@@ -254,12 +263,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nao foi possivel abrir as configuracoes de notificacao.')),
+        const SnackBar(
+            content: Text(
+                'Nao foi possivel abrir as configuracoes de notificacao.')),
       );
     }
   }
 
-  Future<void> _sincronizarStatusNotificacoes({required bool processQueue}) async {
+  Future<void> _sincronizarStatusNotificacoes(
+      {required bool processQueue}) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     if (_loadingNotificationStatus) return;
 
@@ -268,8 +280,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     });
 
     try {
-      final enabled = await _notificationChannel.invokeMethod<bool>('isNotificationAccessEnabled') ?? false;
-      final lastProcessed = await _notificationChannel.invokeMethod<String>('getLastNotificationProcessedAt');
+      final enabled = await _notificationChannel
+              .invokeMethod<bool>('isNotificationAccessEnabled') ??
+          false;
+      final lastProcessed = await _notificationChannel
+          .invokeMethod<String>('getLastNotificationProcessedAt');
 
       if (!mounted) return;
       setState(() {
@@ -277,8 +292,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         _lastNotificationProcessedAt = lastProcessed;
       });
 
-      if (enabled && processQueue) {
+      if (processQueue) {
         await _processarNotificacoesPendentes();
+        await _processarSmsPendentes();
       }
     } catch (_) {
       if (!mounted) return;
@@ -299,7 +315,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     _processingNotifications = true;
 
     try {
-      final raw = await _notificationChannel.invokeMethod<List<dynamic>>('listPendingFinancialNotifications');
+      final raw = await _notificationChannel
+          .invokeMethod<List<dynamic>>('listPendingFinancialNotifications');
       if (raw == null || raw.isEmpty) return;
 
       final repo = ref.read(insightsRepositoryProvider);
@@ -324,16 +341,19 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             title: title,
             text: text,
             subText: subText,
-            postedAt: postedAt.isEmpty ? DateTime.now().toIso8601String() : postedAt,
+            postedAt:
+                postedAt.isEmpty ? DateTime.now().toIso8601String() : postedAt,
             notificationKey: key,
           );
           if (response.duplicate) {
             await _removerNotificacaoPendenteLocal(key);
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Duplicidade descartada automaticamente.')),
+              const SnackBar(
+                  content: Text('Duplicidade descartada automaticamente.')),
             );
-            if (response.pendingTransactionId != null && response.pendingTransactionId!.trim().isNotEmpty) {
+            if (response.pendingTransactionId != null &&
+                response.pendingTransactionId!.trim().isNotEmpty) {
               await _carregarPendenciasNotificacao();
             }
             continue;
@@ -344,7 +364,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             criadas += 1;
             final pendingId = response.pendingTransactionId;
             if (pendingId != null && pendingId.trim().isNotEmpty) {
-              await LocalNotificationService.instance.showDetectedTransactionNotification(
+              await LocalNotificationService.instance
+                  .showDetectedTransactionNotification(
                 pendingTransactionId: pendingId,
                 conta: appName.isEmpty ? packageName : appName,
                 nome: _extrairNomeDaNotificacao(text),
@@ -361,7 +382,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       if (!mounted) return;
       if (criadas > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$criadas notificacoes processadas e enviadas para revisao.')),
+          SnackBar(
+              content: Text(
+                  '$criadas notificacoes processadas e enviadas para revisao.')),
         );
       }
       await _sincronizarStatusNotificacoes(processQueue: false);
@@ -380,6 +403,147 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     } catch (_) {
       // Se a limpeza local falhar, ainda assim preservamos o estado do backend.
     }
+  }
+
+  Future<void> _processarSmsPendentes() async {
+    if (_processingNotifications) return;
+    _processingNotifications = true;
+
+    try {
+      final raw = await _notificationChannel
+          .invokeMethod<List<dynamic>>('listPendingSmsEvents');
+      if (raw == null || raw.isEmpty) return;
+
+      final repo = ref.read(insightsRepositoryProvider);
+      var criadas = 0;
+      for (final item in raw) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final smsMessageId = (map['sms_message_id'] ?? '').toString();
+        final sender = (map['sender'] ?? '').toString().trim();
+        final text = (map['text'] ?? '').toString().trim();
+        final receivedAt = (map['received_at'] ?? '').toString().trim();
+        if (smsMessageId.isEmpty || sender.isEmpty || text.isEmpty) continue;
+
+        try {
+          final response = await repo.interpretarTransacaoPorSms(
+            sender: sender,
+            text: text,
+            receivedAt: receivedAt.isEmpty
+                ? DateTime.now().toIso8601String()
+                : receivedAt,
+            smsMessageId: smsMessageId,
+          );
+          await _removerSmsPendenteLocal(smsMessageId);
+          if (response.duplicate) {
+            if (response.pendingTransactionId != null &&
+                response.pendingTransactionId!.trim().isNotEmpty) {
+              await _carregarPendenciasNotificacao();
+            }
+            continue;
+          }
+          if (response.created) {
+            criadas += 1;
+            final pendingId = response.pendingTransactionId;
+            if (pendingId != null && pendingId.trim().isNotEmpty) {
+              await LocalNotificationService.instance
+                  .showDetectedTransactionNotification(
+                pendingTransactionId: pendingId,
+                conta: sender,
+                nome: _extrairNomeDaNotificacao(text),
+                valor: _extrairValorDaNotificacao(text),
+                confidence: response.confidence,
+              );
+            }
+          }
+        } catch (_) {
+          // Mantem o SMS na fila local para uma nova tentativa quando a tela reabrir.
+        }
+      }
+
+      if (!mounted) return;
+      if (criadas > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('$criadas SMS processados e enviados para revisao.')),
+        );
+      }
+      await _carregarPendenciasNotificacao();
+    } finally {
+      _processingNotifications = false;
+    }
+  }
+
+  Future<void> _removerSmsPendenteLocal(String smsMessageId) async {
+    try {
+      await _notificationChannel.invokeMethod<void>(
+        'removePendingSmsEvent',
+        {'sms_message_id': smsMessageId},
+      );
+    } catch (_) {
+      // Se a limpeza local falhar, ainda assim preservamos o estado do backend.
+    }
+  }
+
+  Future<void> _copiarDiagnosticoCaptura() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final raw = await _notificationChannel
+          .invokeMethod<List<dynamic>>('getCaptureDiagnostics');
+      final items = (raw ?? const <dynamic>[])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      final smsPermission = await _notificationChannel
+              .invokeMethod<bool>('isSmsPermissionGranted') ??
+          false;
+      final pendingSms = await _notificationChannel
+          .invokeMethod<List<dynamic>>('listPendingSmsEvents');
+      final pendingNotifications = await _notificationChannel
+          .invokeMethod<List<dynamic>>('listPendingFinancialNotifications');
+      final lines = <String>[
+        'Diagnostico de captura - ${DateTime.now().toIso8601String()}',
+        'Leitura notificacoes: ${_notificationPermissionActive ? "ativa" : "inativa"}',
+        'Permissao SMS: ${smsPermission ? "concedida" : "nao concedida"}',
+        'Fila SMS local: ${pendingSms?.length ?? 0}',
+        'Fila notificacoes local: ${pendingNotifications?.length ?? 0}',
+        'Pendencias carregadas: ${_pendenciasNotificacao.length}',
+        '',
+        if (items.isEmpty) 'Sem eventos de captura registrados.',
+        ...items.map(_formatarEventoDiagnostico),
+      ];
+      await Clipboard.setData(ClipboardData(text: lines.join('\n')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Diagnostico de captura copiado.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_mensagemErro(error))),
+      );
+    }
+  }
+
+  String _formatarEventoDiagnostico(Map<String, dynamic> item) {
+    final timestampMs = item['timestamp_ms'];
+    final timestamp = timestampMs is num
+        ? DateTime.fromMillisecondsSinceEpoch(timestampMs.toInt())
+            .toLocal()
+            .toIso8601String()
+        : '-';
+    final details = item['details'];
+    return [
+      timestamp,
+      item['source'] ?? '-',
+      item['stage'] ?? '-',
+      item['status'] ?? '-',
+      item['message'] ?? '-',
+      if ((item['event_key'] ?? '').toString().isNotEmpty)
+        'key=${item['event_key']}',
+      if (details is Map && details.isNotEmpty) 'details=$details',
+    ].join(' | ');
   }
 
   Future<void> _interpretarTexto() async {
@@ -404,7 +568,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -499,7 +664,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         _gravandoAudio = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nao foi possivel iniciar a gravacao de audio.')),
+        const SnackBar(
+            content: Text('Nao foi possivel iniciar a gravacao de audio.')),
       );
     }
   }
@@ -516,10 +682,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     final bytes = selecionado.files.single.bytes;
     final name = selecionado.files.single.name;
 
-    if ((path == null || path.trim().isEmpty) && (bytes == null || bytes.isEmpty)) {
+    if ((path == null || path.trim().isEmpty) &&
+        (bytes == null || bytes.isEmpty)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nao foi possivel ler o arquivo selecionado.')),
+        const SnackBar(
+            content: Text('Nao foi possivel ler o arquivo selecionado.')),
       );
       return;
     }
@@ -534,9 +702,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
   Future<void> _interpretarAudio() async {
     final path = _audioFilePath;
     final bytes = _audioBytes;
-    if ((path == null || path.trim().isEmpty) && (bytes == null || bytes.isEmpty)) {
+    if ((path == null || path.trim().isEmpty) &&
+        (bytes == null || bytes.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Grave ou selecione um audio antes de interpretar.')),
+        const SnackBar(
+            content: Text('Grave ou selecione um audio antes de interpretar.')),
       );
       return;
     }
@@ -561,7 +731,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -576,13 +747,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     Map<String, dynamic>? payload,
   }) async {
     if (_pendenciasEmAcao.contains(pendencia.id)) return;
-    final indexOriginal = _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
+    final indexOriginal =
+        _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
     if (indexOriginal < 0) return;
 
     setState(() {
       _pendenciasEmAcao.add(pendencia.id);
-      _pendenciasNotificacao = List<PendingTransactionDto>.from(_pendenciasNotificacao)
-        ..removeWhere((item) => item.id == pendencia.id);
+      _pendenciasNotificacao =
+          List<PendingTransactionDto>.from(_pendenciasNotificacao)
+            ..removeWhere((item) => item.id == pendencia.id);
     });
 
     try {
@@ -601,7 +774,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         items.insert(insertAt, pendencia);
         _pendenciasNotificacao = items;
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -611,15 +785,18 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     }
   }
 
-  Future<void> _ignorarPendenciaNotificacao(PendingTransactionDto pendencia) async {
+  Future<void> _ignorarPendenciaNotificacao(
+      PendingTransactionDto pendencia) async {
     if (_pendenciasEmAcao.contains(pendencia.id)) return;
-    final indexOriginal = _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
+    final indexOriginal =
+        _pendenciasNotificacao.indexWhere((item) => item.id == pendencia.id);
     if (indexOriginal < 0) return;
 
     setState(() {
       _pendenciasEmAcao.add(pendencia.id);
-      _pendenciasNotificacao = List<PendingTransactionDto>.from(_pendenciasNotificacao)
-        ..removeWhere((item) => item.id == pendencia.id);
+      _pendenciasNotificacao =
+          List<PendingTransactionDto>.from(_pendenciasNotificacao)
+            ..removeWhere((item) => item.id == pendencia.id);
     });
 
     try {
@@ -637,7 +814,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         items.insert(insertAt, pendencia);
         _pendenciasNotificacao = items;
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -672,7 +850,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -707,7 +886,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -721,7 +901,6 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     required TransacaoSugeridaDto sugestao,
     required Future<void> Function(Map<String, dynamic> payload) onConfirmar,
   }) async {
-
     final nomeController = TextEditingController(text: sugestao.nome ?? '');
     final dataController = TextEditingController(text: sugestao.data ?? '');
     final valorController = TextEditingController(
@@ -732,7 +911,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       categorias = await _carregarCategoriasComCache();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_mensagemErro(error))));
       return;
     }
     if (!mounted) return;
@@ -760,9 +940,16 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       'InterInvest',
     ];
 
-    String? tipoSelecionado = (sugestao.tipo != null && tipos.contains(sugestao.tipo)) ? sugestao.tipo : null;
-    String? contaSelecionada = (sugestao.conta != null && contas.contains(sugestao.conta)) ? sugestao.conta : null;
-    String? contaDestinoSelecionada = (sugestao.contaDestino != null && contas.contains(sugestao.contaDestino))
+    String? tipoSelecionado =
+        (sugestao.tipo != null && tipos.contains(sugestao.tipo))
+            ? sugestao.tipo
+            : null;
+    String? contaSelecionada =
+        (sugestao.conta != null && contas.contains(sugestao.conta))
+            ? sugestao.conta
+            : null;
+    String? contaDestinoSelecionada = (sugestao.contaDestino != null &&
+            contas.contains(sugestao.contaDestino))
         ? sugestao.contaDestino
         : null;
     String? categoriaSelecionada = sugestao.categoria;
@@ -771,8 +958,14 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
       if (tipo == 'Despesa') return categorias.despesa;
       if (tipo == 'Receita') return categorias.receita;
       if (tipo == 'Investimento') return categorias.investimento;
-      if (tipo == 'Transferência' || tipo == 'Pagamento de Cartão') return const ['Transferência'];
-      return [...categorias.despesa, ...categorias.receita, ...categorias.investimento, 'Transferência'];
+      if (tipo == 'Transferência' || tipo == 'Pagamento de Cartão')
+        return const ['Transferência'];
+      return [
+        ...categorias.despesa,
+        ...categorias.receita,
+        ...categorias.investimento,
+        'Transferência'
+      ];
     }
 
     final confirmado = await showDialog<bool>(
@@ -781,13 +974,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         builder: (context, setStateDialog) {
           final categoriasDisponiveis = categoriasPorTipo(tipoSelecionado);
           final isTransferencia = tipoSelecionado == 'Transferência';
-          if (categoriaSelecionada != null && !categoriasDisponiveis.contains(categoriaSelecionada)) {
+          if (categoriaSelecionada != null &&
+              !categoriasDisponiveis.contains(categoriaSelecionada)) {
             categoriaSelecionada = null;
           }
           if (contaSelecionada != null && !contas.contains(contaSelecionada)) {
             contaSelecionada = null;
           }
-          if (contaDestinoSelecionada != null && !contas.contains(contaDestinoSelecionada)) {
+          if (contaDestinoSelecionada != null &&
+              !contas.contains(contaDestinoSelecionada)) {
             contaDestinoSelecionada = null;
           }
 
@@ -796,11 +991,17 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             content: SingleChildScrollView(
               child: Column(
                 children: [
-                  TextField(controller: dataController, decoration: const InputDecoration(labelText: 'Data (YYYY-MM-DD)')),
+                  TextField(
+                      controller: dataController,
+                      decoration: const InputDecoration(
+                          labelText: 'Data (YYYY-MM-DD)')),
                   DropdownButtonFormField<String>(
                     initialValue: tipoSelecionado,
                     decoration: const InputDecoration(labelText: 'Tipo'),
-                    items: tipos.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                    items: tipos
+                        .map((item) =>
+                            DropdownMenuItem(value: item, child: Text(item)))
+                        .toList(),
                     onChanged: (value) => setStateDialog(() {
                       tipoSelecionado = value;
                       if (tipoSelecionado == 'Transferência') {
@@ -814,7 +1015,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                     initialValue: categoriaSelecionada,
                     decoration: const InputDecoration(labelText: 'Categoria'),
                     items: categoriasDisponiveis
-                        .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                        .map((item) =>
+                            DropdownMenuItem(value: item, child: Text(item)))
                         .toList(),
                     onChanged: (value) => setStateDialog(() {
                       categoriaSelecionada = value;
@@ -825,7 +1027,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                     decoration: InputDecoration(
                       labelText: isTransferencia ? 'Conta origem' : 'Conta',
                     ),
-                    items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                    items: contas
+                        .map((item) =>
+                            DropdownMenuItem(value: item, child: Text(item)))
+                        .toList(),
                     onChanged: (value) => setStateDialog(() {
                       contaSelecionada = value;
                     }),
@@ -833,24 +1038,35 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                   if (isTransferencia)
                     DropdownButtonFormField<String>(
                       initialValue: contaDestinoSelecionada,
-                      decoration: const InputDecoration(labelText: 'Conta destino'),
-                      items: contas.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                      decoration:
+                          const InputDecoration(labelText: 'Conta destino'),
+                      items: contas
+                          .map((item) =>
+                              DropdownMenuItem(value: item, child: Text(item)))
+                          .toList(),
                       onChanged: (value) => setStateDialog(() {
                         contaDestinoSelecionada = value;
                       }),
                     ),
-                  TextField(controller: nomeController, decoration: const InputDecoration(labelText: 'Nome')),
+                  TextField(
+                      controller: nomeController,
+                      decoration: const InputDecoration(labelText: 'Nome')),
                   TextField(
                     controller: valorController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Valor'),
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirmar')),
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar')),
+              FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Confirmar')),
             ],
           );
         },
@@ -860,16 +1076,23 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     if (confirmado != true) return;
 
     final payload = <String, dynamic>{};
-    if (dataController.text.trim().isNotEmpty) payload['data'] = dataController.text.trim();
-    if (tipoSelecionado != null && tipoSelecionado!.trim().isNotEmpty) payload['tipo'] = tipoSelecionado!.trim();
-    if (categoriaSelecionada != null && categoriaSelecionada!.trim().isNotEmpty) payload['categoria'] = categoriaSelecionada!.trim();
-    if (contaSelecionada != null && contaSelecionada!.trim().isNotEmpty) payload['conta'] = contaSelecionada!.trim();
-    if (contaDestinoSelecionada != null && contaDestinoSelecionada!.trim().isNotEmpty) {
+    if (dataController.text.trim().isNotEmpty)
+      payload['data'] = dataController.text.trim();
+    if (tipoSelecionado != null && tipoSelecionado!.trim().isNotEmpty)
+      payload['tipo'] = tipoSelecionado!.trim();
+    if (categoriaSelecionada != null && categoriaSelecionada!.trim().isNotEmpty)
+      payload['categoria'] = categoriaSelecionada!.trim();
+    if (contaSelecionada != null && contaSelecionada!.trim().isNotEmpty)
+      payload['conta'] = contaSelecionada!.trim();
+    if (contaDestinoSelecionada != null &&
+        contaDestinoSelecionada!.trim().isNotEmpty) {
       payload['conta_destino'] = contaDestinoSelecionada!.trim();
     }
-    if (nomeController.text.trim().isNotEmpty) payload['nome'] = nomeController.text.trim();
+    if (nomeController.text.trim().isNotEmpty)
+      payload['nome'] = nomeController.text.trim();
     if (valorController.text.trim().isNotEmpty) {
-      final valor = double.tryParse(valorController.text.replaceAll(',', '.').trim());
+      final valor =
+          double.tryParse(valorController.text.replaceAll(',', '.').trim());
       if (valor != null) payload['valor'] = valor;
     }
     await onConfirmar(payload);
@@ -894,9 +1117,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Transacao sugerida', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Transacao sugerida',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            if (_transcricaoAudio != null && _transcricaoAudio!.trim().isNotEmpty) ...[
+            if (_transcricaoAudio != null &&
+                _transcricaoAudio!.trim().isNotEmpty) ...[
               Text('Transcricao: "${_transcricaoAudio!.trim()}"'),
               const SizedBox(height: 8),
             ],
@@ -906,7 +1131,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             Text('Conta: ${s.conta ?? '-'}'),
             Text('Nome: ${s.nome ?? '-'}'),
             Text('Valor: ${s.valor == null ? '-' : formatarMoeda(s.valor!)}'),
-            Text('Confianca: ${_labelConfianca(s.confianca)} (${(s.confianca * 100).toStringAsFixed(0)}%)'),
+            Text(
+                'Confianca: ${_labelConfianca(s.confianca)} (${(s.confianca * 100).toStringAsFixed(0)}%)'),
             if (s.camposIncertos.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('Campos incertos: ${s.camposIncertos.join(', ')}'),
@@ -919,7 +1145,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                 FilledButton(
                   onPressed: _confirmando ? null : () => _confirmar(),
                   child: _confirmando
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Confirmar'),
                 ),
                 OutlinedButton(
@@ -929,7 +1158,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                 TextButton(
                   onPressed: _ignorando ? null : _ignorar,
                   child: _ignorando
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Ignorar'),
                 ),
               ],
@@ -942,7 +1174,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
 
   @override
   Widget build(BuildContext context) {
-    final suportaCapturaNativaAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final suportaCapturaNativaAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Alfred IA')),
@@ -952,101 +1185,129 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-          const Text('Digite uma transacao:', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _textoController,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'gastei 42 reais no ifood ontem no nubank',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.icon(
-              onPressed: _interpretando ? null : _interpretarTexto,
-              icon: _interpretando
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Interpretar'),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Divider(),
-          const SizedBox(height: 12),
-          const Text('Audio', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FilledButton.icon(
-                onPressed: _interpretandoAudio ? null : _toggleGravacaoAudio,
-                icon: Icon(_gravandoAudio ? Icons.stop_circle_outlined : Icons.mic_none_outlined),
-                label: Text(_gravandoAudio ? 'Parar gravacao' : 'Gravar audio'),
+            const Text('Digite uma transacao:',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _textoController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText: 'gastei 42 reais no ifood ontem no nubank',
+                border: OutlineInputBorder(),
               ),
-              OutlinedButton.icon(
-                onPressed: _gravandoAudio || _interpretandoAudio ? null : _selecionarArquivoAudio,
-                icon: const Icon(Icons.attach_file_outlined),
-                label: const Text('Selecionar audio'),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: _interpretando ? null : _interpretarTexto,
+                icon: _interpretando
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.auto_awesome_outlined),
+                label: const Text('Interpretar'),
               ),
-              FilledButton.tonalIcon(
-                onPressed: _gravandoAudio || _interpretandoAudio ? null : _interpretarAudio,
-                icon: _interpretandoAudio
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.graphic_eq_outlined),
-                label: const Text('Interpretar audio'),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 12),
+            const Text('Audio', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.icon(
+                  onPressed: _interpretandoAudio ? null : _toggleGravacaoAudio,
+                  icon: Icon(_gravandoAudio
+                      ? Icons.stop_circle_outlined
+                      : Icons.mic_none_outlined),
+                  label:
+                      Text(_gravandoAudio ? 'Parar gravacao' : 'Gravar audio'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _gravandoAudio || _interpretandoAudio
+                      ? null
+                      : _selecionarArquivoAudio,
+                  icon: const Icon(Icons.attach_file_outlined),
+                  label: const Text('Selecionar audio'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: _gravandoAudio || _interpretandoAudio
+                      ? null
+                      : _interpretarAudio,
+                  icon: _interpretandoAudio
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.graphic_eq_outlined),
+                  label: const Text('Interpretar audio'),
+                ),
+              ],
+            ),
+            if (_audioFilePath != null ||
+                (_audioBytes != null && _audioBytes!.isNotEmpty)) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Audio pronto: ${_audioFileName ?? (_audioFilePath?.split(RegExp(r"[\\\\/]")).last ?? "gravacao.wav")}',
+                style: const TextStyle(color: Colors.black54),
               ),
             ],
-          ),
-          if (_audioFilePath != null || (_audioBytes != null && _audioBytes!.isNotEmpty)) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Audio pronto: ${_audioFileName ?? (_audioFilePath?.split(RegExp(r"[\\\\/]")).last ?? "gravacao.wav")}',
-              style: const TextStyle(color: Colors.black54),
-            ),
-          ],
-          const SizedBox(height: 16),
-          if (_resultado != null) _buildSugestaoCard(_resultado!),
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 12),
-          const Text('Transacoes detectadas automaticamente', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          if (suportaCapturaNativaAndroid) ...[
-            Text(
-              'Status: ${_notificationPermissionActive ? "Leitura de notificacoes ativa" : "Leitura de notificacoes inativa"}',
-            ),
-            const SizedBox(height: 8),
-            Text('Ultima notificacao processada: ${_formatarUltimoProcessamento(_lastNotificationProcessedAt)}'),
+            const SizedBox(height: 16),
+            if (_resultado != null) _buildSugestaoCard(_resultado!),
+            const SizedBox(height: 24),
+            const Divider(),
             const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: _loadingNotificationStatus ? null : _abrirConfiguracaoNotificacoes,
-              icon: const Icon(Icons.notifications_active_outlined),
-              label: const Text('Ativar leitura de notificacoes'),
-            ),
+            const Text('Transacoes detectadas automaticamente',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () async {
-                await LocalNotificationService.instance.showDebugNotification();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Notificacao de teste enviada. Verifique a bandeja do Android.')),
-                );
-              },
-              icon: const Icon(Icons.notification_add_outlined),
-              label: const Text('Testar notificacao local'),
-            ),
-          ] else ...[
-            const Text(
-              'No navegador, a captura automatica de notificacoes Android fica desativada. '
-              'Voce ainda pode revisar e tratar pendencias detectadas no mobile.',
-              style: TextStyle(color: Colors.black54),
-            ),
-          ],
+            if (suportaCapturaNativaAndroid) ...[
+              Text(
+                'Status: ${_notificationPermissionActive ? "Leitura de notificacoes ativa" : "Leitura de notificacoes inativa"}',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                  'Ultima notificacao processada: ${_formatarUltimoProcessamento(_lastNotificationProcessedAt)}'),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: _loadingNotificationStatus
+                    ? null
+                    : _abrirConfiguracaoNotificacoes,
+                icon: const Icon(Icons.notifications_active_outlined),
+                label: const Text('Ativar leitura de notificacoes'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await LocalNotificationService.instance
+                      .showDebugNotification();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'Notificacao de teste enviada. Verifique a bandeja do Android.')),
+                  );
+                },
+                icon: const Icon(Icons.notification_add_outlined),
+                label: const Text('Testar notificacao local'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _copiarDiagnosticoCaptura,
+                icon: const Icon(Icons.bug_report_outlined),
+                label: const Text('Copiar diagnostico de captura'),
+              ),
+            ] else ...[
+              const Text(
+                'No navegador, a captura automatica de notificacoes Android fica desativada. '
+                'Voce ainda pode revisar e tratar pendencias detectadas no mobile.',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ],
             const SizedBox(height: 8),
             const Text(
               'Nenhuma transacao sera salva automaticamente. Todas as sugestoes passam por confirmacao, edicao, ignorar ou criacao mesmo com alerta de duplicidade.',
@@ -1055,7 +1316,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
             const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 12),
-            const Text('Pendencias detectadas por captura automatica', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Pendencias detectadas por captura automatica',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             if (_loadingPendenciasNotificacao)
               const Padding(
@@ -1063,7 +1325,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (_pendenciasNotificacao.isEmpty)
-              const Text('Nenhuma pendencia de captura automatica no momento.', style: TextStyle(color: Colors.black54))
+              const Text('Nenhuma pendencia de captura automatica no momento.',
+                  style: TextStyle(color: Colors.black54))
             else
               ..._pendenciasNotificacao.map(_buildPendenciaNotificacaoCard),
           ],
@@ -1079,9 +1342,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
     final isSms = pendencia.source == 'android_sms';
     final origemNome = isSms ? 'SMS' : 'notificacao';
     final appName = isSms
-        ? (sms is Map ? (sms['sender']?.toString() ?? 'Remetente') : 'Remetente')
-        : (notificacao is Map ? (notificacao['app_name']?.toString() ?? 'App') : 'App');
-    final nome = s?.nome?.trim().isNotEmpty == true ? s!.nome!.trim() : 'Transacao detectada';
+        ? (sms is Map
+            ? (sms['sender']?.toString() ?? 'Remetente')
+            : 'Remetente')
+        : (notificacao is Map
+            ? (notificacao['app_name']?.toString() ?? 'App')
+            : 'App');
+    final nome = s?.nome?.trim().isNotEmpty == true
+        ? s!.nome!.trim()
+        : 'Transacao detectada';
     final tipo = s?.tipo ?? '-';
     final categoria = s?.categoria ?? '-';
     final conta = s?.conta ?? '-';
@@ -1111,9 +1380,14 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: emAcao ? null : () => _confirmarPendenciaNotificacao(pendencia),
+                  onPressed: emAcao
+                      ? null
+                      : () => _confirmarPendenciaNotificacao(pendencia),
                   child: emAcao
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Confirmar'),
                 ),
                 OutlinedButton(
@@ -1121,12 +1395,16 @@ class _InsightsPageState extends ConsumerState<InsightsPage> with WidgetsBinding
                       ? null
                       : () => _abrirEditorEConfirmar(
                             sugestao: s,
-                            onConfirmar: (payload) => _confirmarPendenciaNotificacao(pendencia, payload: payload),
+                            onConfirmar: (payload) =>
+                                _confirmarPendenciaNotificacao(pendencia,
+                                    payload: payload),
                           ),
                   child: const Text('Editar'),
                 ),
                 TextButton(
-                  onPressed: emAcao ? null : () => _ignorarPendenciaNotificacao(pendencia),
+                  onPressed: emAcao
+                      ? null
+                      : () => _ignorarPendenciaNotificacao(pendencia),
                   child: const Text('Ignorar'),
                 ),
               ],
