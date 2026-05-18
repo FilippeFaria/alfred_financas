@@ -5,7 +5,11 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
-from src.ingestion.sms.normalizer import SmsNormalizado, inferir_banco_por_sender
+from src.ingestion.sms.normalizer import (
+    SmsNormalizado,
+    inferir_banco_por_sender,
+    inferir_banco_por_texto,
+)
 
 
 _BANCO_CONTA_MAP = {
@@ -77,7 +81,9 @@ def extrair_valor(texto: str) -> float | None:
 
     padroes = [
         r"r\$\s*([0-9\.\,]+)",
+        r"\brs\.?\s*([0-9\.\,]+)",
         r"valor\s*de\s*([0-9\.\,]+)",
+        r"valor\s*rs\.?\s*([0-9\.\,]+)",
     ]
     texto_lower = (texto or "").lower()
     for padrao in padroes:
@@ -116,7 +122,7 @@ def inferir_conta(sender: str, *, cartao_por_ultimos4: dict[str, str], texto: st
         cartao = resolver_cartao_por_ultimos4(ultimos4, cartao_por_ultimos4=cartao_por_ultimos4)
         if cartao:
             return cartao
-    banco = inferir_banco_por_sender(sender)
+    banco = inferir_banco_por_sender(sender) or inferir_banco_por_texto(texto)
     if banco and banco in _BANCO_CONTA_MAP:
         return _BANCO_CONTA_MAP[banco]
     return None

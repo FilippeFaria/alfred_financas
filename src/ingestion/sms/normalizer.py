@@ -33,7 +33,7 @@ DECLINED_TRANSACTION_HINTS = (
 
 SMS_BANCO_SENDER_HINTS: dict[str, tuple[str, ...]] = {
     "nubank": ("nubank", "nu pagamentos", "nu"),
-    "itau": ("itau", "itaucard"),
+    "itau": ("itau", "itaucard", "person", "personalite", "personnalite"),
     "inter": ("bancointer", "inter"),
     "c6": ("c6", "c6bank"),
     "mercado_pago": ("mercadopago", "mercado pago", "mp"),
@@ -75,11 +75,21 @@ def normalizar_sms(payload: dict) -> SmsNormalizado:
 
 
 def inferir_banco_por_sender(sender: str) -> str | None:
-    base = (sender or "").strip().lower()
+    base = _normalizar_busca(sender or "")
     if not base:
         return None
     for banco_id, aliases in SMS_BANCO_SENDER_HINTS.items():
-        if any(alias in base for alias in aliases):
+        if any(_normalizar_busca(alias) in base for alias in aliases):
+            return banco_id
+    return None
+
+
+def inferir_banco_por_texto(texto: str) -> str | None:
+    base = _normalizar_busca(texto or "")
+    if not base:
+        return None
+    for banco_id, aliases in SMS_BANCO_SENDER_HINTS.items():
+        if any(_normalizar_busca(alias) in base for alias in aliases):
             return banco_id
     return None
 
@@ -87,7 +97,7 @@ def inferir_banco_por_sender(sender: str) -> str | None:
 def eh_sms_financeiro(sms: SmsNormalizado, *, bancos_habilitados: list[str]) -> bool:
     if not sms.text:
         return False
-    banco = inferir_banco_por_sender(sms.sender)
+    banco = inferir_banco_por_sender(sms.sender) or inferir_banco_por_texto(sms.text)
     if banco is None or banco not in set(bancos_habilitados):
         return False
     texto = _normalizar_busca(sms.text)
