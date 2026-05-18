@@ -22,7 +22,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _savingSms = false;
   bool _importandoSmsRetroativos = false;
   bool _smsEnabled = false;
-  bool _smsPermissionGranted = false;
+  bool _smsReceivePermissionGranted = false;
+  bool _smsReadPermissionGranted = false;
   List<SmsBankCatalogItemDto> _catalogoBancos = const [];
   List<String> _catalogoCartoes = const [];
   final Set<String> _bancosSelecionados = <String>{};
@@ -98,22 +99,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _sincronizarPermissaoSms() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       setState(() {
-        _smsPermissionGranted = false;
+        _smsReceivePermissionGranted = false;
+        _smsReadPermissionGranted = false;
       });
       return;
     }
     try {
-      final granted = await _notificationChannel
-              .invokeMethod<bool>('isSmsPermissionGranted') ??
-          false;
+      final raw = await _notificationChannel
+          .invokeMethod<Map<dynamic, dynamic>>('getSmsPermissionStatus');
+      final status = Map<String, dynamic>.from(raw ?? const {});
       if (!mounted) return;
       setState(() {
-        _smsPermissionGranted = granted;
+        _smsReceivePermissionGranted = status['receive_sms'] == true;
+        _smsReadPermissionGranted = status['read_sms'] == true;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _smsPermissionGranted = false;
+        _smsReceivePermissionGranted = false;
+        _smsReadPermissionGranted = false;
       });
     }
   }
@@ -121,16 +125,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _pedirPermissaoSms() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     try {
-      final granted = await _notificationChannel
-              .invokeMethod<bool>('requestSmsPermission') ??
-          false;
+      await _notificationChannel.invokeMethod<bool>('requestSmsPermission');
+      await _sincronizarPermissaoSms();
       if (!mounted) return;
-      setState(() {
-        _smsPermissionGranted = granted;
-      });
+      final granted =
+          _smsReceivePermissionGranted && _smsReadPermissionGranted;
       if (!granted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permissao de SMS nao concedida.')),
+          const SnackBar(
+            content: Text(
+              'Permissao de SMS incompleta. Verifique RECEIVE_SMS e READ_SMS.',
+            ),
+          ),
         );
       }
     } catch (_) {
@@ -150,16 +156,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _importandoSmsRetroativos = true;
     });
     try {
-      final granted = await _notificationChannel
-              .invokeMethod<bool>('requestSmsPermission') ??
-          false;
+      await _notificationChannel.invokeMethod<bool>('requestSmsPermission');
+      await _sincronizarPermissaoSms();
       if (!mounted) return;
-      setState(() {
-        _smsPermissionGranted = granted;
-      });
+      final granted =
+          _smsReceivePermissionGranted && _smsReadPermissionGranted;
       if (!granted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permissao de SMS nao concedida.')),
+          const SnackBar(
+            content: Text(
+              'Permissao SMS incompleta para importar historico (faltou READ_SMS ou RECEIVE_SMS).',
+            ),
+          ),
         );
         return;
       }
@@ -359,6 +367,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final baseUrl = AppEnv.apiBaseUrl;
     final suportaSmsAndroid =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final smsPermissionGranted =
+        _smsReceivePermissionGranted && _smsReadPermissionGranted;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes')),
@@ -425,7 +435,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         if (suportaSmsAndroid) ...[
                           const SizedBox(height: 6),
                           Text(
-                            'Permissao SMS: ${_smsPermissionGranted ? "concedida" : "nao concedida"}',
+                            'Captura em tempo real (RECEIVE_SMS): ${_smsReceivePermissionGranted ? "ativa" : "inativa"}',
+                          ),
+                          Text(
+                            'RECEIVE_SMS: ${_smsReceivePermissionGranted ? "concedida" : "nao concedida"}',
+                          ),
+                          Text(
+                            'READ_SMS: ${_smsReadPermissionGranted ? "concedida" : "nao concedida"}',
+                          ),
+                          Text(
+                            'Importacao de historico: ${smsPermissionGranted ? "disponivel" : "indisponivel"}',
                           ),
                           const SizedBox(height: 8),
                           Wrap(

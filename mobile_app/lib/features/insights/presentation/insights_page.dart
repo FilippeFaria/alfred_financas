@@ -495,9 +495,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage>
           .whereType<Map>()
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
-      final smsPermission = await _notificationChannel
-              .invokeMethod<bool>('isSmsPermissionGranted') ??
-          false;
+      final smsPermissionStatusRaw = await _notificationChannel
+          .invokeMethod<Map<dynamic, dynamic>>('getSmsPermissionStatus');
+      final smsPermissionStatus =
+          Map<String, dynamic>.from(smsPermissionStatusRaw ?? const {});
+      final smsReceiveGranted = smsPermissionStatus['receive_sms'] == true;
+      final smsReadGranted = smsPermissionStatus['read_sms'] == true;
+      final smsPermission = smsPermissionStatus['all_required'] == true;
       final pendingSms = await _notificationChannel
           .invokeMethod<List<dynamic>>('listPendingSmsEvents');
       final pendingNotifications = await _notificationChannel
@@ -505,7 +509,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage>
       final lines = <String>[
         'Diagnostico de captura - ${DateTime.now().toIso8601String()}',
         'Leitura notificacoes: ${_notificationPermissionActive ? "ativa" : "inativa"}',
-        'Permissao SMS: ${smsPermission ? "concedida" : "nao concedida"}',
+        'Captura SMS em tempo real: ${smsReceiveGranted ? "ativa" : "inativa"}',
+        'Importacao retroativa SMS: ${smsPermission ? "disponivel" : "indisponivel"}',
+        'RECEIVE_SMS: ${smsReceiveGranted ? "concedida" : "nao concedida"}',
+        'READ_SMS: ${smsReadGranted ? "concedida" : "nao concedida"}',
         'Fila SMS local: ${pendingSms?.length ?? 0}',
         'Fila notificacoes local: ${pendingNotifications?.length ?? 0}',
         'Pendencias carregadas: ${_pendenciasNotificacao.length}',

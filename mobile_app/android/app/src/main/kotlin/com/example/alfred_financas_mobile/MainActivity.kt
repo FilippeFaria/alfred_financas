@@ -60,6 +60,15 @@ class MainActivity : FlutterActivity() {
                     "isSmsPermissionGranted" -> {
                         result.success(isSmsPermissionGranted())
                     }
+                    "getSmsPermissionStatus" -> {
+                        result.success(
+                            mapOf(
+                                "receive_sms" to isSmsReceivePermissionGranted(),
+                                "read_sms" to isSmsReadPermissionGranted(),
+                                "all_required" to isSmsPermissionGranted(),
+                            )
+                        )
+                    }
                     "requestSmsPermission" -> {
                         if (isSmsPermissionGranted()) {
                             result.success(true)
@@ -185,15 +194,21 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun isSmsPermissionGranted(): Boolean {
-        val receiveGranted = ContextCompat.checkSelfPermission(
+        return isSmsReceivePermissionGranted() && isSmsReadPermissionGranted()
+    }
+
+    private fun isSmsReceivePermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.RECEIVE_SMS,
         ) == PackageManager.PERMISSION_GRANTED
-        val readGranted = ContextCompat.checkSelfPermission(
+    }
+
+    private fun isSmsReadPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.READ_SMS,
         ) == PackageManager.PERMISSION_GRANTED
-        return receiveGranted && readGranted
     }
 
     private fun importRecentSmsEvents(hours: Int, maxItems: Int): Map<String, Any> {
@@ -201,6 +216,8 @@ class MainActivity : FlutterActivity() {
         val clampedMaxItems = maxItems.coerceIn(1, 400)
 
         if (!isSmsPermissionGranted()) {
+            val hasReceive = isSmsReceivePermissionGranted()
+            val hasRead = isSmsReadPermissionGranted()
             NotificationCaptureStore.recordCaptureDiagnostic(
                 context = this,
                 source = "android_sms",
@@ -208,12 +225,17 @@ class MainActivity : FlutterActivity() {
                 status = "blocked",
                 eventKey = null,
                 message = "missing_sms_permissions",
+                details = JSONObject()
+                    .put("receive_sms", hasReceive)
+                    .put("read_sms", hasRead),
             )
             return mapOf(
                 "imported" to 0,
                 "scanned" to 0,
                 "hours" to clampedHours,
                 "blocked" to true,
+                "receive_sms" to hasReceive,
+                "read_sms" to hasRead,
             )
         }
 
